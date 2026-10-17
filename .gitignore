@@ -1,0 +1,27 @@
+# PlatformIO build directories and local dependencies
+.pio/
+.pioenvs/
+.piolibdeps/
+
+# IDE configurations
+.idea/
+.vscode/
+cmake-build-*/
+
+# Operating System files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Environment variables & local overrides
+.env
+.env.*
+*.local
+
+# Logs and temporary files
+*.log
+*.tmp
