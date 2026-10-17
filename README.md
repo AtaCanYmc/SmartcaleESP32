@@ -1,11 +1,19 @@
-# Smart Kitchen Scale Firmware
+<p align="center">
+  <img src="assets/logo.jpg" alt="SmartScale ESP32 Logo" width="240" />
+</p>
 
-Non-blocking firmware for ESP32-C3 Super Mini smart kitchen scales with HX711 load cell sensing, SH1106 OLED display, Li-Po battery fuel gauge, and BLE GATT connectivity.
+<h1 align="center">Smart Kitchen Scale Firmware</h1>
 
-[![CI](https://github.com/AtaCanYmc/SmartcaleESP32/actions/workflows/ci.yml/badge.svg)](https://github.com/AtaCanYmc/SmartcaleESP32/actions/workflows/ci.yml)
-[![PlatformIO](https://img.shields.io/badge/PlatformIO-Core%206.x-orange.svg)](https://platformio.org)
-[![ESP32-C3](https://img.shields.io/badge/MCU-ESP32--C3%20Super%20Mini-blue.svg)](https://www.espressif.com)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+<p align="center">
+  Non-blocking firmware for ESP32-C3 Super Mini smart kitchen scales with HX711 load cell sensing, SH1106 OLED display, Li-Po battery fuel gauge, and BLE GATT connectivity.
+</p>
+
+<p align="center">
+  <a href="https://github.com/AtaCanYmc/SmartcaleESP32/actions/workflows/ci.yml"><img src="https://github.com/AtaCanYmc/SmartcaleESP32/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="https://platformio.org"><img src="https://img.shields.io/badge/PlatformIO-Core%206.x-orange.svg" alt="PlatformIO" /></a>
+  <a href="https://www.espressif.com"><img src="https://img.shields.io/badge/MCU-ESP32--C3%20Super%20Mini-blue.svg" alt="ESP32-C3" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT" /></a>
+</p>
 
 ---
 
@@ -167,6 +175,8 @@ SmartcaleESP32/
 ├── .github/
 │   └── workflows/
 │       └── ci.yml          # Automated PlatformIO build verification
+├── assets/
+│   └── logo.jpg            # Repository brand emblem
 ├── include/
 │   ├── battery.h           # ADC sampling and piecewise Li-Po SOC approximation
 │   ├── ble_scale.h         # BLE GATT server, advertising, and characteristic callbacks
