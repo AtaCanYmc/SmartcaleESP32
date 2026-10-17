@@ -155,8 +155,8 @@ All operational constants and calibration parameters reside in [include/config.h
 2. Flash the board, place a known reference weight on the platform (e.g. 500.0 grams).
 3. Read the displayed raw value via serial console or OLED.
 4. Calculate the new factor:
-   $$\text{CALIBRATION\_FACTOR} = \frac{\text{Raw Reading}}{\text{Known Weight in Grams}}$$
-5. Update `CALIBRATION_FACTOR` and reflash the device.
+   $$\text{Calibration Factor} = \frac{\text{Raw Reading}}{\text{Known Weight in Grams}}$$
+5. Update `CALIBRATION_FACTOR` in `include/config.h` and reflash the device.
 
 ---
 
