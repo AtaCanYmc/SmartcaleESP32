@@ -14,7 +14,8 @@ class ConfigStorage {
 public:
     static bool load(AppConfig& config) {
         Preferences prefs;
-        if (!prefs.begin(NVS_NAMESPACE, true)) { // Read-only
+        // Open read/write so the namespace is created if not yet present
+        if (!prefs.begin(NVS_NAMESPACE, false)) {
             config.wifiSsid = "";
             config.wifiPass = "";
             config.bleName = DEFAULT_BLE_NAME;
