@@ -9,6 +9,7 @@
 #include <math.h>
 
 #include "config.h"
+#include "logger.h"
 #include "storage.h"
 #include "buzzer.h"
 #include "battery.h"
@@ -54,15 +55,21 @@ void triggerTareFromBle() {
 // =============================================================================
 void setup() {
     Serial.begin(115200);
+    // Allow USB CDC time to attach
+    while (!Serial && millis() < 1500);
+
+    LOG_I("BOOT", "=== SmartScale ESP32 Starting ===");
 
     // 1. Check if Tare button is held down at power-on to force setup mode
     pinMode(PIN_TARE_BTN, INPUT_PULLUP);
     bool forceSetupMode = false;
     if (digitalRead(PIN_TARE_BTN) == LOW) {
+        LOG_I("BOOT", "Tare button pressed on power-up, checking hold duration...");
         unsigned long holdStart = millis();
         while (digitalRead(PIN_TARE_BTN) == LOW) {
             if (millis() - holdStart >= HOLD_TO_SETUP_MS) {
                 forceSetupMode = true;
+                LOG_W("BOOT", "Tare button held for >%lums -> Forcing Setup Mode!", HOLD_TO_SETUP_MS);
                 break;
             }
             delay(10);
@@ -76,23 +83,27 @@ void setup() {
 
     // 3. Load Persistent Configuration from NVS
     bool isConfigured = ConfigStorage::load(g_appConfig);
+    LOG_I("BOOT", "NVS Config: configured=%d, SSID='%s', BLE='%s', CAL=%.1f",
+          isConfigured, g_appConfig.wifiSsid.c_str(), g_appConfig.bleName.c_str(), g_appConfig.calibrationFactor);
 
     // 4. Branch to Captive Portal AP Setup if unconfigured or requested
     if (forceSetupMode || !isConfigured) {
         g_setupMode = true;
+        LOG_W("BOOT", "Launching Setup AP Mode (SSID: %s)", SETUP_AP_SSID);
         ConfigPortal::begin(g_appConfig);
         g_batteryPercent = getBatteryPercent();
         renderConfigPortal(SETUP_AP_SSID, ConfigPortal::getApIp().toString().c_str(), g_batteryPercent);
-        Serial.println("Started Wi-Fi Setup AP Mode.");
         return;
     }
 
     // 5. Normal Scale Operation Mode
+    LOG_I("BOOT", "Entering normal scale weighing mode");
     attachInterrupt(digitalPinToInterrupt(PIN_TARE_BTN), onTareButtonISR, FALLING);
     initBle(g_appConfig.bleName.c_str(), triggerTareFromBle);
 
     // Optional background Wi-Fi connection
     if (g_appConfig.wifiSsid.length() > 0) {
+        LOG_I("WIFI", "Connecting to Wi-Fi SSID '%s'...", g_appConfig.wifiSsid.c_str());
         WiFi.mode(WIFI_STA);
         WiFi.begin(g_appConfig.wifiSsid.c_str(), g_appConfig.wifiPass.c_str());
     }
@@ -108,11 +119,14 @@ void setup() {
     }
     if (scale.is_ready()) {
         scale.tare(10);
+        LOG_I("SCALE", "Sensor ready. Offset calibrated: %ld", scale.get_offset());
+    } else {
+        LOG_W("SCALE", "Sensor not detected or busy on power-up");
     }
 
     g_batteryPercent = getBatteryPercent();
     beepBoot();
-    Serial.println("Smart Kitchen Scale initialized in normal weighing mode.");
+    LOG_I("BOOT", "Initialization complete. Ready.");
 }
 
 void loop() {

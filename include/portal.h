@@ -6,6 +6,7 @@
 #include "config.h"
 #include "storage.h"
 #include "buzzer.h"
+#include "logger.h"
 
 class ConfigPortal {
 public:
@@ -13,16 +14,25 @@ public:
         s_config = currentConfig;
         s_restartPending = false;
 
-        WiFi.mode(WIFI_AP);
-        WiFi.softAP(SETUP_AP_SSID);
+        WiFi.disconnect(true);
+        delay(20);
+        WiFi.mode(WIFI_AP_STA);
+        bool apOk = WiFi.softAP(SETUP_AP_SSID, nullptr, 1);
+        IPAddress apIp = WiFi.softAPIP();
+
+        LOG_I("PORTAL", "SoftAP start: %s | SSID: '%s' | IP: %s",
+              apOk ? "SUCCESS" : "FAILED", SETUP_AP_SSID, apIp.toString().c_str());
 
         // Start Captive Portal DNS on port 53
-        s_dnsServer.start(53, "*", WiFi.softAPIP());
+        s_dnsServer.start(53, "*", apIp);
+        LOG_I("PORTAL", "DNS captive portal active on port 53");
 
         // Scan available networks
+        LOG_I("PORTAL", "Scanning nearby 2.4GHz Wi-Fi networks...");
         s_networkListHtml = "";
         int n = WiFi.scanNetworks();
-        if (n == 0) {
+        LOG_I("PORTAL", "Found %d networks", n);
+        if (n <= 0) {
             s_networkListHtml = "<option value=\"\">Ag bulunamadi</option>";
         } else {
             for (int i = 0; i < n; ++i) {
@@ -45,6 +55,7 @@ public:
         s_webServer.onNotFound(handleRedirect);
 
         s_webServer.begin();
+        LOG_I("PORTAL", "HTTP web server active on port 80");
         beepConfigMode();
     }
 
