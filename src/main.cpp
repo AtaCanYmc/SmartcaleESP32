@@ -1,21 +1,27 @@
 /**
  * @file main.cpp
- * @brief Smart Kitchen Scale - Main Controller
+ * @brief Smart Kitchen Scale - Main Controller with Wi-Fi AP Provisioning
  */
 
 #include <Arduino.h>
+#include <WiFi.h>
 #include <HX711.h>
 #include <math.h>
 
 #include "config.h"
+#include "storage.h"
 #include "buzzer.h"
 #include "battery.h"
 #include "display.h"
 #include "ble_scale.h"
+#include "portal.h"
 
 // =============================================================================
-// State & Instances
+// Operating Mode & Global State
 // =============================================================================
+static bool g_setupMode = false;
+static AppConfig g_appConfig;
+
 static HX711 scale;
 static volatile bool g_tareRequested = false;
 static volatile unsigned long g_lastTareInterruptMs = 0;
@@ -49,19 +55,51 @@ void triggerTareFromBle() {
 void setup() {
     Serial.begin(115200);
 
-    // Tare Button (Internal Pull-Up)
+    // 1. Check if Tare button is held down at power-on to force setup mode
     pinMode(PIN_TARE_BTN, INPUT_PULLUP);
-    attachInterrupt(digitalPinToInterrupt(PIN_TARE_BTN), onTareButtonISR, FALLING);
+    bool forceSetupMode = false;
+    if (digitalRead(PIN_TARE_BTN) == LOW) {
+        unsigned long holdStart = millis();
+        while (digitalRead(PIN_TARE_BTN) == LOW) {
+            if (millis() - holdStart >= HOLD_TO_SETUP_MS) {
+                forceSetupMode = true;
+                break;
+            }
+            delay(10);
+        }
+    }
 
-    // Peripherals
+    // 2. Initialize Core Hardware
     initBuzzer();
     initBattery();
     initDisplay();
-    initBle(triggerTareFromBle);
 
-    // HX711 Setup
+    // 3. Load Persistent Configuration from NVS
+    bool isConfigured = ConfigStorage::load(g_appConfig);
+
+    // 4. Branch to Captive Portal AP Setup if unconfigured or requested
+    if (forceSetupMode || !isConfigured) {
+        g_setupMode = true;
+        ConfigPortal::begin(g_appConfig);
+        g_batteryPercent = getBatteryPercent();
+        renderConfigPortal(SETUP_AP_SSID, ConfigPortal::getApIp().toString().c_str(), g_batteryPercent);
+        Serial.println("Started Wi-Fi Setup AP Mode.");
+        return;
+    }
+
+    // 5. Normal Scale Operation Mode
+    attachInterrupt(digitalPinToInterrupt(PIN_TARE_BTN), onTareButtonISR, FALLING);
+    initBle(g_appConfig.bleName.c_str(), triggerTareFromBle);
+
+    // Optional background Wi-Fi connection
+    if (g_appConfig.wifiSsid.length() > 0) {
+        WiFi.mode(WIFI_STA);
+        WiFi.begin(g_appConfig.wifiSsid.c_str(), g_appConfig.wifiPass.c_str());
+    }
+
+    // HX711 Setup with stored calibration factor
     scale.begin(PIN_HX711_DT, PIN_HX711_SCK);
-    scale.set_scale(CALIBRATION_FACTOR);
+    scale.set_scale(g_appConfig.calibrationFactor);
 
     // Initial boot tare (wait up to 1.5s for sensor ready)
     unsigned long bootStart = millis();
@@ -74,9 +112,28 @@ void setup() {
 
     g_batteryPercent = getBatteryPercent();
     beepBoot();
+    Serial.println("Smart Kitchen Scale initialized in normal weighing mode.");
 }
 
 void loop() {
+    // -------------------------------------------------------------------------
+    // Mode A: Captive Portal Configuration Loop
+    // -------------------------------------------------------------------------
+    if (g_setupMode) {
+        ConfigPortal::handle();
+
+        unsigned long now = millis();
+        if (now - g_lastDisplayMs >= INTERVAL_DISPLAY_MS) {
+            g_lastDisplayMs = now;
+            g_batteryPercent = getBatteryPercent();
+            renderConfigPortal(SETUP_AP_SSID, ConfigPortal::getApIp().toString().c_str(), g_batteryPercent);
+        }
+        return;
+    }
+
+    // -------------------------------------------------------------------------
+    // Mode B: Normal Weighing & Telemetry Loop
+    // -------------------------------------------------------------------------
     unsigned long now = millis();
 
     // 1. Process Pending Tare Request

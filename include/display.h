@@ -65,3 +65,27 @@ inline void renderDisplay(float weightGrams, bool bleConnected, uint8_t batPerce
 
     u8g2.sendBuffer();
 }
+
+inline void renderConfigPortal(const char* ssid, const char* ip, uint8_t batPercent) {
+    u8g2.clearBuffer();
+
+    // Top Bar
+    u8g2.setFont(u8g2_font_6x10_tf);
+    u8g2.drawStr(0, 8, "KURULUM MODU (AP)");
+    drawBatteryIcon(106, 0, batPercent);
+    u8g2.drawHLine(0, 11, 128);
+
+    // Setup details
+    u8g2.setFont(u8g2_font_7x14_tf);
+    u8g2.drawStr(0, 26, "WiFi:");
+    u8g2.drawStr(38, 26, ssid);
+
+    u8g2.drawStr(0, 42, "IP  :");
+    u8g2.drawStr(38, 42, ip);
+
+    u8g2.setFont(u8g2_font_6x10_tf);
+    u8g2.drawStr(0, 60, "Webden ayarlayiniz");
+
+    u8g2.sendBuffer();
+}
+

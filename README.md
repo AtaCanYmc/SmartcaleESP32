@@ -23,6 +23,7 @@
 - [Hardware Specifications](#hardware-specifications)
 - [Pin Configuration](#pin-configuration)
 - [System Architecture](#system-architecture)
+- [Wi-Fi Provisioning & Web Portal](#wi-fi-provisioning--web-portal)
 - [BLE GATT Specification](#ble-gatt-specification)
 - [Quick Start](#quick-start)
 - [Configuration & Calibration](#configuration--calibration)
@@ -38,11 +39,12 @@ This repository contains the production firmware for a digital kitchen scale bui
 
 ### Key Capabilities
 
+- **Wi-Fi Provisioning & Captive Portal**: Broadcasts SoftAP (`SmartScale-Setup`) with automatic DNS captive portal on first boot or button hold, enabling mobile-friendly configuration of Wi-Fi network, BLE device name, and calibration factor.
 - **Non-blocking Dispatch Loop**: Driven entirely by `millis()` interval registers, maintaining responsive 100ms BLE updates and 200ms display frame rates.
 - **Hardware Interrupt Tare**: Falling-edge interrupt on GPIO 2 with 200ms hardware-debounced flag assertion.
 - **Noise Filtration & Deadband**: Exponential Moving Average (EMA, alpha = 0.25) combined with a +/- 0.4g zero-point deadband to suppress idle mechanical jitter.
 - **Piecewise Li-Po Fuel Gauge**: 11-point piecewise linear interpolation across standard 1S lithium polymer discharge curves using eFuse-calibrated ADC millivolt readings.
-- **Acoustic Feedback**: Hardware LEDC PWM tone generation on GPIO 4 for boot, tare confirmation, and BLE connection state transitions.
+- **Acoustic Feedback**: Hardware LEDC PWM tone generation on GPIO 4 for boot, tare confirmation, setup mode entry, and BLE connection state transitions.
 
 ---
 
@@ -104,9 +106,37 @@ flowchart TD
 
 ---
 
+## Wi-Fi Provisioning & Web Portal
+
+The scale features an integrated SoftAP with an auto-redirecting DNS captive portal, allowing users to configure settings from any phone or computer browser without extra software.
+
+### Activation Triggers
+
+1. **First Boot (Automatic)**: If no Wi-Fi credentials are saved in NVS storage, the device immediately launches the setup portal.
+2. **Manual Override**: Holding the Tare button (GPIO 2) during power-on for more than 2 seconds forces the setup portal.
+
+### Network & Portal Information
+
+| Parameter | Value |
+| :--- | :--- |
+| **Setup Wi-Fi SSID** | `SmartScale-Setup` (Open network, no password) |
+| **Portal IP Address** | `192.168.4.1` |
+| **Captive Redirection** | Automatic on iOS, Android, macOS, and Windows |
+| **OLED Status** | Displays SSID, IP, and battery state during setup |
+
+### Configurable Settings
+
+- **Wi-Fi Network (SSID)**: Interactive drop-down with live-scanned networks or manual text entry.
+- **Wi-Fi Password**: WPA2/WPA3 network passphrase.
+- **BLE Device Name**: Custom name for Bluetooth identification (defaults to `SmartKitchenScale`).
+- **Calibration Factor**: Direct adjustment of the load cell scaling ratio.
+- **Factory Reset**: Single-click button to wipe NVS storage and restore hardware defaults.
+
+---
+
 ## BLE GATT Specification
 
-The ESP32 acts as a GATT Server advertising under the local name `SmartKitchenScale`.
+The ESP32 acts as a GATT Server advertising under the local name defined in configuration (default: `SmartKitchenScale`).
 
 ### Service: Scale Service
 - **UUID**: `4fafc201-1fb5-459e-8fcc-c5c9c331914b`
@@ -182,7 +212,9 @@ SmartcaleESP32/
 │   ├── ble_scale.h         # BLE GATT server, advertising, and characteristic callbacks
 │   ├── buzzer.h            # Non-blocking acoustic tone feedback
 │   ├── config.h            # Pin definitions, calibration factor, and timing constants
-│   └── display.h           # SH1106 OLED rendering and battery gauge graphics
+│   ├── display.h           # SH1106 OLED rendering and battery gauge graphics
+│   ├── portal.h            # Captive portal DNS server and mobile web configurator
+│   └── storage.h           # NVS Preferences manager for persistent parameters
 ├── src/
 │   └── main.cpp            # Main entry point, interrupt handlers, and scheduling loop
 ├── .gitignore              # Build artifact exclusions (.pio, .vscode)

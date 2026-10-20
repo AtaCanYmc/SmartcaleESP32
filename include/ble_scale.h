@@ -39,10 +39,11 @@ class BleCommandCallbacks : public BLECharacteristicCallbacks {
     }
 };
 
-inline void initBle(void (*onTareFunc)()) {
+inline void initBle(const char* deviceName, void (*onTareFunc)()) {
     g_onTareCallback = onTareFunc;
 
-    BLEDevice::init(BLE_DEVICE_NAME);
+    const char* name = (deviceName && strlen(deviceName) > 0) ? deviceName : DEFAULT_BLE_NAME;
+    BLEDevice::init(name);
     pBleServer = BLEDevice::createServer();
     pBleServer->setCallbacks(new BleServerCallbacks());
 

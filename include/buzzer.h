@@ -25,3 +25,7 @@ inline void beepConnected() {
 inline void beepDisconnected() {
     beep(1500, 120);
 }
+
+inline void beepConfigMode() {
+    beep(1800, 150);
+}
