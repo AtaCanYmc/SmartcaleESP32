@@ -29,8 +29,8 @@ class BleServerCallbacks : public BLEServerCallbacks {
 
 class BleCommandCallbacks : public BLECharacteristicCallbacks {
     void onWrite(BLECharacteristic* pCharacteristic) override {
-        std::string value = pCharacteristic->getValue();
-        if (!value.empty()) {
+        String value = String(pCharacteristic->getValue().c_str());
+        if (value.length() > 0) {
             char cmd = value[0];
             if ((cmd == 'T' || cmd == 't') && g_onTareCallback != nullptr) {
                 g_onTareCallback();
