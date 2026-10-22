@@ -20,6 +20,7 @@
 ## Table of Contents
 
 - [Overview](#overview)
+- [Technical Documentation (`docs/`)](#technical-documentation)
 - [Hardware Specifications](#hardware-specifications)
 - [Pin Configuration](#pin-configuration)
 - [System Architecture](#system-architecture)
@@ -48,6 +49,20 @@ This repository contains the production firmware for a digital kitchen scale bui
 
 ---
 
+## Technical Documentation
+
+Detailed engineering guides and architectural specifications are organized in the [`docs/`](docs/) directory:
+
+| Guide | Description |
+| :--- | :--- |
+| [Hardware Specification](docs/hardware.md) | Pin assignments, wiring diagrams, load cell interfaces, and power circuits |
+| [Firmware Architecture](docs/architecture.md) | Non-blocking scheduling loop, interrupt handlers, EMA filter, and Li-Po piecewise model |
+| [BLE GATT Specification](docs/ble_protocol.md) | Service UUIDs, characteristic descriptors, notification payloads, and command sequences |
+| [Wi-Fi Provisioning & Portal](docs/provisioning.md) | Captive portal DNS hijacking, HTTP endpoints, and NVS storage layout |
+| [Calibration & Troubleshooting](docs/calibration.md) | Mathematical formulas, physical calibration procedure, and troubleshooting matrix |
+
+---
+
 ## Hardware Specifications
 
 | Component | Model / Type | Interface |
@@ -72,6 +87,8 @@ This repository contains the production firmware for a digital kitchen scale bui
 | **Piezo Buzzer** | PWM | GPIO 4 | Push-Pull Output |
 | **OLED (SH1106)** | SDA | GPIO 8 | Hardware I2C Data |
 | **OLED (SH1106)** | SCL | GPIO 9 | Hardware I2C Clock |
+
+For detailed electrical schematics, component ratings, and subsystem hookups, see [Hardware Specification](docs/hardware.md).
 
 ---
 
@@ -104,6 +121,8 @@ flowchart TD
     end
 ```
 
+For full state machines, interrupt debouncing, and digital filter equations, see [Firmware Architecture](docs/architecture.md).
+
 ---
 
 ## Wi-Fi Provisioning & Web Portal
@@ -132,6 +151,8 @@ The scale features an integrated SoftAP with an auto-redirecting DNS captive por
 - **Calibration Factor**: Direct adjustment of the load cell scaling ratio.
 - **Factory Reset**: Single-click button to wipe NVS storage and restore hardware defaults.
 
+For complete DNS hijacking mechanisms, captive probe routes, and NVS storage layout, see [Wi-Fi Provisioning & Captive Portal](docs/provisioning.md).
+
 ---
 
 ## BLE GATT Specification
@@ -147,6 +168,8 @@ The ESP32 acts as a GATT Server advertising under the local name defined in conf
 | :--- | :--- | :--- | :--- | :--- |
 | **Weight Data** | `beb5483e-36e1-4688-b7f5-ea07361b26a8` | Read, Notify | UTF-8 String (e.g. `"125.4"`) | Pushed every 100ms when connected |
 | **Remote Command**| `1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e` | Write | UTF-8 Char (`'T'` or `'t'`) | Triggers tare operation on write |
+
+For complete packet formats, CCCD subscription requirements, and sequence diagrams, see [BLE GATT Specification](docs/ble_protocol.md).
 
 ---
 
@@ -196,6 +219,8 @@ All operational constants and calibration parameters reside in [include/config.h
    $$\text{Calibration Factor} = \frac{\text{Raw Reading}}{\text{Known Weight in Grams}}$$
 5. Update `CALIBRATION_FACTOR` in `include/config.h` and reflash the device.
 
+For runtime web portal calibration, mathematical derivations, and a full troubleshooting matrix, see [Calibration & Troubleshooting](docs/calibration.md).
+
 ---
 
 ## Repository Structure
@@ -207,6 +232,13 @@ SmartcaleESP32/
 │       └── ci.yml          # Automated PlatformIO build verification
 ├── assets/
 │   └── logo.jpg            # Repository brand emblem
+├── docs/                   # In-depth technical documentation suite
+│   ├── README.md           # Documentation index and subsystem map
+│   ├── architecture.md     # Software scheduling and signal processing filters
+│   ├── ble_protocol.md     # BLE GATT service and characteristic specification
+│   ├── calibration.md      # Load cell calibration protocol and diagnosis
+│   ├── hardware.md         # Electrical schematics, pin mapping, and peripherals
+│   └── provisioning.md     # SoftAP captive portal and NVS configuration
 ├── include/
 │   ├── battery.h           # ADC sampling and piecewise Li-Po SOC approximation
 │   ├── ble_scale.h         # BLE GATT server, advertising, and characteristic callbacks
