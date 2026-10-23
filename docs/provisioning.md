@@ -44,7 +44,7 @@ stateDiagram-v2
 1. **First Boot (Automated)**:
    The firmware inspects NVS storage on startup. If no Wi-Fi SSID is stored (`storage.isConfigured() == false`), the device enters portal mode directly.
 2. **Manual Button Hold**:
-   During power-up, holding the physical Tare button (GPIO 2) for more than 2.0 seconds forces portal mode. An acoustic tone (`beepPortal()`) confirms entry.
+   During power-up, holding the physical Tare button (GPIO 2) for more than 2.0 seconds forces portal mode.
 
 ---
 

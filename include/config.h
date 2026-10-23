@@ -7,8 +7,6 @@
 static constexpr uint8_t PIN_HX711_DT     = 0;  // Load Cell Data
 static constexpr uint8_t PIN_HX711_SCK    = 1;  // Load Cell Clock
 static constexpr uint8_t PIN_TARE_BTN     = 2;  // Hardware Tare Button (INPUT_PULLUP)
-static constexpr uint8_t PIN_BATTERY_ADC  = 3;  // Li-Po Voltage Divider (ADC1_CH3)
-static constexpr uint8_t PIN_BUZZER       = 4;  // Piezo Buzzer (PWM Tone)
 static constexpr uint8_t PIN_I2C_SDA      = 8;  // OLED I2C SDA
 static constexpr uint8_t PIN_I2C_SCL      = 9;  // OLED I2C SCL
 
@@ -24,7 +22,6 @@ static constexpr float DEADBAND_GRAMS             = 0.40f;  // [-0.4g, +0.4g] cl
 // =============================================================================
 static constexpr unsigned long INTERVAL_BLE_NOTIFY_MS = 100;
 static constexpr unsigned long INTERVAL_DISPLAY_MS    = 200;
-static constexpr unsigned long INTERVAL_BATTERY_MS    = 3000;
 static constexpr unsigned long HOLD_TO_SETUP_MS       = 2000; // Hold Tare btn on boot for setup
 
 // =============================================================================

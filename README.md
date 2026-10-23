@@ -5,7 +5,7 @@
 <h1 align="center">Smart Kitchen Scale Firmware</h1>
 
 <p align="center">
-  Non-blocking firmware for ESP32-C3 Super Mini smart kitchen scales with HX711 load cell sensing, SH1106 OLED display, Li-Po battery fuel gauge, and BLE GATT connectivity.
+  Non-blocking firmware for ESP32-C3 Super Mini smart kitchen scales with HX711 load cell sensing, SH1106 OLED display, and BLE GATT connectivity.
 </p>
 
 <p align="center">
@@ -36,7 +36,7 @@
 
 ## Overview
 
-This repository contains the production firmware for a digital kitchen scale built around the ESP32-C3 Super Mini development board. The system executes non-blocking measurement, filtering, display rendering, acoustic notifications, and BLE telemetry without relying on blocking delays or complex RTOS thread synchronization.
+This repository contains the production firmware for a digital kitchen scale built around the ESP32-C3 Super Mini development board. The system executes non-blocking measurement, filtering, display rendering, and BLE telemetry without relying on blocking delays or complex RTOS thread synchronization.
 
 ### Key Capabilities
 
@@ -44,8 +44,6 @@ This repository contains the production firmware for a digital kitchen scale bui
 - **Non-blocking Dispatch Loop**: Driven entirely by `millis()` interval registers, maintaining responsive 100ms BLE updates and 200ms display frame rates.
 - **Hardware Interrupt Tare**: Falling-edge interrupt on GPIO 2 with 200ms hardware-debounced flag assertion.
 - **Noise Filtration & Deadband**: Exponential Moving Average (EMA, alpha = 0.25) combined with a +/- 0.4g zero-point deadband to suppress idle mechanical jitter.
-- **Piecewise Li-Po Fuel Gauge**: 11-point piecewise linear interpolation across standard 1S lithium polymer discharge curves using eFuse-calibrated ADC millivolt readings.
-- **Acoustic Feedback**: Hardware LEDC PWM tone generation on GPIO 4 for boot, tare confirmation, setup mode entry, and BLE connection state transitions.
 
 ---
 
@@ -70,9 +68,7 @@ Detailed engineering guides and architectural specifications are organized in th
 | Microcontroller | ESP32 Super Mini (ESP32-C3 RISC-V @ 160MHz) | Native USB CDC / JTAG |
 | Load Cell ADC | HX711 24-bit Analog-to-Digital Converter | 2-Wire Bit-Banged Serial |
 | Display | 1.3-inch 128x64 Monochrome OLED (SH1106) | Hardware I2C (400kHz) |
-| Audio Indicator | Passive / Active Piezo Buzzer | Hardware LEDC PWM Tone |
 | User Input | Push Button (Tactile Switch) | Internal Pull-Up, Active Low |
-| Battery Sense | 1S Li-Po (3.7V nominal, 4.2V max) | 100k + 100k Voltage Divider |
 
 ---
 
@@ -83,8 +79,6 @@ Detailed engineering guides and architectural specifications are organized in th
 | **HX711** | DT (Data) | GPIO 0 | Input |
 | **HX711** | SCK (Clock) | GPIO 1 | Output |
 | **Tare Button** | Signal | GPIO 2 | `INPUT_PULLUP` to GND |
-| **Battery Monitor**| ADC Input | GPIO 3 (ADC1_CH3) | 11dB attenuation, 2.0x divider |
-| **Piezo Buzzer** | PWM | GPIO 4 | Push-Pull Output |
 | **OLED (SH1106)** | SDA | GPIO 8 | Hardware I2C Data |
 | **OLED (SH1106)** | SCL | GPIO 9 | Hardware I2C Clock |
 
@@ -101,7 +95,6 @@ flowchart TD
     subgraph Inputs
         BTN["Tare Button (GPIO 2)"] -->|Interrupt| ISR["ISR: Flag tareRequested"]
         BLE_CMD["BLE Write 'T'/'t'"] -->|Callback| ISR
-        ADC["Li-Po Divider (GPIO 3)"] -->|16-Sample Avg| BAT["Piecewise SOC %"]
         HX["HX711 (GPIO 0/1)"] -->|is_ready check| RAW["Raw ADC Units"]
     end
 
@@ -114,10 +107,8 @@ flowchart TD
     end
 
     subgraph Outputs
-        TARE_EXEC --> BZ1["Buzzer: beepTare()"]
         ZERO & OUT --> DISP["SH1106 OLED (200ms)"]
         ZERO & OUT --> BLE_TX["BLE Notify (100ms)"]
-        BAT --> DISP
     end
 ```
 
@@ -141,7 +132,7 @@ The scale features an integrated SoftAP with an auto-redirecting DNS captive por
 | **Setup Wi-Fi SSID** | `SmartScale-Setup` (Open network, no password) |
 | **Portal IP Address** | `192.168.4.1` |
 | **Captive Redirection** | Automatic on iOS, Android, macOS, and Windows |
-| **OLED Status** | Displays SSID, IP, and battery state during setup |
+| **OLED Status** | Displays SSID and IP during setup |
 
 ### Configurable Settings
 
@@ -240,11 +231,9 @@ SmartcaleESP32/
 │   ├── hardware.md         # Electrical schematics, pin mapping, and peripherals
 │   └── provisioning.md     # SoftAP captive portal and NVS configuration
 ├── include/
-│   ├── battery.h           # ADC sampling and piecewise Li-Po SOC approximation
 │   ├── ble_scale.h         # BLE GATT server, advertising, and characteristic callbacks
-│   ├── buzzer.h            # Non-blocking acoustic tone feedback
 │   ├── config.h            # Pin definitions, calibration factor, and timing constants
-│   ├── display.h           # SH1106 OLED rendering and battery gauge graphics
+│   ├── display.h           # SH1106 OLED rendering graphics
 │   ├── portal.h            # Captive portal DNS server and mobile web configurator
 │   └── storage.h           # NVS Preferences manager for persistent parameters
 ├── src/
@@ -264,12 +253,6 @@ SmartcaleESP32/
 
 #### Why use non-blocking polling on `scale.is_ready()` instead of FreeRTOS tasks?
 HX711 outputs data at a fixed 10Hz or 80Hz rate determined by its pin configuration. Polling `is_ready()` without blocking lets the main thread update the OLED display and service BLE stacks continuously. This avoids the memory overhead and context switching of dedicated FreeRTOS task stacks on the memory-constrained ESP32-C3.
-
-#### How does the Li-Po estimation account for non-linear discharge?
-Lithium polymer cells spend the majority of their discharge plateau between 3.7V and 3.9V, dropping steeply below 3.6V and above 4.1V. A pure linear map from 3.3V to 4.2V produces inaccurate percentages. The firmware uses an 11-point piecewise linear approximation table calibrated against the real open-circuit voltage curve of 1S Li-Po cells.
-
-#### Does the buzzer block loop execution during sound generation?
-No. The `tone()` function in the ESP32 Arduino framework dispatches command packets to an asynchronous FreeRTOS hardware timer task that manages LEDC PWM registers. Execution in `loop()` continues without delay.
 
 ---
 

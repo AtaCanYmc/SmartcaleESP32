@@ -11,8 +11,6 @@
 #include "config.h"
 #include "logger.h"
 #include "storage.h"
-#include "buzzer.h"
-#include "battery.h"
 #include "display.h"
 #include "ble_scale.h"
 #include "portal.h"
@@ -29,11 +27,9 @@ static volatile unsigned long g_lastTareInterruptMs = 0;
 
 static float g_filteredWeight = 0.0f;
 static float g_displayWeight = 0.0f;
-static uint8_t g_batteryPercent = 100;
 
 static unsigned long g_lastDisplayMs = 0;
 static unsigned long g_lastBleMs     = 0;
-static unsigned long g_lastBatteryMs = 0;
 
 // =============================================================================
 // Hardware ISR & Tare Handler
@@ -77,8 +73,6 @@ void setup() {
     }
 
     // 2. Initialize Core Hardware
-    initBuzzer();
-    initBattery();
     initDisplay();
 
     // 3. Load Persistent Configuration from NVS
@@ -91,8 +85,7 @@ void setup() {
         g_setupMode = true;
         LOG_W("BOOT", "Launching Setup AP Mode (SSID: %s)", SETUP_AP_SSID);
         ConfigPortal::begin(g_appConfig);
-        g_batteryPercent = getBatteryPercent();
-        renderConfigPortal(SETUP_AP_SSID, ConfigPortal::getApIp().toString().c_str(), g_batteryPercent);
+        renderConfigPortal(SETUP_AP_SSID, ConfigPortal::getApIp().toString().c_str());
         return;
     }
 
@@ -124,8 +117,6 @@ void setup() {
         LOG_W("SCALE", "Sensor not detected or busy on power-up");
     }
 
-    g_batteryPercent = getBatteryPercent();
-    beepBoot();
     LOG_I("BOOT", "Initialization complete. Ready.");
 }
 
@@ -139,8 +130,7 @@ void loop() {
         unsigned long now = millis();
         if (now - g_lastDisplayMs >= INTERVAL_DISPLAY_MS) {
             g_lastDisplayMs = now;
-            g_batteryPercent = getBatteryPercent();
-            renderConfigPortal(SETUP_AP_SSID, ConfigPortal::getApIp().toString().c_str(), g_batteryPercent);
+            renderConfigPortal(SETUP_AP_SSID, ConfigPortal::getApIp().toString().c_str());
         }
         return;
     }
@@ -160,7 +150,6 @@ void loop() {
         }
         g_filteredWeight = 0.0f;
         g_displayWeight = 0.0f;
-        beepTare();
     }
 
     // 2. Read Weight Non-Blockingly
@@ -176,15 +165,9 @@ void loop() {
         notifyBleWeight(g_displayWeight);
     }
 
-    // 4. Battery Level Monitoring (3000ms)
-    if (now - g_lastBatteryMs >= INTERVAL_BATTERY_MS) {
-        g_lastBatteryMs = now;
-        g_batteryPercent = getBatteryPercent();
-    }
-
-    // 5. Display Update (200ms)
+    // 4. Display Update (200ms)
     if (now - g_lastDisplayMs >= INTERVAL_DISPLAY_MS) {
         g_lastDisplayMs = now;
-        renderDisplay(g_displayWeight, isBleConnected(), g_batteryPercent);
+        renderDisplay(g_displayWeight, isBleConnected());
     }
 }

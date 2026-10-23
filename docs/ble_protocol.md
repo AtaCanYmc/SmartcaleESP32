@@ -88,7 +88,6 @@ sequenceDiagram
 
     Central->>GATT: Connect request
     GATT->>Scale: onConnect callback
-    Scale-->>User: Play beepConnected() tone
     GATT-->>Central: Connection established
 
     Central->>GATT: Discover Services & Characteristics
@@ -106,11 +105,9 @@ sequenceDiagram
     Central->>GATT: Write 'T' to CommandCharacteristic
     GATT->>Scale: onWrite callback triggers g_tareRequested
     Scale->>Scale: scale.tare()
-    Scale-->>User: Play beepTare() tone
 
     Central->>GATT: Disconnect request
     GATT->>Scale: onDisconnect callback
-    Scale-->>User: Play beepDisconnected() tone
     Scale->>GATT: Restart BLE Advertising
 ```
 

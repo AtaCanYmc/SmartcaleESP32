@@ -5,7 +5,6 @@
 #include <DNSServer.h>
 #include "config.h"
 #include "storage.h"
-#include "buzzer.h"
 #include "logger.h"
 
 class ConfigPortal {
@@ -56,7 +55,6 @@ public:
 
         s_webServer.begin();
         LOG_I("PORTAL", "HTTP web server active on port 80");
-        beepConfigMode();
     }
 
     static void handle() {

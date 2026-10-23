@@ -17,8 +17,6 @@ The board is powered by an Espressif ESP32-C3FH4 single-core 32-bit RISC-V proce
 | **GPIO 0** | HX711 ADC | DT (Data) | Input | High-impedance digital input |
 | **GPIO 1** | HX711 ADC | SCK (Clock) | Output | Push-pull digital output |
 | **GPIO 2** | Tactile Switch | Tare Button | Input | Internal pull-up enabled, active low to GND |
-| **GPIO 3** | Voltage Divider | Battery Sense | Analog Input | ADC1 Channel 3, 11dB attenuation (up to 2.5V) |
-| **GPIO 4** | Piezo Buzzer | PWM Signal | Output | LEDC PWM driven tone generator |
 | **GPIO 8** | SH1106 OLED | SDA | Open-Drain / I2C | Hardware I2C data bus |
 | **GPIO 9** | SH1106 OLED | SCL | Open-Drain / I2C | Hardware I2C clock bus (400kHz) |
 
@@ -42,24 +40,15 @@ flowchart LR
         OLED["SH1106 1.3in OLED (128x64)"]
     end
 
-    subgraph Power Management
-        BATT["1S Li-Po (3.7V - 4.2V)"]
-        DIV["100k / 100k Resistor Divider"]
-        BATT --> DIV
-    end
-
-    subgraph Inputs and Audio
+    subgraph Inputs
         BTN["Tare Tactile Button"]
-        BUZ["Piezo Buzzer"]
     end
 
     HX -->|"DT: GPIO 0"| ESP
     HX -->|"SCK: GPIO 1"| ESP
     OLED -->|"SDA: GPIO 8"| ESP
     OLED -->|"SCL: GPIO 9"| ESP
-    DIV -->|"V_DIV: GPIO 3"| ESP
     BTN -->|"Active Low: GPIO 2"| ESP
-    ESP -->|"PWM Tone: GPIO 4"| BUZ
 ```
 
 ---
@@ -86,27 +75,9 @@ Display rendering uses the U8g2 library with the full-buffer constructor `U8G2_S
 - **Clock Frequency**: Initialized at 400kHz for low screen latency.
 - **Pull-Up Resistors**: The OLED breakout board typically includes onboard 4.7k Ohm pull-up resistors to 3.3V. If using a bare panel without onboard pull-ups, install external 4.7k Ohm resistors between SDA/SCL and 3.3V.
 
-### 3. Battery Voltage Divider
-
-Battery monitoring measures a single-cell lithium polymer battery with a nominal voltage of 3.7V and a maximum charging voltage of 4.2V.
-
-- **Divider Circuit**:
-  - High-side resistor: 100k Ohm connected from battery positive to GPIO 3.
-  - Low-side resistor: 100k Ohm connected from GPIO 3 to GND.
-  - Scaling ratio: 
-    $$V_{\text{ADC}} = V_{\text{BAT}} \times \frac{100\,\text{k}\Omega}{100\,\text{k}\Omega + 100\,\text{k}\Omega} = \frac{V_{\text{BAT}}}{2}$$
-- **Maximum ADC Input**: At $V_{\text{BAT}} = 4.2\text{V}$, $V_{\text{ADC}} = 2.1\text{V}$.
-- **ADC Configuration**: ADC1 Channel 3 configured with 11dB attenuation (`ADC_11db`). This configuration scales the measurable range up to approximately 2500mV, well above the 2100mV peak.
-
-### 4. Tare Button
+### 3. Tare Button
 
 - **Switch Type**: Normally-open momentary tactile pushbutton.
 - **Connection**: One terminal connects to GPIO 2. The opposite terminal connects to GND.
 - **Configuration**: Internal pull-up (`INPUT_PULLUP`). The pin remains logic HIGH when open and drops to logic LOW when pressed.
 - **Interrupt Mode**: Hardware interrupt configured for `FALLING` edges with a 200ms debounce interval in software.
-
-### 5. Piezo Buzzer
-
-- **Type**: Passive or active piezo transducer.
-- **Connection**: Positive terminal to GPIO 4, negative terminal to GND.
-- **Drive Mode**: Driven through the ESP32 hardware LEDC peripheral via the non-blocking Arduino `tone()` function. Frequency patterns vary from 1200Hz to 2400Hz depending on system events.

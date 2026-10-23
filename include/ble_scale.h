@@ -6,7 +6,6 @@
 #include <BLE2902.h>
 #include <string>
 #include "config.h"
-#include "buzzer.h"
 
 static BLEServer* pBleServer = nullptr;
 static BLECharacteristic* pWeightCharacteristic = nullptr;
@@ -17,12 +16,10 @@ static void (*g_onTareCallback)() = nullptr;
 class BleServerCallbacks : public BLEServerCallbacks {
     void onConnect(BLEServer* pServer) override {
         g_bleConnected = true;
-        beepConnected();
     }
 
     void onDisconnect(BLEServer* pServer) override {
         g_bleConnected = false;
-        beepDisconnected();
         pServer->startAdvertising(); // Auto-restart advertising
     }
 };

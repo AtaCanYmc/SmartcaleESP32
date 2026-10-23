@@ -7,10 +7,8 @@ Milestones and upcoming engineering objectives for the ESP32-C3 Smart Kitchen Sc
 - [x] Non-blocking ESP32-C3 firmware architecture using `millis()` dispatch loops.
 - [x] Hardware interrupt-driven tare button with software debouncing.
 - [x] HX711 24-bit ADC integration with exponential moving average filtering and 0.4g deadband clamping.
-- [x] 1.3-inch SH1106 I2C OLED interface with dynamic battery icon and BLE connection indicator.
-- [x] Li-Po battery state-of-charge calculation using factory calibrated ADC readings and piecewise linear interpolation.
+- [x] 1.3-inch SH1106 I2C OLED interface with BLE connection indicator.
 - [x] BLE GATT server providing 100ms weight notifications and remote tare write commands.
-- [x] Non-blocking acoustic feedback via ESP32 hardware LEDC PWM timer.
 - [x] Non-volatile storage (NVS / Preferences) for Wi-Fi credentials, BLE name, and calibration parameters.
 - [x] Wi-Fi SoftAP (`SmartScale-Setup`) and mobile-responsive captive portal web configurator.
 

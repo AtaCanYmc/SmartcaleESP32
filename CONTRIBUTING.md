@@ -16,7 +16,7 @@ All commit messages must adhere to the Conventional Commits specification.
 
 Format: `<type>(<scope>): <subject>`
 
-Example: `feat(buzzer): add non-blocking acoustic feedback on tare`
+Example: `feat(ble): add connection timeout handler`
 
 ## Local Development Workflow
 

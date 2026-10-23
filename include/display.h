@@ -18,27 +18,12 @@ inline void initDisplay() {
     u8g2.sendBuffer();
 }
 
-inline void drawBatteryIcon(int x, int y, uint8_t percent) {
-    // Battery boundary: 18x9 px
-    u8g2.drawFrame(x, y, 18, 9);
-    // Positive terminal: 2x5 px
-    u8g2.drawBox(x + 18, y + 2, 2, 5);
-
-    // Dynamic fill bar (up to 14 px)
-    int fillWidth = (percent * 14) / 100;
-    if (fillWidth > 14) fillWidth = 14;
-    if (fillWidth > 0) {
-        u8g2.drawBox(x + 2, y + 2, fillWidth, 5);
-    }
-}
-
-inline void renderDisplay(float weightGrams, bool bleConnected, uint8_t batPercent) {
+inline void renderDisplay(float weightGrams, bool bleConnected) {
     u8g2.clearBuffer();
 
-    // 1. Top Bar: BLE status (Left) + Battery Icon (Right)
+    // 1. Top Bar: BLE status
     u8g2.setFont(u8g2_font_6x10_tf);
     u8g2.drawStr(0, 8, bleConnected ? "BLE: BAGLI" : "BLE: BEKLIYOR");
-    drawBatteryIcon(106, 0, batPercent);
 
     // Separator line
     u8g2.drawHLine(0, 11, 128);
@@ -66,13 +51,12 @@ inline void renderDisplay(float weightGrams, bool bleConnected, uint8_t batPerce
     u8g2.sendBuffer();
 }
 
-inline void renderConfigPortal(const char* ssid, const char* ip, uint8_t batPercent) {
+inline void renderConfigPortal(const char* ssid, const char* ip) {
     u8g2.clearBuffer();
 
     // Top Bar
     u8g2.setFont(u8g2_font_6x10_tf);
     u8g2.drawStr(0, 8, "KURULUM MODU (AP)");
-    drawBatteryIcon(106, 0, batPercent);
     u8g2.drawHLine(0, 11, 128);
 
     // Setup details
