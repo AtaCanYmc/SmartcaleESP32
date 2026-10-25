@@ -119,6 +119,8 @@ export interface Translations {
   aboutHardwareTitle: string;
   aboutFeaturesTitle: string;
   aboutOpenSource: string;
+  aboutApiTitle: string;
+  aboutApiDesc: string;
   manualAddBtn: string;
   exportDataBtn: string;
   exportJSON: string;
@@ -128,6 +130,20 @@ export interface Translations {
   saveBtn: string;
   cancelBtn: string;
   quickAddMeal: string;
+  weighOnScale: string;
+  foodScreenHint: string;
+  barcodeLabel: string;
+  brandLabel: string;
+  contributeToOffCheckbox: string;
+  contributeSuccessToast: string;
+  uploadingToOff: string;
+  openInOffWeb: string;
+  productNotFoundAdd: string;
+  productNotFoundDesc: string;
+  offCommunityContribution: string;
+  offCommunityDesc: string;
+  selectDate: string;
+  goToToday: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -236,6 +252,8 @@ export const translations: Record<Language, Translations> = {
     aboutHardwareTitle: 'Donanım & Mimari',
     aboutFeaturesTitle: 'Öne Çıkan Özellikler',
     aboutOpenSource: 'Açık Kaynak Kod',
+    aboutApiTitle: 'Besin Veritabanı & API',
+    aboutApiDesc: 'Milyonlarca gıda ürünü, barkod ve besin değeri bilgisini barındıran açık kaynaklı ve ücretsiz küresel gıda veritabanı.',
     manualAddBtn: 'Manuel Ekle',
     exportDataBtn: 'Dışa Aktar',
     exportJSON: 'JSON İndir',
@@ -245,6 +263,20 @@ export const translations: Record<Language, Translations> = {
     saveBtn: 'Kaydet',
     cancelBtn: 'İptal',
     quickAddMeal: 'Öğüne Ekle',
+    weighOnScale: 'Terazide Tart',
+    foodScreenHint: 'Barkod tarayarak, isimle aratarak veya manuel olarak besin ekleyebilirsiniz.',
+    barcodeLabel: 'Barkod (Opsiyonel)',
+    brandLabel: 'Marka (Opsiyonel)',
+    contributeToOffCheckbox: 'Open Food Facts veritabanına katkıda bulun (Tüm dünyada herkes için kalıcı olsun)',
+    contributeSuccessToast: 'Open Food Facts veritabanına başarıyla eklendi!',
+    uploadingToOff: 'Open Food Facts havuzuna yükleniyor...',
+    openInOffWeb: 'Open Food Facts Web Sayfasında Fotoğraf Yükle',
+    productNotFoundAdd: 'Ürünü Bulamadık, Sen Ekle',
+    productNotFoundDesc: 'Bu barkod veritabanında bulunamadı. Besin değerlerini girerek hem günlüğünüze ekleyebilir hem de Open Food Facts küresel havuzuna katkıda bulunabilirsiniz.',
+    offCommunityContribution: 'Open Food Facts Katkısı',
+    offCommunityDesc: 'Eklediğiniz ürünlerin dünya genelinde kalıcı ve fotoğraflı olması için resmi Open Food Facts mobil uygulamasını (iOS/Android) kullanarak ambalaj fotoğraflarını yükleyebilirsiniz.',
+    selectDate: 'Tarih Seç',
+    goToToday: 'Bugüne Git',
   },
   en: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -351,6 +383,8 @@ export const translations: Record<Language, Translations> = {
     aboutHardwareTitle: 'Hardware & Architecture',
     aboutFeaturesTitle: 'Key Features',
     aboutOpenSource: 'Open Source Code',
+    aboutApiTitle: 'Food Database & API',
+    aboutApiDesc: 'Free, open, collaborative database of food products, barcodes, and nutrition facts from around the world.',
     manualAddBtn: 'Add Manually',
     exportDataBtn: 'Export',
     exportJSON: 'Download JSON',
@@ -360,6 +394,20 @@ export const translations: Record<Language, Translations> = {
     saveBtn: 'Save',
     cancelBtn: 'Cancel',
     quickAddMeal: 'Add to Meal',
+    weighOnScale: 'Weigh on Scale',
+    foodScreenHint: 'Search food by name, scan barcode, or add custom foods manually.',
+    barcodeLabel: 'Barcode (Optional)',
+    brandLabel: 'Brand (Optional)',
+    contributeToOffCheckbox: 'Contribute to Open Food Facts database (Permanent worldwide for everyone)',
+    contributeSuccessToast: 'Successfully contributed to Open Food Facts!',
+    uploadingToOff: 'Uploading to Open Food Facts...',
+    openInOffWeb: 'Upload Packaging Photos on Open Food Facts',
+    productNotFoundAdd: 'Product Not Found, Add It',
+    productNotFoundDesc: 'This barcode was not found in the database. Enter its nutrition facts to add it to your diary and contribute to Open Food Facts.',
+    offCommunityContribution: 'Open Food Facts Contribution',
+    offCommunityDesc: 'To ensure your products are permanent and have photos worldwide, you can also use the official Open Food Facts app (iOS/Android) or website to upload packaging photos.',
+    selectDate: 'Select Date',
+    goToToday: 'Go to Today',
   },
   de: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -466,6 +514,8 @@ export const translations: Record<Language, Translations> = {
     aboutHardwareTitle: 'Hardware & Architektur',
     aboutFeaturesTitle: 'Hauptfunktionen',
     aboutOpenSource: 'Open-Source-Code',
+    aboutApiTitle: 'Lebensmittel-Datenbank & API',
+    aboutApiDesc: 'Freie, offene Lebensmittel-Datenbank mit Barcodes und Nährwertangaben aus aller Welt.',
     manualAddBtn: 'Manuell hinzufügen',
     exportDataBtn: 'Exportieren',
     exportJSON: 'JSON herunterladen',
@@ -475,6 +525,18 @@ export const translations: Record<Language, Translations> = {
     saveBtn: 'Speichern',
     cancelBtn: 'Abbrechen',
     quickAddMeal: 'Zu Mahlzeit',
+    weighOnScale: 'Auf Waage wiegen',
+    foodScreenHint: 'Nahrungsmittel nach Name suchen, Barcode scannen oder manuell hinzufügen.',
+    barcodeLabel: 'Barcode (Optional)',
+    brandLabel: 'Marke (Optional)',
+    contributeToOffCheckbox: 'Zur Open Food Facts-Datenbank beitragen (Weltweit dauerhaft für alle verfügbar)',
+    contributeSuccessToast: 'Erfolgreich zu Open Food Facts hinzugefügt!',
+    uploadingToOff: 'Wird auf Open Food Facts hochgeladen...',
+    openInOffWeb: 'Verpackungsfotos auf Open Food Facts hochladen',
+    productNotFoundAdd: 'Produkt nicht gefunden, selbst hinzufügen',
+    productNotFoundDesc: 'Dieser Barcode wurde nicht gefunden. Tragen Sie die Nährwerte ein, um ihn zum Tagebuch hinzuzufügen und zu Open Food Facts beizutragen.',
+    offCommunityContribution: 'Open Food Facts Beitrag',
+    offCommunityDesc: 'Damit Ihre Produkte weltweit mit Fotos verfügbar sind, können Sie auch die offizielle Open Food Facts-App (iOS/Android) nutzen.',
   },
   fr: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -581,6 +643,8 @@ export const translations: Record<Language, Translations> = {
     aboutHardwareTitle: 'Matériel & Architecture',
     aboutFeaturesTitle: 'Fonctionnalités clés',
     aboutOpenSource: 'Code source ouvert',
+    aboutApiTitle: 'Base de données alimentaire & API',
+    aboutApiDesc: 'Base de données ouverte et collaborative de produits alimentaires, codes-barres et informations nutritionnelles.',
     manualAddBtn: 'Ajouter manuellement',
     exportDataBtn: 'Exporter',
     exportJSON: 'Télécharger JSON',
@@ -590,6 +654,18 @@ export const translations: Record<Language, Translations> = {
     saveBtn: 'Enregistrer',
     cancelBtn: 'Annuler',
     quickAddMeal: 'Ajouter au repas',
+    weighOnScale: 'Peser sur la balance',
+    foodScreenHint: 'Recherchez par nom, scannez le code-barres ou ajoutez manuellement.',
+    barcodeLabel: 'Code-barres (Optionnel)',
+    brandLabel: 'Marque (Optionnel)',
+    contributeToOffCheckbox: 'Contribuer à la base de données Open Food Facts (Permanent pour tous dans le monde)',
+    contributeSuccessToast: 'Ajouté avec succès à Open Food Facts !',
+    uploadingToOff: 'Envoi vers Open Food Facts...',
+    openInOffWeb: 'Téléverser des photos d\'emballage sur Open Food Facts',
+    productNotFoundAdd: 'Produit introuvable, ajoutez-le',
+    productNotFoundDesc: 'Ce code-barres est introuvable. Entrez ses valeurs nutritionnelles pour l\'ajouter au journal et contribuer à Open Food Facts.',
+    offCommunityContribution: 'Contribution à Open Food Facts',
+    offCommunityDesc: 'Pour rendre vos produits permanents et visibles dans le monde entier, vous pouvez aussi utiliser l\'application Open Food Facts (iOS/Android).',
   },
   es: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -696,6 +772,8 @@ export const translations: Record<Language, Translations> = {
     aboutHardwareTitle: 'Hardware y Arquitectura',
     aboutFeaturesTitle: 'Características principales',
     aboutOpenSource: 'Código fuente abierto',
+    aboutApiTitle: 'Base de datos de alimentos y API',
+    aboutApiDesc: 'Base de datos abierta y colaborativa de productos alimenticios, códigos de barras e información nutricional.',
     manualAddBtn: 'Añadir manualmente',
     exportDataBtn: 'Exportar',
     exportJSON: 'Descargar JSON',
@@ -705,6 +783,18 @@ export const translations: Record<Language, Translations> = {
     saveBtn: 'Guardar',
     cancelBtn: 'Cancelar',
     quickAddMeal: 'Añadir a comida',
+    weighOnScale: 'Pesar en la báscula',
+    foodScreenHint: 'Busque alimentos por nombre, escanee el código de barras o añada manualmente.',
+    barcodeLabel: 'Código de barras (Opcional)',
+    brandLabel: 'Marca (Opcional)',
+    contributeToOffCheckbox: 'Contribuir a la base de datos de Open Food Facts (Permanente para todos en el mundo)',
+    contributeSuccessToast: '¡Añadido con éxito a Open Food Facts!',
+    uploadingToOff: 'Subiendo a Open Food Facts...',
+    openInOffWeb: 'Subir fotos del empaque en Open Food Facts',
+    productNotFoundAdd: 'Producto no encontrado, añádelo tú',
+    productNotFoundDesc: 'No se encontró este código. Ingrese sus valores nutricionales para añadirlo a su diario y contribuir a Open Food Facts.',
+    offCommunityContribution: 'Contribución a Open Food Facts',
+    offCommunityDesc: 'Para que sus productos estén disponibles en todo el mundo con fotos, también puede usar la aplicación oficial de Open Food Facts (iOS/Android).',
   },
 };
 

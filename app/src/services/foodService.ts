@@ -1,9 +1,24 @@
 import { Capacitor, CapacitorHttp } from '@capacitor/core';
 import type { FoodProduct, FoodNutriments, ScaledNutrition } from '../types/food';
 
+export interface OpenFoodFactsWriteData {
+  code: string;
+  name: string;
+  brand?: string;
+  calories100g: number;
+  proteins100g: number;
+  carbs100g: number;
+  fat100g: number;
+}
+
+export function getOpenFoodFactsEditUrl(barcode: string): string {
+  return `https://world.openfoodfacts.org/cgi/product.pl?type=edit&code=${encodeURIComponent(barcode.trim())}`;
+}
+
 export interface IFoodService {
   search(query: string, limit?: number): Promise<FoodProduct[]>;
   getByBarcode(barcode: string): Promise<FoodProduct | null>;
+  uploadProduct(data: OpenFoodFactsWriteData): Promise<{ success: boolean; statusVerbose: string }>;
 }
 
 const USER_AGENT = 'SmartcaleESP32 - Web - Version 1.1.0 (https://github.com/AtaCanYmc/SmartcaleESP32)';
@@ -167,6 +182,77 @@ export class OpenFoodFactsService implements IFoodService {
         return null;
       }
       throw err;
+    }
+  }
+
+  async uploadProduct(data: OpenFoodFactsWriteData): Promise<{ success: boolean; statusVerbose: string }> {
+    const code = data.code.trim();
+    const name = data.name.trim();
+    if (!code || !name) {
+      return { success: false, statusVerbose: 'Missing code or product name' };
+    }
+
+    const targetUrl = 'https://world.openfoodfacts.org/cgi/product_jqm.pl';
+    const proxyPath = '/api/off-write';
+
+    const formData = new FormData();
+    formData.append('code', code);
+    formData.append('product_name', name);
+    if (data.brand?.trim()) formData.append('brands', data.brand.trim());
+    formData.append('nutriment_energy-kcal_100g', String(data.calories100g));
+    formData.append('nutriment_proteins_100g', String(data.proteins100g));
+    formData.append('nutriment_carbohydrates_100g', String(data.carbs100g));
+    formData.append('nutriment_fat_100g', String(data.fat100g));
+    formData.append('comment', 'Added via Smartcale ESP32 Companion');
+
+    try {
+      if (Capacitor.isNativePlatform()) {
+        const payload: Record<string, string> = {
+          code,
+          product_name: name,
+          'nutriment_energy-kcal_100g': String(data.calories100g),
+          'nutriment_proteins_100g': String(data.proteins100g),
+          'nutriment_carbohydrates_100g': String(data.carbs100g),
+          'nutriment_fat_100g': String(data.fat100g),
+          comment: 'Added via Smartcale ESP32 Companion',
+        };
+        if (data.brand?.trim()) payload.brands = data.brand.trim();
+
+        const res = await CapacitorHttp.post({
+          url: targetUrl,
+          headers: {
+            'User-Agent': USER_AGENT,
+          },
+          data: payload,
+        });
+
+        const success = res.data?.status === 1 || res.status === 200;
+        return {
+          success,
+          statusVerbose: res.data?.status_verbose || (success ? 'Saved to Open Food Facts' : 'Upload failed'),
+        };
+      }
+
+      const isDev = typeof import.meta !== 'undefined' && Boolean(import.meta.env?.DEV);
+      const urlToFetch = isDev ? proxyPath : targetUrl;
+
+      const res = await fetch(urlToFetch, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const json = await res.json().catch(() => null);
+      const success = json?.status === 1 || res.ok;
+      return {
+        success,
+        statusVerbose: json?.status_verbose || (success ? 'Saved to Open Food Facts' : 'Upload failed'),
+      };
+    } catch (err) {
+      console.error('Open Food Facts upload error:', err);
+      return {
+        success: false,
+        statusVerbose: err instanceof Error ? err.message : 'Network error',
+      };
     }
   }
 }

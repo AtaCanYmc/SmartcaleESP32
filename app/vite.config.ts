@@ -22,6 +22,14 @@ export default defineConfig({
           'User-Agent': 'SmartcaleESP32 - Web - Version 1.1.0 (https://github.com/AtaCanYmc/SmartcaleESP32)',
         },
       },
+      '/api/off-write': {
+        target: 'https://world.openfoodfacts.org',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/off-write/, '/cgi/product_jqm.pl'),
+        headers: {
+          'User-Agent': 'SmartcaleESP32 - Web - Version 1.1.0 (https://github.com/AtaCanYmc/SmartcaleESP32)',
+        },
+      },
     },
   },
 });

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { calculateNutrition, parseProductRaw, OpenFoodFactsService } from './foodService';
+import { calculateNutrition, parseProductRaw, OpenFoodFactsService, getOpenFoodFactsEditUrl } from './foodService';
 import type { FoodNutriments } from '../types/food';
 
 // 1. Check nutrition scaling calculation
@@ -81,5 +81,10 @@ assert.equal(decimalSample.nutriments.fat100g, 30.56);
 const service = new OpenFoodFactsService();
 assert.ok(typeof service.search === 'function');
 assert.ok(typeof service.getByBarcode === 'function');
+assert.ok(typeof service.uploadProduct === 'function');
+
+// 4. Open Food Facts contribution URL check
+const editUrl = getOpenFoodFactsEditUrl('8690504018086');
+assert.equal(editUrl, 'https://world.openfoodfacts.org/cgi/product.pl?type=edit&code=8690504018086');
 
 console.log('✓ All foodService tests passed!');

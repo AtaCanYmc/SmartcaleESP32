@@ -3,8 +3,6 @@ import {
   Bluetooth,
   BluetoothConnected,
   RotateCcw,
-  Play,
-  Pause,
   SlidersHorizontal,
   Wifi,
   X,
@@ -36,11 +34,12 @@ import {
   Sparkles,
   Download,
   FileSpreadsheet,
-  FileText
+  FileText,
+  UploadCloud
 } from 'lucide-react';
 import logoUrl from './assets/logo.jpg';
 import { scaleBle } from './services/bleService';
-import { foodService, calculateNutrition } from './services/foodService';
+import { foodService, calculateNutrition, getOpenFoodFactsEditUrl } from './services/foodService';
 import { mealService, getLocalDateString, downloadFile } from './services/mealService';
 import type { WeightUnit, ConnectionStatus } from './types/scale';
 import type { FoodProduct } from './types/food';
@@ -66,19 +65,16 @@ export const App: React.FC = () => {
   const [deviceName, setDeviceName] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Timer state (for coffee brewing / recipes)
-  const [timerSeconds, setTimerSeconds] = useState<number>(0);
-  const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false);
-
-  type AppTab = 'scale' | 'diary' | 'about';
+  type AppTab = 'scale' | 'food' | 'diary' | 'about';
   const [activeTab, setActiveTab] = useState<AppTab>('scale');
 
   // Modals
   const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false);
-  const [showFoodModal, setShowFoodModal] = useState<boolean>(false);
   const [showMealPicker, setShowMealPicker] = useState<boolean>(false);
   const [showManualAddModal, setShowManualAddModal] = useState<boolean>(false);
   const [showExportModal, setShowExportModal] = useState<boolean>(false);
+
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   // Manual Food Form State
   const [manualMealType, setManualMealType] = useState<MealType>('breakfast');
@@ -88,6 +84,10 @@ export const App: React.FC = () => {
   const [manualProteins, setManualProteins] = useState<string>('');
   const [manualCarbs, setManualCarbs] = useState<string>('');
   const [manualFat, setManualFat] = useState<string>('');
+  const [manualBarcode, setManualBarcode] = useState<string>('');
+  const [manualBrand, setManualBrand] = useState<string>('');
+  const [contributeToOff, setContributeToOff] = useState<boolean>(false);
+  const [isContributing, setIsContributing] = useState<boolean>(false);
 
   const [selectedDate, setSelectedDate] = useState<string>(getLocalDateString);
   const [, setDiaryRevision] = useState<number>(0);
@@ -100,7 +100,6 @@ export const App: React.FC = () => {
   const handleGoHome = () => {
     setActiveTab('scale');
     setShowSettingsModal(false);
-    setShowFoodModal(false);
     setShowMealPicker(false);
     setShowManualAddModal(false);
     setShowExportModal(false);
@@ -170,13 +169,16 @@ export const App: React.FC = () => {
             const rawVal = barcodes[0].rawValue;
             if (rawVal) {
               stopScanner();
+              setSearchQuery(rawVal);
               setIsSearching(true);
               const found = await foodService.getByBarcode(rawVal);
               setIsSearching(false);
               if (found) {
                 setActiveProduct(found);
-                setShowFoodModal(false);
+                setSearchResults([found]);
+                setSearchError(null);
               } else {
+                setSearchResults([]);
                 setSearchError(`${t.noProductsFound} (${rawVal})`);
               }
             }
@@ -251,11 +253,10 @@ export const App: React.FC = () => {
 
   // Close modals with Escape key
   useEffect(() => {
-    if (!showSettingsModal && !showFoodModal && !showMealPicker && !showManualAddModal && !showExportModal) return;
+    if (!showSettingsModal && !showMealPicker && !showManualAddModal && !showExportModal) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setShowSettingsModal(false);
-        setShowFoodModal(false);
         setShowMealPicker(false);
         setShowManualAddModal(false);
         setShowExportModal(false);
@@ -264,9 +265,9 @@ export const App: React.FC = () => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showSettingsModal, showFoodModal, showMealPicker, showManualAddModal, showExportModal]);
+  }, [showSettingsModal, showMealPicker, showManualAddModal, showExportModal]);
 
-  const handleManualAddSubmit = (e: React.FormEvent) => {
+  const handleManualAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const foodName = manualFoodName.trim();
     if (!foodName) return;
@@ -279,12 +280,45 @@ export const App: React.FC = () => {
       date: selectedDate,
       mealType: manualMealType,
       foodName,
+      brand: manualBrand.trim() || undefined,
       weightGrams: weight,
       calories: cals,
       proteins: parseFloat(manualProteins) || 0,
       carbs: parseFloat(manualCarbs) || 0,
       fat: parseFloat(manualFat) || 0,
     });
+
+    const barcodeToUpload = manualBarcode.trim();
+    const willContribute = contributeToOff && barcodeToUpload.length >= 8;
+
+    if (willContribute) {
+      setIsContributing(true);
+      try {
+        const factor = weight > 0 ? 100 / weight : 1;
+        const uploadResult = await foodService.uploadProduct({
+          code: barcodeToUpload,
+          name: foodName,
+          brand: manualBrand.trim() || undefined,
+          calories100g: Math.round(cals * factor * 100) / 100,
+          proteins100g: Math.round((parseFloat(manualProteins) || 0) * factor * 100) / 100,
+          carbs100g: Math.round((parseFloat(manualCarbs) || 0) * factor * 100) / 100,
+          fat100g: Math.round((parseFloat(manualFat) || 0) * factor * 100) / 100,
+        });
+
+        if (uploadResult.success) {
+          setLogSuccessToast(t.contributeSuccessToast);
+        } else {
+          setLogSuccessToast(`${t[manualMealType]}: ${added.foodName} (${added.weightGrams.toFixed(0)}g • ${added.calories.toFixed(2)} kcal)`);
+        }
+      } catch (err) {
+        console.error('OFF contribution error:', err);
+        setLogSuccessToast(`${t[manualMealType]}: ${added.foodName} (${added.weightGrams.toFixed(0)}g • ${added.calories.toFixed(2)} kcal)`);
+      } finally {
+        setIsContributing(false);
+      }
+    } else {
+      setLogSuccessToast(`${t[manualMealType]}: ${added.foodName} (${added.weightGrams.toFixed(0)}g • ${added.calories.toFixed(2)} kcal)`);
+    }
 
     setShowManualAddModal(false);
     setDiaryRevision((r) => r + 1);
@@ -293,9 +327,11 @@ export const App: React.FC = () => {
     setManualProteins('');
     setManualCarbs('');
     setManualFat('');
+    setManualBarcode('');
+    setManualBrand('');
+    setContributeToOff(false);
 
-    setLogSuccessToast(`${t[manualMealType]}: ${added.foodName} (${added.weightGrams.toFixed(0)}g • ${added.calories.toFixed(2)} kcal)`);
-    setTimeout(() => setLogSuccessToast(null), 2800);
+    setTimeout(() => setLogSuccessToast(null), 3200);
   };
 
   const handleExportJSON = () => {
@@ -376,16 +412,6 @@ export const App: React.FC = () => {
     };
   }, []);
 
-  useEffect(() => {
-    let interval: number | undefined;
-    if (isTimerRunning) {
-      interval = window.setInterval(() => {
-        setTimerSeconds((prev) => prev + 1);
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isTimerRunning]);
-
   // Connect BLE handler
   const handleConnect = async () => {
     try {
@@ -444,13 +470,6 @@ export const App: React.FC = () => {
       default:
         return g.toFixed(1);
     }
-  };
-
-  // Format timer MM:SS
-  const formatTimer = (totalSecs: number): string => {
-    const mins = Math.floor(totalSecs / 60);
-    const secs = totalSecs % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
   // Calibration calculation
@@ -618,37 +637,246 @@ export const App: React.FC = () => {
             </section>
           )}
 
-          <section className="feature-card" aria-label={t.timerAria}>
-            <div className="card-header">
-              <span>{t.timerTitle}</span>
-              <span>{isTimerRunning ? t.timerRunning : t.timerStopped}</span>
+          {!activeProduct && (
+            <div
+              className="settings-card"
+              onClick={() => setActiveTab('food')}
+              style={{ cursor: 'pointer', marginTop: '6px' }}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') setActiveTab('food');
+              }}
+            >
+              <div className="settings-card-left">
+                <div className="settings-card-icon" style={{ background: 'rgba(56, 189, 248, 0.15)', color: 'var(--accent-blue)' }}>
+                  <Search size={18} />
+                </div>
+                <div className="settings-card-info">
+                  <span className="settings-card-title">{t.foodNutritionTitle}</span>
+                  <span className="settings-card-sub">{t.foodSearchPlaceholder}</span>
+                </div>
+              </div>
+              <ChevronRight size={18} style={{ color: 'var(--text-muted)' }} />
+            </div>
+          )}
+        </>
+      ) : activeTab === 'food' ? (
+        <div className="food-screen">
+          <div className="food-screen-header">
+            <div className="food-title-area">
+              <h1 className="food-screen-title">{t.foodNutritionTitle}</h1>
+              <span className="food-screen-sub">{t.foodSearchPlaceholder}</span>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span className="timer-digits" aria-live="off">{formatTimer(timerSeconds)}</span>
+            <div className="food-header-actions">
+              <button
+                type="button"
+                className="btn btn-primary btn-header-action"
+                onClick={() => {
+                  setManualMealType('breakfast');
+                  setShowManualAddModal(true);
+                }}
+                title={t.manualAddBtn}
+                aria-label={t.manualAddBtn}
+              >
+                <Plus size={15} aria-hidden="true" />
+                <span>{t.manualAddBtn}</span>
+              </button>
+            </div>
+          </div>
 
-              <div className="timer-actions">
+          <form onSubmit={handleSearch} className="food-search-row">
+            <div className="search-input-wrapper">
+              <Search size={16} className="search-icon" aria-hidden="true" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t.foodSearchPlaceholder}
+                aria-label={t.foodSearchPlaceholder}
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="btn btn-primary"
+              style={{ padding: '10px 14px', flexShrink: 0 }}
+              disabled={isSearching}
+            >
+              {isSearching ? t.searchingProducts : t.searchBtn}
+            </button>
+
+            <button
+              type="button"
+              className={`icon-btn btn-scan-camera ${isScanning ? 'scanning' : ''}`}
+              onClick={isScanning ? stopScanner : startScanner}
+              aria-label={isScanning ? t.stopScannerBtn : t.scanBarcodeBtn}
+              title={isScanning ? t.stopScannerBtn : t.scanBarcodeBtn}
+            >
+              {isScanning ? <CameraOff size={18} /> : <ScanLine size={18} />}
+            </button>
+          </form>
+
+          {isScanning && (
+            <div className="scanner-container">
+              {scannerSupported ? (
+                <>
+                  <video ref={videoRef} className="scanner-video" playsInline muted autoPlay />
+                  <div className="scanner-overlay">
+                    <div className="scanner-guide-box">
+                      <div className="scanner-laser" />
+                    </div>
+                    <span className="scanner-prompt">{t.scannerHint}</span>
+                  </div>
+                </>
+              ) : (
+                <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
+                  <AlertCircle size={24} style={{ color: 'var(--accent-amber)', marginBottom: '8px' }} />
+                  <p>{t.scannerNotSupported}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {searchError && (
+            <div className="error-alert">
+              <AlertCircle size={16} aria-hidden="true" />
+              <span>{searchError}</span>
+            </div>
+          )}
+
+          {/* Unknown barcode / product not found contribute callout */}
+          {searchQuery.trim().length >= 8 && /^\d+$/.test(searchQuery.trim()) && searchResults.length === 0 && !isSearching && (
+            <div
+              style={{
+                marginTop: '12px',
+                padding: '16px',
+                borderRadius: '12px',
+                border: '1px solid var(--border-color)',
+                background: 'var(--bg-card)',
+                textAlign: 'center',
+              }}
+            >
+              <Globe size={26} style={{ color: 'var(--accent-blue)', margin: '0 auto 8px' }} />
+              <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>
+                {t.productNotFoundAdd}
+              </h3>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '14px', lineHeight: 1.4 }}>
+                {t.productNotFoundDesc}
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: '340px', margin: '0 auto' }}>
                 <button
-                  className="icon-btn"
-                  onClick={() => setIsTimerRunning(!isTimerRunning)}
-                  aria-label={isTimerRunning ? t.timerStop : t.timerStart}
-                >
-                  {isTimerRunning ? <Pause size={18} /> : <Play size={18} />}
-                </button>
-                <button
-                  className="icon-btn"
+                  type="button"
+                  className="btn btn-primary"
                   onClick={() => {
-                    setIsTimerRunning(false);
-                    setTimerSeconds(0);
+                    setManualBarcode(searchQuery.trim());
+                    setContributeToOff(true);
+                    setManualMealType('breakfast');
+                    setShowManualAddModal(true);
                   }}
-                  aria-label={t.timerReset}
                 >
-                  <RotateCcw size={18} />
+                  <Plus size={15} />
+                  <span>{t.productNotFoundAdd} ({searchQuery.trim()})</span>
                 </button>
+                <a
+                  href={getOpenFoodFactsEditUrl(searchQuery.trim())}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn btn-secondary"
+                  style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                >
+                  <UploadCloud size={15} />
+                  <span>{t.openInOffWeb}</span>
+                  <ExternalLink size={13} />
+                </a>
               </div>
             </div>
-          </section>
-        </>
+          )}
+
+          {searchResults.length > 0 ? (
+            <div className="products-results-list" style={{ maxHeight: 'none', overflowY: 'visible' }}>
+              {searchResults.map((product) => (
+                <div key={product.code} className="product-result-card">
+                  <div className="product-result-header">
+                    {product.imageUrl ? (
+                      <img src={product.imageUrl} alt="" className="nutrition-thumb" />
+                    ) : (
+                      <div className="nutrition-thumb-fallback">
+                        <Utensils size={20} />
+                      </div>
+                    )}
+                    <div className="product-result-info">
+                      <div className="product-result-name">{product.name}</div>
+                      <div className="product-result-sub">{product.brands || product.code}</div>
+                      <div className="product-result-macros">
+                        <span className="macro-chip protein">{t.proteinLabel}: {product.nutriments.proteins100g.toFixed(2)}g</span>
+                        <span className="macro-chip carbs">{t.carbsLabel}: {product.nutriments.carbs100g.toFixed(2)}g</span>
+                        <span className="macro-chip fat">{t.fatLabel}: {product.nutriments.fat100g.toFixed(2)}g</span>
+                      </div>
+                    </div>
+                    <div className="product-result-badge">
+                      {product.nutriments.calories100g.toFixed(2)} kcal
+                    </div>
+                  </div>
+
+                  <div className="product-card-actions">
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-product-action"
+                      onClick={() => {
+                        setActiveProduct(product);
+                        stopScanner();
+                        setActiveTab('scale');
+                      }}
+                    >
+                      <RotateCcw size={14} />
+                      <span>{t.weighOnScale}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-product-action"
+                      onClick={() => {
+                        setActiveProduct(product);
+                        stopScanner();
+                        setShowMealPicker(true);
+                      }}
+                    >
+                      <Plus size={14} />
+                      <span>{t.logMeal}</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            !isSearching && (
+              <div className="food-empty-card">
+                <Search size={36} style={{ margin: '0 auto 10px', opacity: 0.35, color: 'var(--accent-blue)' }} />
+                <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>
+                  {t.foodNutritionTitle}
+                </p>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)', maxWidth: '300px', margin: '0 auto 16px', lineHeight: 1.4 }}>
+                  {t.foodScreenHint}
+                </p>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  style={{ margin: '0 auto', minHeight: '40px', padding: '8px 16px', fontSize: '13px' }}
+                  onClick={() => {
+                    setManualMealType('breakfast');
+                    setShowManualAddModal(true);
+                  }}
+                >
+                  <Plus size={15} />
+                  <span>{t.manualAddBtn}</span>
+                </button>
+              </div>
+            )
+          )}
+        </div>
       ) : activeTab === 'diary' ? (
         <div className="diary-screen">
           <div className="diary-screen-header">
@@ -876,7 +1104,6 @@ export const App: React.FC = () => {
                 <div className="about-dev-avatar">AC</div>
                 <div className="about-dev-info">
                   <span className="about-dev-name">Ata Can Yaymacı</span>
-                  <span className="about-dev-sub">Embedded & Mobile Systems Developer</span>
                 </div>
               </div>
 
@@ -888,6 +1115,47 @@ export const App: React.FC = () => {
               >
                 <Code size={15} />
                 <span>github.com/AtaCanYmc/SmartcaleESP32</span>
+                <ExternalLink size={13} />
+              </a>
+            </div>
+          </div>
+
+          {/* Open Food Facts API & Database Card */}
+          <div className="about-section">
+            <span className="settings-group-title">
+              <Globe size={14} aria-hidden="true" />
+              {t.aboutApiTitle}
+            </span>
+
+            <div className="about-card">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-main)' }}>
+                  Open Food Facts REST API v2
+                </span>
+                <span style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                  {t.aboutApiDesc}
+                </span>
+                <div className="about-badges-row" style={{ justifyContent: 'flex-start', marginTop: '2px' }}>
+                  <span className="about-badge version">JSON REST API</span>
+                  <span className="about-badge license">ODbL / DbCL</span>
+                  <span className="about-badge tag">3M+ Products</span>
+                </div>
+                <div style={{ marginTop: '8px', padding: '8px 10px', background: 'var(--bg-hover)', borderRadius: '6px', fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                  <strong style={{ color: 'var(--text-main)', display: 'block', marginBottom: '2px' }}>
+                    {t.offCommunityContribution}
+                  </strong>
+                  {t.offCommunityDesc}
+                </div>
+              </div>
+
+              <a
+                href="https://world.openfoodfacts.org"
+                target="_blank"
+                rel="noreferrer"
+                className="btn btn-secondary about-github-btn"
+              >
+                <Globe size={15} />
+                <span>world.openfoodfacts.org</span>
                 <ExternalLink size={13} />
               </a>
             </div>
@@ -1268,133 +1536,6 @@ export const App: React.FC = () => {
         </div>
       )}
 
-      {showFoodModal && (
-        <div
-          className="modal-overlay"
-          onClick={() => {
-            setShowFoodModal(false);
-            stopScanner();
-          }}
-        >
-          <div
-            className="modal-content"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="food-modal-title"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 id="food-modal-title" className="modal-title">{t.foodNutritionTitle}</h2>
-              <button
-                className="icon-btn"
-                onClick={() => {
-                  setShowFoodModal(false);
-                  stopScanner();
-                }}
-                aria-label={t.calClose}
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSearch} className="food-search-row">
-              <div className="search-input-wrapper">
-                <Search size={16} className="search-icon" aria-hidden="true" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={t.foodSearchPlaceholder}
-                  aria-label={t.foodSearchPlaceholder}
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="btn btn-primary"
-                style={{ padding: '10px 14px', flexShrink: 0 }}
-                disabled={isSearching}
-              >
-                {isSearching ? t.searchingProducts : t.searchBtn}
-              </button>
-
-              <button
-                type="button"
-                className={`icon-btn btn-scan-camera ${isScanning ? 'scanning' : ''}`}
-                onClick={isScanning ? stopScanner : startScanner}
-                aria-label={isScanning ? t.stopScannerBtn : t.scanBarcodeBtn}
-                title={isScanning ? t.stopScannerBtn : t.scanBarcodeBtn}
-              >
-                {isScanning ? <CameraOff size={18} /> : <ScanLine size={18} />}
-              </button>
-            </form>
-
-            {isScanning && (
-              <div className="scanner-container">
-                {scannerSupported ? (
-                  <>
-                    <video ref={videoRef} className="scanner-video" playsInline muted autoPlay />
-                    <div className="scanner-overlay">
-                      <div className="scanner-guide-box">
-                        <div className="scanner-laser" />
-                      </div>
-                      <span className="scanner-prompt">{t.scannerHint}</span>
-                    </div>
-                  </>
-                ) : (
-                  <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
-                    <AlertCircle size={24} style={{ color: 'var(--accent-amber)', marginBottom: '8px' }} />
-                    <p>{t.scannerNotSupported}</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {searchError && (
-              <div className="error-alert">
-                <AlertCircle size={16} aria-hidden="true" />
-                <span>{searchError}</span>
-              </div>
-            )}
-
-            <div className="products-results-list">
-              {searchResults.map((product) => (
-                <button
-                  key={product.code}
-                  type="button"
-                  className="product-result-item"
-                  onClick={() => {
-                    setActiveProduct(product);
-                    setShowFoodModal(false);
-                    stopScanner();
-                  }}
-                >
-                  {product.imageUrl ? (
-                    <img src={product.imageUrl} alt="" className="nutrition-thumb" />
-                  ) : (
-                    <div className="nutrition-thumb-fallback">
-                      <Utensils size={20} />
-                    </div>
-                  )}
-                  <div className="product-result-info">
-                    <div className="product-result-name">{product.name}</div>
-                    <div className="product-result-sub">{product.brands || product.code}</div>
-                    <div className="product-result-macros">
-                      <span className="macro-chip protein">{t.proteinLabel}: {product.nutriments.proteins100g.toFixed(2)}g</span>
-                      <span className="macro-chip carbs">{t.carbsLabel}: {product.nutriments.carbs100g.toFixed(2)}g</span>
-                      <span className="macro-chip fat">{t.fatLabel}: {product.nutriments.fat100g.toFixed(2)}g</span>
-                    </div>
-                  </div>
-                  <div className="product-result-badge">
-                    {product.nutriments.calories100g.toFixed(2)} kcal
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Quick Meal Picker Modal */}
       {showMealPicker && activeProduct && (
         <div
@@ -1497,6 +1638,37 @@ export const App: React.FC = () => {
                 />
               </div>
 
+              {/* Optional Barcode & Brand */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div>
+                  <label htmlFor="manual-barcode" className="input-label">{t.barcodeLabel}</label>
+                  <input
+                    id="manual-barcode"
+                    type="text"
+                    className="input-field"
+                    placeholder="8690504..."
+                    value={manualBarcode}
+                    onChange={(e) => {
+                      setManualBarcode(e.target.value);
+                      if (e.target.value.trim().length >= 8) {
+                        setContributeToOff(true);
+                      }
+                    }}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="manual-brand" className="input-label">{t.brandLabel}</label>
+                  <input
+                    id="manual-brand"
+                    type="text"
+                    className="input-field"
+                    placeholder="Nestle, Pinar..."
+                    value={manualBrand}
+                    onChange={(e) => setManualBrand(e.target.value)}
+                  />
+                </div>
+              </div>
+
               {/* Calories & Weight */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div>
@@ -1566,12 +1738,30 @@ export const App: React.FC = () => {
                 </div>
               </div>
 
+              {/* Open Food Facts Contribution Toggle */}
+              {manualBarcode.trim().length >= 8 && (
+                <div style={{ padding: '10px 12px', background: 'var(--bg-hover)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                  <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer', fontSize: '12px', color: 'var(--text-main)' }}>
+                    <input
+                      type="checkbox"
+                      checked={contributeToOff}
+                      onChange={(e) => setContributeToOff(e.target.checked)}
+                      style={{ marginTop: '2px', accentColor: 'var(--accent-blue)', cursor: 'pointer', width: '15px', height: '15px' }}
+                    />
+                    <span style={{ lineHeight: 1.4, flex: 1 }}>
+                      <strong>Open Food Facts:</strong> {t.contributeToOffCheckbox}
+                    </span>
+                  </label>
+                </div>
+              )}
+
               <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
                 <button
                   type="button"
                   className="btn btn-secondary"
                   style={{ flex: 1 }}
                   onClick={() => setShowManualAddModal(false)}
+                  disabled={isContributing}
                 >
                   {t.cancelBtn}
                 </button>
@@ -1579,8 +1769,9 @@ export const App: React.FC = () => {
                   type="submit"
                   className="btn btn-primary"
                   style={{ flex: 1 }}
+                  disabled={isContributing}
                 >
-                  {t.saveBtn}
+                  {isContributing ? t.uploadingToOff : t.saveBtn}
                 </button>
               </div>
             </form>
@@ -1670,7 +1861,7 @@ export const App: React.FC = () => {
       <nav className="bottom-nav" aria-label="Bottom Navigation">
         <button
           type="button"
-          className={`bottom-nav-item ${activeTab === 'scale' && !showFoodModal && !showSettingsModal ? 'active' : ''}`}
+          className={`bottom-nav-item ${activeTab === 'scale' && !showSettingsModal ? 'active' : ''}`}
           onClick={handleGoHome}
           aria-label={t.navHome}
         >
@@ -1680,9 +1871,9 @@ export const App: React.FC = () => {
 
         <button
           type="button"
-          className={`bottom-nav-item ${showFoodModal ? 'active' : ''}`}
+          className={`bottom-nav-item ${activeTab === 'food' && !showSettingsModal ? 'active' : ''}`}
           onClick={() => {
-            setShowFoodModal(true);
+            setActiveTab('food');
             setShowSettingsModal(false);
           }}
           aria-label={t.foodSearchOrScan}
@@ -1693,10 +1884,9 @@ export const App: React.FC = () => {
 
         <button
           type="button"
-          className={`bottom-nav-item ${activeTab === 'diary' && !showFoodModal && !showSettingsModal ? 'active' : ''}`}
+          className={`bottom-nav-item ${activeTab === 'diary' && !showSettingsModal ? 'active' : ''}`}
           onClick={() => {
             setActiveTab('diary');
-            setShowFoodModal(false);
             setShowSettingsModal(false);
           }}
           aria-label={t.mealTitle}
@@ -1710,7 +1900,6 @@ export const App: React.FC = () => {
           className={`bottom-nav-item ${showSettingsModal ? 'active' : ''}`}
           onClick={() => {
             setShowSettingsModal(true);
-            setShowFoodModal(false);
           }}
           aria-label={t.settingsBtnAria}
         >
@@ -1719,20 +1908,6 @@ export const App: React.FC = () => {
             <span className={`nav-dot ${connectionStatus}`} />
           </div>
           <span>{t.navSettings}</span>
-        </button>
-
-        <button
-          type="button"
-          className={`bottom-nav-item ${activeTab === 'about' && !showFoodModal && !showSettingsModal ? 'active' : ''}`}
-          onClick={() => {
-            setActiveTab('about');
-            setShowFoodModal(false);
-            setShowSettingsModal(false);
-          }}
-          aria-label={t.aboutTitle}
-        >
-          <Info size={20} aria-hidden="true" />
-          <span>{t.aboutTitle}</span>
         </button>
       </nav>
     </div>
