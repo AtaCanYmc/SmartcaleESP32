@@ -57,11 +57,11 @@ export function parseProductRaw(raw: OpenFoodFactsProductRaw): FoodProduct | nul
   const n = raw.nutriments || {};
   const rawCalories = parseNum(n['energy-kcal_100g'] ?? n['energy-kcal'] ?? n['energy-kcal_value']);
   const calories = Math.round(rawCalories * 100) / 100;
-  const proteins = parseNum(n.proteins_100g ?? n.proteins);
-  const carbs = parseNum(n.carbohydrates_100g ?? n.carbohydrates);
-  const fat = parseNum(n.fat_100g ?? n.fat);
-  const sugars = n.sugars_100g !== undefined ? parseNum(n.sugars_100g) : undefined;
-  const salt = n.salt_100g !== undefined ? parseNum(n.salt_100g) : undefined;
+  const proteins = Math.round(parseNum(n.proteins_100g ?? n.proteins) * 100) / 100;
+  const carbs = Math.round(parseNum(n.carbohydrates_100g ?? n.carbohydrates) * 100) / 100;
+  const fat = Math.round(parseNum(n.fat_100g ?? n.fat) * 100) / 100;
+  const sugars = n.sugars_100g !== undefined ? Math.round(parseNum(n.sugars_100g) * 100) / 100 : undefined;
+  const salt = n.salt_100g !== undefined ? Math.round(parseNum(n.salt_100g) * 100) / 100 : undefined;
 
   const nutriments: FoodNutriments = {
     calories100g: calories,
@@ -176,11 +176,11 @@ export function calculateNutrition(nutriments: FoodNutriments, weightGrams: numb
   return {
     weightGrams: Math.max(0, weightGrams),
     calories: Math.round(nutriments.calories100g * factor * 100) / 100,
-    proteins: Math.round(nutriments.proteins100g * factor * 10) / 10,
-    carbs: Math.round(nutriments.carbs100g * factor * 10) / 10,
-    fat: Math.round(nutriments.fat100g * factor * 10) / 10,
+    proteins: Math.round(nutriments.proteins100g * factor * 100) / 100,
+    carbs: Math.round(nutriments.carbs100g * factor * 100) / 100,
+    fat: Math.round(nutriments.fat100g * factor * 100) / 100,
     sugars: nutriments.sugars100g !== undefined
-      ? Math.round(nutriments.sugars100g * factor * 10) / 10
+      ? Math.round(nutriments.sugars100g * factor * 100) / 100
       : undefined,
     salt: nutriments.salt100g !== undefined
       ? Math.round(nutriments.salt100g * factor * 100) / 100

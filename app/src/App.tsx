@@ -436,15 +436,15 @@ export const App: React.FC = () => {
               <span className="macro-label">kcal</span>
             </div>
             <div className="macro-box">
-              <span className="macro-value">{liveNutrition.proteins}g</span>
+              <span className="macro-value">{liveNutrition.proteins.toFixed(2)}g</span>
               <span className="macro-label">{t.proteinLabel}</span>
             </div>
             <div className="macro-box">
-              <span className="macro-value">{liveNutrition.carbs}g</span>
+              <span className="macro-value">{liveNutrition.carbs.toFixed(2)}g</span>
               <span className="macro-label">{t.carbsLabel}</span>
             </div>
             <div className="macro-box">
-              <span className="macro-value">{liveNutrition.fat}g</span>
+              <span className="macro-value">{liveNutrition.fat.toFixed(2)}g</span>
               <span className="macro-label">{t.fatLabel}</span>
             </div>
           </div>
@@ -724,17 +724,10 @@ export const App: React.FC = () => {
 
               <button
                 type="button"
-                className="icon-btn"
+                className={`icon-btn btn-scan-camera ${isScanning ? 'scanning' : ''}`}
                 onClick={isScanning ? stopScanner : startScanner}
                 aria-label={isScanning ? t.stopScannerBtn : t.scanBarcodeBtn}
                 title={isScanning ? t.stopScannerBtn : t.scanBarcodeBtn}
-                style={{
-                  background: isScanning ? 'var(--accent-red)' : 'var(--bg-tertiary)',
-                  color: '#fff',
-                  minWidth: '42px',
-                  minHeight: '42px',
-                  flexShrink: 0
-                }}
               >
                 {isScanning ? <CameraOff size={18} /> : <ScanLine size={18} />}
               </button>
@@ -790,6 +783,11 @@ export const App: React.FC = () => {
                   <div className="product-result-info">
                     <div className="product-result-name">{product.name}</div>
                     <div className="product-result-sub">{product.brands || product.code}</div>
+                    <div className="product-result-macros">
+                      <span className="macro-chip protein">{t.proteinLabel}: {product.nutriments.proteins100g.toFixed(2)}g</span>
+                      <span className="macro-chip carbs">{t.carbsLabel}: {product.nutriments.carbs100g.toFixed(2)}g</span>
+                      <span className="macro-chip fat">{t.fatLabel}: {product.nutriments.fat100g.toFixed(2)}g</span>
+                    </div>
                   </div>
                   <div className="product-result-badge">
                     {product.nutriments.calories100g.toFixed(2)} kcal

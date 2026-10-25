@@ -315,6 +315,16 @@ a:focus-visible {
   background: linear-gradient(135deg, #0284c7, #38bdf8);
 }
 
+[data-theme="light"] .btn-primary {
+  background: linear-gradient(135deg, #0369a1, #0284c7);
+  color: #ffffff;
+}
+
+[data-theme="light"] .btn-tare-huge {
+  background: linear-gradient(135deg, #0369a1, #0284c7);
+  color: #ffffff;
+}
+
 .feature-card {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
@@ -647,6 +657,11 @@ a:focus-visible {
   flex-shrink: 0;
 }
 
+[data-theme="light"] .nutrition-thumb-fallback {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
 .nutrition-title-area {
   flex: 1;
   min-width: 0;
@@ -715,6 +730,32 @@ a:focus-visible {
   display: flex;
   gap: 8px;
   align-items: center;
+}
+
+.btn-scan-camera {
+  min-width: 42px;
+  min-height: 42px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-tertiary);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.btn-scan-camera:hover {
+  background: var(--bg-hover);
+  color: var(--accent-blue);
+}
+
+.btn-scan-camera.scanning {
+  background: var(--accent-red);
+  color: #ffffff;
+  border-color: var(--accent-red);
 }
 
 .search-input-wrapper {
@@ -855,6 +896,53 @@ a:focus-visible {
 .product-result-sub {
   font-size: 11px;
   color: var(--text-muted);
+}
+
+.product-result-macros {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 3px;
+  flex-wrap: wrap;
+}
+
+.macro-chip {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+}
+
+.macro-chip.protein {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+}
+
+.macro-chip.carbs {
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.12);
+}
+
+.macro-chip.fat {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.12);
+}
+
+[data-theme="light"] .macro-chip.protein {
+  color: #0284c7;
+  background: rgba(2, 132, 199, 0.12);
+}
+
+[data-theme="light"] .macro-chip.carbs {
+  color: #16a34a;
+  background: rgba(22, 163, 74, 0.12);
+}
+
+[data-theme="light"] .macro-chip.fat {
+  color: #d97706;
+  background: rgba(217, 119, 6, 0.12);
 }
 
 .product-result-badge {

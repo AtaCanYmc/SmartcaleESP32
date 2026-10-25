@@ -59,17 +59,23 @@ assert.equal(parsed.nutriments.fat100g, 7.69);
 assert.equal(parseProductRaw({ code: '' }), null);
 assert.equal(parseProductRaw({ product_name: 'Empty' }), null);
 
-// Check 2 decimal places precision on calories
+// Check 2 decimal places precision on calories and macros
 const decimalSample = parseProductRaw({
   code: '123',
   product_name: 'Decimal Item',
   nutriments: {
     'energy-kcal_100g': 530.55555,
+    proteins_100g: 6.111111,
+    carbohydrates_100g: 55.55555,
+    fat_100g: 30.55555,
   },
 });
 assert.ok(decimalSample);
 if (!decimalSample) throw new Error('Expected decimalSample to be defined');
 assert.equal(decimalSample.nutriments.calories100g, 530.56);
+assert.equal(decimalSample.nutriments.proteins100g, 6.11);
+assert.equal(decimalSample.nutriments.carbs100g, 55.56);
+assert.equal(decimalSample.nutriments.fat100g, 30.56);
 
 // 3. Service instance check
 const service = new OpenFoodFactsService();
