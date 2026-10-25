@@ -1,3 +1,4 @@
+import { Capacitor, CapacitorHttp } from '@capacitor/core';
 import type { FoodProduct, FoodNutriments, ScaledNutrition } from '../types/food';
 
 export interface IFoodService {
@@ -21,11 +22,12 @@ interface OpenFoodFactsNutrimentsRaw {
   salt_100g?: number | string;
 }
 
-interface OpenFoodFactsProductRaw {
+export interface OpenFoodFactsProductRaw {
   code?: string;
   product_name?: string;
-  brands?: string;
+  brands?: string | string[];
   image_url?: string;
+  image_front_url?: string;
   nutriments?: OpenFoodFactsNutrimentsRaw;
 }
 
@@ -42,6 +44,15 @@ export function parseProductRaw(raw: OpenFoodFactsProductRaw): FoodProduct | nul
   const code = raw.code?.trim();
   const name = raw.product_name?.trim();
   if (!code || !name) return null;
+
+  let brands: string | undefined;
+  if (Array.isArray(raw.brands)) {
+    brands = raw.brands.filter(Boolean).join(', ').trim() || undefined;
+  } else if (typeof raw.brands === 'string') {
+    brands = raw.brands.trim() || undefined;
+  }
+
+  const imageUrl = raw.image_url || raw.image_front_url;
 
   const n = raw.nutriments || {};
   const calories = parseNum(n['energy-kcal_100g'] ?? n['energy-kcal'] ?? n['energy-kcal_value']);
@@ -63,38 +74,73 @@ export function parseProductRaw(raw: OpenFoodFactsProductRaw): FoodProduct | nul
   return {
     code,
     name,
-    brands: raw.brands?.trim() || undefined,
-    imageUrl: raw.image_url || undefined,
+    brands,
+    imageUrl: imageUrl || undefined,
     nutriments,
   };
 }
 
-export class OpenFoodFactsService implements IFoodService {
-  private readonly baseUrl = 'https://world.openfoodfacts.org';
+interface JsonApiResponse {
+  status?: number;
+  product?: OpenFoodFactsProductRaw;
+  hits?: OpenFoodFactsProductRaw[];
+  products?: OpenFoodFactsProductRaw[];
+}
 
+async function fetchJson(targetUrl: string, proxyPath?: string): Promise<JsonApiResponse> {
+  // 1. Native mobile (Capacitor Android / iOS) bypasses browser CORS entirely
+  if (Capacitor.isNativePlatform()) {
+    const res = await CapacitorHttp.get({
+      url: targetUrl,
+      headers: {
+        'User-Agent': USER_AGENT,
+      },
+    });
+    return res.data;
+  }
+
+  // 2. Local browser development via Vite proxy to prevent CORS & preflight
+  const isDev = typeof import.meta !== 'undefined' && Boolean(import.meta.env?.DEV);
+  const urlToFetch = isDev && proxyPath ? proxyPath : targetUrl;
+
+  // Never pass custom User-Agent in browser fetch (forbidden header in W3C spec)
+  const isBrowser = typeof window !== 'undefined';
+  const headers: Record<string, string> = {
+    Accept: 'application/json',
+  };
+  if (!isBrowser) {
+    headers['User-Agent'] = USER_AGENT;
+  }
+
+  const res = await fetch(urlToFetch, { headers });
+  if (!res.ok) {
+    throw new Error(`Open Food Facts API error: ${res.status}`);
+  }
+  return res.json();
+}
+
+export class OpenFoodFactsService implements IFoodService {
   async search(query: string, limit = 10): Promise<FoodProduct[]> {
     const trimmed = query.trim();
     if (!trimmed) return [];
 
-    const url = `${this.baseUrl}/cgi/search.pl?search_terms=${encodeURIComponent(
-      trimmed
-    )}&search_simple=1&action=process&json=1&page_size=${limit}&fields=code,product_name,brands,nutriments,image_url`;
-
-    const res = await fetch(url, {
-      headers: {
-        'User-Agent': USER_AGENT,
-        Accept: 'application/json',
-      },
+    const params = new URLSearchParams({
+      q: trimmed,
+      page_size: String(limit),
+      fields: 'code,product_name,brands,nutriments,image_url',
     });
 
-    if (!res.ok) {
-      throw new Error(`Open Food Facts search error: ${res.status}`);
-    }
+    const targetUrl = `https://search.openfoodfacts.org/search?${params.toString()}`;
+    const proxyPath = `/api/off-search?${params.toString()}`;
 
-    const data = await res.json();
-    const products: OpenFoodFactsProductRaw[] = Array.isArray(data.products) ? data.products : [];
+    const data = await fetchJson(targetUrl, proxyPath);
+    const items: OpenFoodFactsProductRaw[] = Array.isArray(data?.hits)
+      ? data.hits
+      : Array.isArray(data?.products)
+      ? data.products
+      : [];
 
-    return products
+    return items
       .map(parseProductRaw)
       .filter((p): p is FoodProduct => p !== null);
   }
@@ -103,28 +149,24 @@ export class OpenFoodFactsService implements IFoodService {
     const trimmed = barcode.trim();
     if (!trimmed) return null;
 
-    const url = `${this.baseUrl}/api/v2/product/${encodeURIComponent(
+    const fields = 'code,product_name,brands,nutriments,image_url';
+    const targetUrl = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(
       trimmed
-    )}.json?fields=code,product_name,brands,nutriments,image_url`;
+    )}.json?fields=${fields}`;
+    const proxyPath = `/api/off-product/${encodeURIComponent(trimmed)}.json?fields=${fields}`;
 
-    const res = await fetch(url, {
-      headers: {
-        'User-Agent': USER_AGENT,
-        Accept: 'application/json',
-      },
-    });
-
-    if (res.status === 404) return null;
-    if (!res.ok) {
-      throw new Error(`Open Food Facts barcode lookup error: ${res.status}`);
+    try {
+      const data = await fetchJson(targetUrl, proxyPath);
+      if (!data || data.status !== 1 || !data.product) {
+        return null;
+      }
+      return parseProductRaw(data.product);
+    } catch (err) {
+      if (err instanceof Error && err.message.includes('404')) {
+        return null;
+      }
+      throw err;
     }
-
-    const data = await res.json();
-    if (!data || data.status !== 1 || !data.product) {
-      return null;
-    }
-
-    return parseProductRaw(data.product);
   }
 }
 
@@ -145,5 +187,4 @@ export function calculateNutrition(nutriments: FoodNutriments, weightGrams: numb
   };
 }
 
-// Singleton instance providing the application-wide service
 export const foodService: IFoodService = new OpenFoodFactsService();
