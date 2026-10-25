@@ -1,4 +1,4 @@
-import type { MealEntry, DayNutritionSummary } from '../types/meal';
+import type { MealEntry, DayNutritionSummary, MealType } from '../types/meal';
 
 const STORAGE_KEY = 'smartcale_meal_entries';
 
@@ -139,4 +139,50 @@ export function downloadFile(content: string, filename: string, mimeType: string
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+export function generateAiPrompt(
+  date: string,
+  entries: MealEntry[],
+  mealLabels: Record<MealType, string> = {
+    breakfast: 'Kahvaltı',
+    lunch: 'Öğle Yemeği',
+    dinner: 'Akşam Yemeği',
+    snack: 'Ara Öğün',
+  }
+): string {
+  const summary = mealService.calculateDaySummary(entries);
+  const lines: string[] = [];
+
+  lines.push(`🤖 Smartcale ESP32 - Günlük Beslenme Raporu (${date})`);
+  lines.push('');
+  lines.push('📊 Günlük Toplam Değerler:');
+  lines.push(`• Kalori: ${summary.calories.toFixed(1)} kcal`);
+  lines.push(`• Protein: ${summary.proteins.toFixed(1)}g`);
+  lines.push(`• Karbonhidrat: ${summary.carbs.toFixed(1)}g`);
+  lines.push(`• Yağ: ${summary.fat.toFixed(1)}g`);
+  lines.push('');
+  lines.push('🍽️ Tüketilen Öğünler:');
+
+  const mealTypes: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack'];
+  for (const mType of mealTypes) {
+    const group = entries.filter((e) => e.mealType === mType);
+    if (group.length > 0) {
+      const groupSummary = mealService.calculateDaySummary(group);
+      lines.push(`[${mealLabels[mType]}] - Toplam: ${groupSummary.calories.toFixed(1)} kcal (P: ${groupSummary.proteins.toFixed(1)}g, K: ${groupSummary.carbs.toFixed(1)}g, Y: ${groupSummary.fat.toFixed(1)}g)`);
+      for (const item of group) {
+        const brandStr = item.brand ? ` (${item.brand})` : '';
+        lines.push(`  - ${item.foodName}${brandStr}: ${item.weightGrams.toFixed(0)}g • ${item.calories.toFixed(1)} kcal (Protein: ${item.proteins.toFixed(1)}g, Karb: ${item.carbs.toFixed(1)}g, Yağ: ${item.fat.toFixed(1)}g)`);
+      }
+    }
+  }
+
+  lines.push('');
+  lines.push('💬 AI Beslenme Analizi ve Yorumu Talebi:');
+  lines.push('Lütfen bu günlük beslenme günlüğümü bir uzman diyetisyen/beslenme koçu perspektifiyle analiz et:');
+  lines.push('1. Kalori ve makro dağılımımı (Protein / Karbonhidrat / Yağ dengesi) değerlendir.');
+  lines.push('2. Öğün zamanlaması ve besin çeşitliliği açısından güçlü ve zayıf yönleri belirt.');
+  lines.push('3. Sağlıklı beslenme ve performans hedefleri için somut önerilerde bulun.');
+
+  return lines.join('\n');
 }

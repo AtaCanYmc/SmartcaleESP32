@@ -35,16 +35,19 @@ import {
   Download,
   FileSpreadsheet,
   FileText,
-  UploadCloud
+  UploadCloud,
+  Share2
 } from 'lucide-react';
 import logoUrl from './assets/logo.jpg';
 import { scaleBle } from './services/bleService';
 import { foodService, calculateNutrition, getOpenFoodFactsEditUrl } from './services/foodService';
-import { mealService, getLocalDateString, downloadFile } from './services/mealService';
+import { mealService, getLocalDateString, downloadFile, generateAiPrompt } from './services/mealService';
 import type { WeightUnit, ConnectionStatus } from './types/scale';
 import type { FoodProduct } from './types/food';
 import type { MealType } from './types/meal';
 import { translations, getInitialLanguage, LANGUAGES, type Language } from './i18n';
+import { WEEKDAY_NAMES_BY_LANG, getCalendarGrid } from './utils/calendar';
+import { formatWeight, computeCalFactor, calculateSparklinePoints } from './utils/scaleMath';
 
 type ThemeMode = 'dark' | 'light' | 'system';
 
@@ -53,80 +56,6 @@ const getInitialTheme = (): ThemeMode => {
   if (saved === 'dark' || saved === 'light' || saved === 'system') return saved;
   return 'system';
 };
-
-const WEEKDAY_NAMES_BY_LANG: Record<Language, string[]> = {
-  tr: ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'],
-  en: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-  de: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
-  fr: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
-  es: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
-};
-
-interface CalendarDay {
-  dateStr: string;
-  dayNumber: number;
-  isCurrentMonth: boolean;
-  isToday: boolean;
-  isSelected: boolean;
-  hasLogs: boolean;
-}
-
-function getCalendarGrid(viewDate: Date, selectedDateStr: string, loggedDatesSet: Set<string>): CalendarDay[] {
-  const year = viewDate.getFullYear();
-  const month = viewDate.getMonth();
-  const todayStr = getLocalDateString();
-
-  const firstDay = new Date(year, month, 1);
-  const startDayOffset = (firstDay.getDay() + 6) % 7; // Monday = 0
-
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const prevMonthDays = new Date(year, month, 0).getDate();
-
-  const days: CalendarDay[] = [];
-
-  for (let i = startDayOffset - 1; i >= 0; i--) {
-    const d = prevMonthDays - i;
-    const prevDate = new Date(year, month - 1, d);
-    const dateStr = getLocalDateString(prevDate);
-    days.push({
-      dateStr,
-      dayNumber: d,
-      isCurrentMonth: false,
-      isToday: dateStr === todayStr,
-      isSelected: dateStr === selectedDateStr,
-      hasLogs: loggedDatesSet.has(dateStr),
-    });
-  }
-
-  for (let d = 1; d <= daysInMonth; d++) {
-    const curDate = new Date(year, month, d);
-    const dateStr = getLocalDateString(curDate);
-    days.push({
-      dateStr,
-      dayNumber: d,
-      isCurrentMonth: true,
-      isToday: dateStr === todayStr,
-      isSelected: dateStr === selectedDateStr,
-      hasLogs: loggedDatesSet.has(dateStr),
-    });
-  }
-
-  const remaining = (7 - (days.length % 7)) % 7;
-  for (let d = 1; d <= remaining; d++) {
-    const nextDate = new Date(year, month + 1, d);
-    const dateStr = getLocalDateString(nextDate);
-    days.push({
-      dateStr,
-      dayNumber: d,
-      isCurrentMonth: false,
-      isToday: dateStr === todayStr,
-      isSelected: dateStr === selectedDateStr,
-      hasLogs: loggedDatesSet.has(dateStr),
-    });
-  }
-
-  return days;
-}
 
 export const App: React.FC = () => {
   const [lang, setLang] = useState<Language>(getInitialLanguage);
@@ -460,6 +389,45 @@ export const App: React.FC = () => {
     setShowExportModal(false);
   };
 
+  const handleShareAi = async () => {
+    if (mealEntries.length === 0) {
+      setLogSuccessToast(t.noEntriesToday);
+      setTimeout(() => setLogSuccessToast(null), 2500);
+      return;
+    }
+
+    const mealLabels: Record<MealType, string> = {
+      breakfast: t.breakfast,
+      lunch: t.lunch,
+      dinner: t.dinner,
+      snack: t.snack,
+    };
+
+    const promptText = generateAiPrompt(selectedDate, mealEntries, mealLabels);
+
+    if (typeof navigator !== 'undefined' && 'share' in navigator) {
+      try {
+        await navigator.share({
+          title: `Smartcale - ${selectedDate}`,
+          text: promptText,
+        });
+        return;
+      } catch {
+        // User cancelled or unsupported target -> fall through to clipboard
+      }
+    }
+
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(promptText);
+        setLogSuccessToast(t.shareAiSuccessToast);
+        setTimeout(() => setLogSuccessToast(null), 3200);
+      } catch (err) {
+        console.error('Clipboard write error:', err);
+      }
+    }
+  };
+
   const handleLogMeal = (mealType: MealType) => {
     if (!activeProduct) return;
     const effectiveWeight = weightGrams > 0 ? weightGrams : 100;
@@ -573,40 +541,8 @@ export const App: React.FC = () => {
     }
   };
 
-  // Unit conversion
-  const formatWeight = (g: number): string => {
-    switch (unit) {
-      case 'oz':
-        return (g * 0.035274).toFixed(2);
-      case 'ml':
-        return g.toFixed(1); // 1g water = 1ml
-      case 'g':
-      default:
-        return g.toFixed(1);
-    }
-  };
-
-  // Calibration calculation
-  const computedCalFactor = (): string => {
-    const raw = parseFloat(rawAdcInput);
-    const ref = parseFloat(refWeightGrams);
-    if (!isNaN(raw) && !isNaN(ref) && ref > 0) {
-      return (raw / ref).toFixed(1);
-    }
-    return '420.0';
-  };
-
-  // Sparkline SVG calculation
-  const minW = Math.min(0, ...history);
-  const maxW = Math.max(10, ...history);
-  const range = maxW - minW || 1;
-  const svgPoints = history
-    .map((val, idx) => {
-      const x = (idx / (history.length - 1)) * 100;
-      const y = 35 - ((val - minW) / range) * 30;
-      return `${x},${y}`;
-    })
-    .join(' ');
+  const computedFactor = computeCalFactor(rawAdcInput, refWeightGrams);
+  const svgPoints = calculateSparklinePoints(history);
 
   const liveNutrition = activeProduct
     ? calculateNutrition(activeProduct.nutriments, weightGrams)
@@ -655,7 +591,7 @@ export const App: React.FC = () => {
             </div>
 
             <div className="weight-value-container" aria-live="polite">
-              <span className="weight-digits">{formatWeight(weightGrams)}</span>
+              <span className="weight-digits">{formatWeight(weightGrams, unit)}</span>
               <span className="weight-unit">{unit}</span>
             </div>
 
@@ -1100,6 +1036,16 @@ export const App: React.FC = () => {
             </div>
 
             <div className="diary-header-actions">
+              <button
+                type="button"
+                className="btn btn-secondary btn-header-action"
+                onClick={handleShareAi}
+                title={t.shareAiBtn}
+                aria-label={t.shareAiBtn}
+              >
+                <Share2 size={18} aria-hidden="true" />
+              </button>
+
               <button
                 type="button"
                 className="btn btn-secondary btn-header-action"
@@ -1566,7 +1512,7 @@ export const App: React.FC = () => {
                       <span style={{ fontSize: '13px', fontWeight: 600 }}>{t.calAdvancedToggle}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span className="settings-tag">{computedCalFactor()}</span>
+                      <span className="settings-tag">{computedFactor}</span>
                       {isCalOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                     </div>
                   </button>
@@ -1611,7 +1557,7 @@ export const App: React.FC = () => {
 
                       <div className="cal-result-box" style={{ padding: '8px', marginTop: '8px' }}>
                         <div className="cal-result-label">{t.calFactorTitle}</div>
-                        <div className="cal-result-value" style={{ fontSize: '20px' }}>{computedCalFactor()}</div>
+                        <div className="cal-result-value" style={{ fontSize: '20px' }}>{computedFactor}</div>
                       </div>
 
                       <p className="modal-footer-note" style={{ textAlign: 'left', fontSize: '11px', marginTop: '6px' }}>
@@ -2050,6 +1996,24 @@ export const App: React.FC = () => {
                   <span className="export-card-sub">Ham JSON yedekleme formatı</span>
                 </div>
                 <Download size={16} style={{ color: 'var(--text-muted)', marginLeft: 'auto' }} />
+              </button>
+
+              <button
+                type="button"
+                className="export-card-btn"
+                onClick={() => {
+                  setShowExportModal(false);
+                  handleShareAi();
+                }}
+              >
+                <div className="export-card-icon" style={{ background: 'rgba(168, 85, 247, 0.15)', color: 'var(--accent-purple, #a855f7)' }}>
+                  <Sparkles size={22} />
+                </div>
+                <div className="export-card-info">
+                  <span className="export-card-title">{t.exportAiPrompt}</span>
+                  <span className="export-card-sub">ChatGPT, Claude, Gemini için beslenme analizi istemi</span>
+                </div>
+                <Share2 size={16} style={{ color: 'var(--text-muted)', marginLeft: 'auto' }} />
               </button>
             </div>
 

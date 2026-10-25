@@ -9,7 +9,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "npx --yes tsx src/services/foodService.test.ts && npx --yes tsx src/services/mealService.test.ts",
+    "test": "npx --yes tsx src/test/runner.ts",
     "postinstall": "node scripts/patch-ble.js"
   },
   "dependencies": {
