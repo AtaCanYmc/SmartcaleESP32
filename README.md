@@ -227,8 +227,12 @@ For runtime web portal calibration, mathematical derivations, and a full trouble
 ```
 SmartcaleESP32/
 ├── .github/
-│   └── workflows/
-│       └── ci.yml          # Automated PlatformIO build verification
+│   ├── workflows/
+│   │   ├── ci.yml          # Automated PlatformIO & Capacitor build verification
+│   │   └── release.yml     # Release Please automated semantic releases & binary assets
+│   └── dependabot.yml      # Automated weekly dependency updates (npm & GitHub Actions)
+├── .release-please-config.json   # Release Please configuration
+├── .release-please-manifest.json # Release Please version tracking
 ├── app/                    # Cross-platform companion app (Capacitor 8 + React)
 │   ├── android/            # Native Android wrapper project
 │   ├── ios/                # Native iOS wrapper project (Swift Package Manager)

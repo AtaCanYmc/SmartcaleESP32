@@ -6,9 +6,13 @@ on:
   pull_request:
     branches: [ main, master ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build:
-    name: Build Firmware
+  firmware:
+    name: Build Firmware (ESP32-C3)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -18,9 +22,67 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
+
+      - name: Cache PlatformIO packages and core
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.platformio
+            .pio
+          key: ${{ runner.os }}-pio-${{ hashFiles('platformio.ini') }}
+          restore-keys: |
+            ${{ runner.os }}-pio-
 
       - name: Install PlatformIO Core
         run: pip install --upgrade platformio
 
       - name: Compile PlatformIO environment
         run: pio run
+
+      - name: Upload Firmware Binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: esp32c3-firmware
+          path: |
+            .pio/build/esp32-c3-devkitm-1/firmware.bin
+            .pio/build/esp32-c3-devkitm-1/bootloader.bin
+            .pio/build/esp32-c3-devkitm-1/partitions.bin
+          if-no-files-found: error
+
+  app:
+    name: Build Companion App (Web / Capacitor 8)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint frontend code
+        run: npm run lint
+
+      - name: Build web bundle & typecheck
+        run: npm run build
+
+      - name: Verify Capacitor sync
+        run: npx cap sync
+
+  all-checks-passed:
+    name: All CI Checks
+    needs: [firmware, app]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Success
+        run: echo "All firmware and app CI checks have passed successfully."
