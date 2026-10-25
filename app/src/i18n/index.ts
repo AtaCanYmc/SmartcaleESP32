@@ -55,6 +55,17 @@ export interface Translations {
   calFactorTitle: string;
   calNote: string;
   calDone: string;
+  settingsTitle: string;
+  settingsBtnAria: string;
+  themeSection: string;
+  themeSectionDesc: string;
+  themeLightLabel: string;
+  themeDarkLabel: string;
+  themeSystemLabel: string;
+  langSection: string;
+  langSectionDesc: string;
+  aboutSection: string;
+  versionLabel: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -99,6 +110,17 @@ export const translations: Record<Language, Translations> = {
     calFactorTitle: 'Hesaplanan Katsayı',
     calNote: 'Bu değeri 192.168.4.1 web arayüzüne girerek tartınıza kaydedebilirsiniz.',
     calDone: 'Tamam',
+    settingsTitle: 'Ayarlar',
+    settingsBtnAria: 'Ayarları aç',
+    themeSection: 'Görünüm ve Tema',
+    themeSectionDesc: 'Uygulama temasını belirleyin',
+    themeLightLabel: 'Açık',
+    themeDarkLabel: 'Koyu',
+    themeSystemLabel: 'Sistem',
+    langSection: 'Dil Seçimi',
+    langSectionDesc: 'Kullanmak istediğiniz dili seçin',
+    aboutSection: 'Hakkında',
+    versionLabel: 'Sürüm',
   },
   en: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -141,6 +163,17 @@ export const translations: Record<Language, Translations> = {
     calFactorTitle: 'Calculated Factor',
     calNote: 'Enter this value in the 192.168.4.1 setup portal to save it to your scale.',
     calDone: 'Done',
+    settingsTitle: 'Settings',
+    settingsBtnAria: 'Open settings',
+    themeSection: 'Appearance & Theme',
+    themeSectionDesc: 'Choose your preferred app theme',
+    themeLightLabel: 'Light',
+    themeDarkLabel: 'Dark',
+    themeSystemLabel: 'System',
+    langSection: 'Language',
+    langSectionDesc: 'Select your language',
+    aboutSection: 'About',
+    versionLabel: 'Version',
   },
   de: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -183,6 +216,17 @@ export const translations: Record<Language, Translations> = {
     calFactorTitle: 'Berechneter Faktor',
     calNote: 'Geben Sie diesen Wert unter 192.168.4.1 ein, um ihn auf der Waage zu speichern.',
     calDone: 'Fertig',
+    settingsTitle: 'Einstellungen',
+    settingsBtnAria: 'Einstellungen öffnen',
+    themeSection: 'Erscheinungsbild & Design',
+    themeSectionDesc: 'Wählen Sie das App-Design',
+    themeLightLabel: 'Hell',
+    themeDarkLabel: 'Dunkel',
+    themeSystemLabel: 'System',
+    langSection: 'Sprache',
+    langSectionDesc: 'Wählen Sie Ihre Sprache',
+    aboutSection: 'Über',
+    versionLabel: 'Version',
   },
   fr: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -225,6 +269,17 @@ export const translations: Record<Language, Translations> = {
     calFactorTitle: 'Facteur calculé',
     calNote: 'Saisissez cette valeur sur 192.168.4.1 pour l\'enregistrer sur votre balance.',
     calDone: 'Terminé',
+    settingsTitle: 'Paramètres',
+    settingsBtnAria: 'Ouvrir les paramètres',
+    themeSection: 'Apparence & Thème',
+    themeSectionDesc: 'Choisissez le thème de l\'application',
+    themeLightLabel: 'Clair',
+    themeDarkLabel: 'Sombre',
+    themeSystemLabel: 'Système',
+    langSection: 'Langue',
+    langSectionDesc: 'Sélectionnez votre langue',
+    aboutSection: 'À propos',
+    versionLabel: 'Version',
   },
   es: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -267,6 +322,17 @@ export const translations: Record<Language, Translations> = {
     calFactorTitle: 'Factor calculado',
     calNote: 'Ingrese este valor en 192.168.4.1 para guardarlo en su báscula.',
     calDone: 'Listo',
+    settingsTitle: 'Configuración',
+    settingsBtnAria: 'Abrir configuración',
+    themeSection: 'Apariencia y Tema',
+    themeSectionDesc: 'Elija el tema de la aplicación',
+    themeLightLabel: 'Claro',
+    themeDarkLabel: 'Oscuro',
+    themeSystemLabel: 'Sistema',
+    langSection: 'Idioma',
+    langSectionDesc: 'Seleccione su idioma',
+    aboutSection: 'Acerca de',
+    versionLabel: 'Versión',
   },
 };
 

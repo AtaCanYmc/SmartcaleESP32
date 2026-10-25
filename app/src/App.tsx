@@ -14,18 +14,21 @@ import {
   AlertCircle,
   Sun,
   Moon,
+  Monitor,
+  Check,
+  Settings,
   Languages as LanguagesIcon
 } from 'lucide-react';
 import { scaleBle } from './services/bleService';
 import type { WeightUnit, ConnectionStatus } from './types/scale';
 import { translations, getInitialLanguage, LANGUAGES, type Language } from './i18n';
 
-type ThemeMode = 'dark' | 'light';
+type ThemeMode = 'dark' | 'light' | 'system';
 
 const getInitialTheme = (): ThemeMode => {
   const saved = localStorage.getItem('smartscale-theme');
-  if (saved === 'dark' || saved === 'light') return saved;
-  return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  if (saved === 'dark' || saved === 'light' || saved === 'system') return saved;
+  return 'system';
 };
 
 export const App: React.FC = () => {
@@ -43,8 +46,9 @@ export const App: React.FC = () => {
   const [timerSeconds, setTimerSeconds] = useState<number>(0);
   const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false);
 
-  // Calibration Modal
+  // Modals
   const [showCalModal, setShowCalModal] = useState<boolean>(false);
+  const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false);
   const [refWeightGrams, setRefWeightGrams] = useState<string>('500');
   const [rawAdcInput, setRawAdcInput] = useState<string>('210000');
 
@@ -58,25 +62,37 @@ export const App: React.FC = () => {
   }, [lang]);
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
+    const applyTheme = () => {
+      let effective = theme;
+      if (theme === 'system') {
+        effective = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      document.documentElement.setAttribute('data-theme', effective);
+    };
+
+    applyTheme();
     localStorage.setItem('smartscale-theme', theme);
+
+    if (theme === 'system' && window.matchMedia) {
+      const media = window.matchMedia('(prefers-color-scheme: dark)');
+      const listener = () => applyTheme();
+      media.addEventListener('change', listener);
+      return () => media.removeEventListener('change', listener);
+    }
   }, [theme]);
 
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
-  };
-
-  // Close calibration modal with Escape key
+  // Close modals with Escape key
   useEffect(() => {
-    if (!showCalModal) return;
+    if (!showCalModal && !showSettingsModal) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setShowCalModal(false);
+        setShowSettingsModal(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showCalModal]);
+  }, [showCalModal, showSettingsModal]);
 
   useEffect(() => {
     let interval: number | undefined;
@@ -191,29 +207,13 @@ export const App: React.FC = () => {
         </div>
 
         <div className="header-actions">
-          <div className="lang-picker">
-            <LanguagesIcon size={15} className="lang-icon" aria-hidden="true" />
-            <select
-              className="lang-select"
-              value={lang}
-              onChange={(e) => setLang(e.target.value as Language)}
-              aria-label={t.selectLanguage}
-            >
-              {LANGUAGES.map((opt) => (
-                <option key={opt.code} value={opt.code}>
-                  {opt.shortLabel} - {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
           <button
             className="icon-btn"
-            onClick={toggleTheme}
-            aria-label={theme === 'dark' ? t.switchToLight : t.switchToDark}
-            title={theme === 'dark' ? t.themeLight : t.themeDark}
+            onClick={() => setShowSettingsModal(true)}
+            aria-label={t.settingsBtnAria}
+            title={t.settingsTitle}
           >
-            {theme === 'dark' ? <Sun size={18} aria-hidden="true" /> : <Moon size={18} aria-hidden="true" />}
+            <Settings size={18} aria-hidden="true" />
           </button>
 
           <button
@@ -442,6 +442,118 @@ export const App: React.FC = () => {
             <button
               className="btn btn-primary"
               onClick={() => setShowCalModal(false)}
+            >
+              {t.calDone}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showSettingsModal && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowSettingsModal(false)}
+        >
+          <div
+            className="modal-content"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="settings-modal-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 id="settings-modal-title" className="modal-title">{t.settingsTitle}</h2>
+              <button
+                className="icon-btn"
+                onClick={() => setShowSettingsModal(false)}
+                aria-label={t.calClose}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="settings-section">
+              <div className="settings-section-header">
+                <span className="settings-section-title">
+                  <Sun size={15} aria-hidden="true" />
+                  {t.themeSection}
+                </span>
+                <span className="settings-section-desc">{t.themeSectionDesc}</span>
+              </div>
+
+              <div className="theme-segmented" role="radiogroup" aria-label={t.themeSection}>
+                <button
+                  type="button"
+                  className={`theme-option ${theme === 'light' ? 'active' : ''}`}
+                  onClick={() => setTheme('light')}
+                  role="radio"
+                  aria-checked={theme === 'light'}
+                >
+                  <Sun size={18} aria-hidden="true" />
+                  <span>{t.themeLightLabel}</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`theme-option ${theme === 'dark' ? 'active' : ''}`}
+                  onClick={() => setTheme('dark')}
+                  role="radio"
+                  aria-checked={theme === 'dark'}
+                >
+                  <Moon size={18} aria-hidden="true" />
+                  <span>{t.themeDarkLabel}</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`theme-option ${theme === 'system' ? 'active' : ''}`}
+                  onClick={() => setTheme('system')}
+                  role="radio"
+                  aria-checked={theme === 'system'}
+                >
+                  <Monitor size={18} aria-hidden="true" />
+                  <span>{t.themeSystemLabel}</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="settings-section">
+              <div className="settings-section-header">
+                <span className="settings-section-title">
+                  <LanguagesIcon size={15} aria-hidden="true" />
+                  {t.langSection}
+                </span>
+                <span className="settings-section-desc">{t.langSectionDesc}</span>
+              </div>
+
+              <div className="lang-grid" role="radiogroup" aria-label={t.langSection}>
+                {LANGUAGES.map((opt) => (
+                  <button
+                    key={opt.code}
+                    type="button"
+                    className={`lang-card ${lang === opt.code ? 'active' : ''}`}
+                    onClick={() => setLang(opt.code)}
+                    role="radio"
+                    aria-checked={lang === opt.code}
+                  >
+                    <div className="lang-card-left">
+                      <span className="lang-badge">{opt.shortLabel}</span>
+                      <span>{opt.label}</span>
+                    </div>
+                    {lang === opt.code && <Check size={16} aria-hidden="true" />}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="settings-about">
+              <span>SmartScale ESP32</span>
+              <span>{t.versionLabel} 1.1.0</span>
+            </div>
+
+            <button
+              className="btn btn-primary"
+              onClick={() => setShowSettingsModal(false)}
             >
               {t.calDone}
             </button>
