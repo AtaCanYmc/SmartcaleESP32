@@ -87,6 +87,10 @@ export interface Translations {
   saltLabel: string;
   per100gSuffix: string;
   onScaleNutrition: string;
+  navFood: string;
+  navCal: string;
+  navWifi: string;
+  navSettings: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -163,6 +167,10 @@ export const translations: Record<Language, Translations> = {
     saltLabel: 'Tuz',
     per100gSuffix: '100g başına',
     onScaleNutrition: 'Terazideki Miktar',
+    navFood: 'Besin',
+    navCal: 'Kalibrasyon',
+    navWifi: 'Wi-Fi',
+    navSettings: 'Ayarlar',
   },
   en: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -237,6 +245,10 @@ export const translations: Record<Language, Translations> = {
     saltLabel: 'Salt',
     per100gSuffix: 'per 100g',
     onScaleNutrition: 'On Scale Weight',
+    navFood: 'Food',
+    navCal: 'Calibration',
+    navWifi: 'Wi-Fi',
+    navSettings: 'Settings',
   },
   de: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -311,6 +323,10 @@ export const translations: Record<Language, Translations> = {
     saltLabel: 'Salz',
     per100gSuffix: 'pro 100g',
     onScaleNutrition: 'Aktuelles Gewicht',
+    navFood: 'Nährwerte',
+    navCal: 'Kalibrierung',
+    navWifi: 'WLAN',
+    navSettings: 'Optionen',
   },
   fr: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -385,6 +401,10 @@ export const translations: Record<Language, Translations> = {
     saltLabel: 'Sel',
     per100gSuffix: 'par 100g',
     onScaleNutrition: 'Poids sur la balance',
+    navFood: 'Aliments',
+    navCal: 'Étalonnage',
+    navWifi: 'Wi-Fi',
+    navSettings: 'Réglages',
   },
   es: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -459,6 +479,10 @@ export const translations: Record<Language, Translations> = {
     saltLabel: 'Sal',
     per100gSuffix: 'por 100g',
     onScaleNutrition: 'Peso en báscula',
+    navFood: 'Alimentos',
+    navCal: 'Calibración',
+    navWifi: 'Wi-Fi',
+    navSettings: 'Ajustes',
   },
 };
 

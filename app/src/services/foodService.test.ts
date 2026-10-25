@@ -59,6 +59,18 @@ assert.equal(parsed.nutriments.fat100g, 7.69);
 assert.equal(parseProductRaw({ code: '' }), null);
 assert.equal(parseProductRaw({ product_name: 'Empty' }), null);
 
+// Check 2 decimal places precision on calories
+const decimalSample = parseProductRaw({
+  code: '123',
+  product_name: 'Decimal Item',
+  nutriments: {
+    'energy-kcal_100g': 530.55555,
+  },
+});
+assert.ok(decimalSample);
+if (!decimalSample) throw new Error('Expected decimalSample to be defined');
+assert.equal(decimalSample.nutriments.calories100g, 530.56);
+
 // 3. Service instance check
 const service = new OpenFoodFactsService();
 assert.ok(typeof service.search === 'function');

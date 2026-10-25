@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  Scale,
   Bluetooth,
   BluetoothConnected,
   RotateCcw,
@@ -8,7 +7,6 @@ import {
   Pause,
   SlidersHorizontal,
   Wifi,
-  ExternalLink,
   X,
   CheckCircle2,
   AlertCircle,
@@ -329,50 +327,6 @@ export const App: React.FC = () => {
 
   return (
     <div className="app-container">
-      <header className="app-header">
-        <div className="brand">
-          <div className="brand-icon" aria-hidden="true">
-            <Scale size={20} />
-          </div>
-          <div>
-            <h1 className="brand-title">Smartcale</h1>
-            <p className="brand-subtitle">{t.brandSubtitle}</p>
-          </div>
-        </div>
-
-        <div className="header-actions">
-          <button
-            className="icon-btn"
-            onClick={() => setShowSettingsModal(true)}
-            aria-label={t.settingsBtnAria}
-            title={t.settingsTitle}
-          >
-            <Settings size={18} aria-hidden="true" />
-          </button>
-
-          <button
-            className={`status-pill ${connectionStatus}`}
-            onClick={connectionStatus === 'connected' ? handleDisconnect : handleConnect}
-            aria-label={connectionStatus === 'connected' ? t.disconnect : t.connectToScale}
-          >
-            <span className={`status-dot ${connectionStatus === 'connecting' ? 'pulse' : ''}`} aria-hidden="true" />
-            {connectionStatus === 'connected' ? (
-              <>
-                <BluetoothConnected size={14} aria-hidden="true" />
-                <span>{deviceName || t.connected}</span>
-              </>
-            ) : connectionStatus === 'connecting' ? (
-              <span>{t.searching}</span>
-            ) : (
-              <>
-                <Bluetooth size={14} aria-hidden="true" />
-                <span>{t.connect}</span>
-              </>
-            )}
-          </button>
-        </div>
-      </header>
-
       {errorMessage && (
         <div role="alert" className="error-alert">
           <AlertCircle size={16} aria-hidden="true" />
@@ -441,47 +395,14 @@ export const App: React.FC = () => {
         </div>
       </main>
 
-      <div className="controls-grid">
-        <button
-          className="btn btn-primary btn-tare-huge"
-          onClick={handleTare}
-          aria-label={t.tareAria}
-        >
-          <RotateCcw size={22} aria-hidden="true" />
-          <span>{t.tareBtn}</span>
-        </button>
-
-        <button
-          className="btn btn-secondary"
-          onClick={() => setShowFoodModal(true)}
-          aria-label={t.foodSearchOrScan}
-        >
-          <ScanLine size={18} aria-hidden="true" />
-          <span>{t.foodNutritionTitle}</span>
-        </button>
-
-        <button
-          className="btn btn-secondary"
-          onClick={() => setShowCalModal(true)}
-          aria-label={t.calibrationAria}
-        >
-          <SlidersHorizontal size={18} aria-hidden="true" />
-          <span>{t.calibrationBtn}</span>
-        </button>
-
-        <a
-          className="btn btn-secondary"
-          href="http://192.168.4.1"
-          target="_blank"
-          rel="noreferrer"
-          style={{ textDecoration: 'none', gridColumn: 'span 2' }}
-          aria-label={t.wifiPortalAria}
-        >
-          <Wifi size={18} aria-hidden="true" />
-          <span>{t.wifiPortalBtn}</span>
-          <ExternalLink size={13} style={{ opacity: 0.6 }} aria-hidden="true" />
-        </a>
-      </div>
+      <button
+        className="btn btn-primary btn-tare-huge"
+        onClick={handleTare}
+        aria-label={t.tareAria}
+      >
+        <RotateCcw size={22} aria-hidden="true" />
+        <span>{t.tareBtn}</span>
+      </button>
 
       {activeProduct && liveNutrition && (
         <section className="nutrition-card" aria-label={t.foodNutritionTitle}>
@@ -496,7 +417,7 @@ export const App: React.FC = () => {
             <div className="nutrition-title-area">
               <div className="nutrition-product-name">{activeProduct.name}</div>
               <div className="nutrition-product-brand">
-                {activeProduct.brands || activeProduct.code} • {activeProduct.nutriments.calories100g} kcal {t.per100gSuffix}
+                {activeProduct.brands || activeProduct.code} • {activeProduct.nutriments.calories100g.toFixed(2)} kcal {t.per100gSuffix}
               </div>
             </div>
             <button
@@ -511,7 +432,7 @@ export const App: React.FC = () => {
 
           <div className="macros-grid">
             <div className="macro-box calories">
-              <span className="macro-value">{liveNutrition.calories}</span>
+              <span className="macro-value">{liveNutrition.calories.toFixed(2)}</span>
               <span className="macro-label">kcal</span>
             </div>
             <div className="macro-box">
@@ -871,7 +792,7 @@ export const App: React.FC = () => {
                     <div className="product-result-sub">{product.brands || product.code}</div>
                   </div>
                   <div className="product-result-badge">
-                    {product.nutriments.calories100g} kcal
+                    {product.nutriments.calories100g.toFixed(2)} kcal
                   </div>
                 </button>
               ))}
@@ -879,6 +800,72 @@ export const App: React.FC = () => {
           </div>
         </div>
       )}
+
+      <nav className="bottom-nav" aria-label="Bottom Navigation">
+        <button
+          type="button"
+          className={`bottom-nav-item ${connectionStatus === 'connected' ? 'connected' : ''}`}
+          onClick={connectionStatus === 'connected' ? handleDisconnect : handleConnect}
+          aria-label={connectionStatus === 'connected' ? t.disconnect : t.connectToScale}
+        >
+          <div className="nav-icon-wrapper">
+            {connectionStatus === 'connected' ? (
+              <BluetoothConnected size={20} aria-hidden="true" />
+            ) : (
+              <Bluetooth size={20} aria-hidden="true" />
+            )}
+            <span className={`nav-dot ${connectionStatus}`} />
+          </div>
+          <span>
+            {connectionStatus === 'connected'
+              ? (deviceName || t.connected)
+              : connectionStatus === 'connecting'
+              ? t.searching
+              : t.connect}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          className={`bottom-nav-item ${showFoodModal ? 'active' : ''}`}
+          onClick={() => setShowFoodModal(true)}
+          aria-label={t.foodSearchOrScan}
+        >
+          <ScanLine size={20} aria-hidden="true" />
+          <span>{t.navFood}</span>
+        </button>
+
+        <button
+          type="button"
+          className={`bottom-nav-item ${showCalModal ? 'active' : ''}`}
+          onClick={() => setShowCalModal(true)}
+          aria-label={t.calibrationAria}
+        >
+          <SlidersHorizontal size={20} aria-hidden="true" />
+          <span>{t.navCal}</span>
+        </button>
+
+        <a
+          className="bottom-nav-item"
+          href="http://192.168.4.1"
+          target="_blank"
+          rel="noreferrer"
+          aria-label={t.wifiPortalAria}
+        >
+          <Wifi size={20} aria-hidden="true" />
+          <span>{t.navWifi}</span>
+        </a>
+
+        <button
+          type="button"
+          className={`bottom-nav-item ${showSettingsModal ? 'active' : ''}`}
+          onClick={() => setShowSettingsModal(true)}
+          aria-label={t.settingsBtnAria}
+        >
+          <Settings size={20} aria-hidden="true" />
+          <span>{t.navSettings}</span>
+        </button>
+      </nav>
     </div>
   );
 };

@@ -55,7 +55,8 @@ export function parseProductRaw(raw: OpenFoodFactsProductRaw): FoodProduct | nul
   const imageUrl = raw.image_url || raw.image_front_url;
 
   const n = raw.nutriments || {};
-  const calories = parseNum(n['energy-kcal_100g'] ?? n['energy-kcal'] ?? n['energy-kcal_value']);
+  const rawCalories = parseNum(n['energy-kcal_100g'] ?? n['energy-kcal'] ?? n['energy-kcal_value']);
+  const calories = Math.round(rawCalories * 100) / 100;
   const proteins = parseNum(n.proteins_100g ?? n.proteins);
   const carbs = parseNum(n.carbohydrates_100g ?? n.carbohydrates);
   const fat = parseNum(n.fat_100g ?? n.fat);
@@ -174,7 +175,7 @@ export function calculateNutrition(nutriments: FoodNutriments, weightGrams: numb
   const factor = Math.max(0, weightGrams) / 100;
   return {
     weightGrams: Math.max(0, weightGrams),
-    calories: Math.round(nutriments.calories100g * factor * 10) / 10,
+    calories: Math.round(nutriments.calories100g * factor * 100) / 100,
     proteins: Math.round(nutriments.proteins100g * factor * 10) / 10,
     carbs: Math.round(nutriments.carbs100g * factor * 10) / 10,
     fat: Math.round(nutriments.fat100g * factor * 10) / 10,
