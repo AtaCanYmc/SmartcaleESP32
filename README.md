@@ -173,10 +173,10 @@ For complete packet formats, CCCD subscription requirements, and sequence diagra
 
 ### 1. Build Firmware
 
-Compile the firmware binary and download library dependencies:
+Compile the firmware binary using `make` or `pio`:
 
 ```bash
-pio run
+make build-firmware   # or: pio run
 ```
 
 ### 2. Flash to Device
@@ -184,7 +184,7 @@ pio run
 Connect the board and flash the target environment:
 
 ```bash
-pio run --target upload
+make flash            # or: pio run --target upload
 ```
 
 ### 3. Open Serial Monitor
@@ -192,7 +192,15 @@ pio run --target upload
 Monitor diagnostic output over USB CDC:
 
 ```bash
-pio device monitor --baud 115200
+make monitor          # or: pio device monitor --baud 115200
+```
+
+### 4. Run Companion Web / Mobile App
+
+Start the Capacitor companion app development server:
+
+```bash
+make app-dev          # starts Vite dev server with Web Bluetooth
 ```
 
 ---
@@ -221,6 +229,11 @@ SmartcaleESP32/
 ├── .github/
 │   └── workflows/
 │       └── ci.yml          # Automated PlatformIO build verification
+├── app/                    # Cross-platform companion app (Capacitor 8 + React)
+│   ├── android/            # Native Android wrapper project
+│   ├── ios/                # Native iOS wrapper project (Swift Package Manager)
+│   ├── src/                # Web UI, BLE GATT client, and calibration wizard
+│   └── package.json        # Frontend and Capacitor dependencies
 ├── assets/
 │   └── logo.jpg            # Repository brand emblem
 ├── docs/                   # In-depth technical documentation suite
@@ -241,6 +254,7 @@ SmartcaleESP32/
 ├── .gitignore              # Build artifact exclusions (.pio, .vscode)
 ├── CONTRIBUTING.md         # Commit standards and pull request validation rules
 ├── LICENSE                 # MIT License terms
+├── Makefile                # Unified build automation for firmware and companion app
 ├── platformio.ini          # Board definitions, build flags, and library dependencies
 ├── README.md               # Primary technical documentation
 ├── ROADMAP.md              # Milestone tracking and planned features
