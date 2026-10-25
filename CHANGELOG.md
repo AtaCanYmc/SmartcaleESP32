@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.2.0](https://github.com/AtaCanYmc/SmartcaleESP32/compare/smartscale-esp32-v1.1.0...smartscale-esp32-v1.2.0) (2026-10-25)
+
+
+### Features
+
+* add AI prompt sharing functionality and improve calendar utilities ([d96c1d6](https://github.com/AtaCanYmc/SmartcaleESP32/commit/d96c1d6ae3ff24b41e9e12decfd21ab0542c3b9f))
+* add calendar modal for date selection and home search functionality ([d71cac7](https://github.com/AtaCanYmc/SmartcaleESP32/commit/d71cac7e86f64b64d0230d3103c1ce3733524264))
+* add data export functionality and update license to Apache 2.0 ([f92c3c0](https://github.com/AtaCanYmc/SmartcaleESP32/commit/f92c3c0422a1e2ac953dd035ea92c1f8eb960102))
+* add food search and barcode scanning functionality in App component ([8292ccb](https://github.com/AtaCanYmc/SmartcaleESP32/commit/8292ccb837f295251694949ae9f8bb385771727d))
+* add food search functionality with barcode scanning and product upload to Open Food Facts ([07a574f](https://github.com/AtaCanYmc/SmartcaleESP32/commit/07a574f3bf64ad7fa2e8ac12c497250d96cbc683))
+* add initial configuration files for Capacitor app and update web manifest ([54a9577](https://github.com/AtaCanYmc/SmartcaleESP32/commit/54a95779b56acaa775419c89fe8e645de6490913))
+* add settings modal for theme and language selection in App component ([29fd544](https://github.com/AtaCanYmc/SmartcaleESP32/commit/29fd54453430c81bc7ee0ee8146b05ae72291aa7))
+* enhance accessibility and usability in App component with keyboard navigation and ARIA roles ([c94dfca](https://github.com/AtaCanYmc/SmartcaleESP32/commit/c94dfcaf019b0c452220546af0983f459682d955))
+* enhance food service with improved API integration and proxy setup ([96ae76e](https://github.com/AtaCanYmc/SmartcaleESP32/commit/96ae76e106617c214198a85f5fc2985af0095cd3))
+* enhance nutritional information display with 2 decimal precision and add macro chips ([e89288f](https://github.com/AtaCanYmc/SmartcaleESP32/commit/e89288f7950e49ead59a652add821f734d13ced1))
+* implement language selection and theme toggle in App component ([3a6757c](https://github.com/AtaCanYmc/SmartcaleESP32/commit/3a6757cedfd0f0367c71dc152f9a6def7c2774a8))
+* implement meal logging and diary functionality with UI updates ([83f085b](https://github.com/AtaCanYmc/SmartcaleESP32/commit/83f085beb5f911955d5a7778f0c95eeb6883736d))
+* implement mobile bottom navigation and enhance calorie precision in food service ([da2e6f3](https://github.com/AtaCanYmc/SmartcaleESP32/commit/da2e6f3b7b3f5490295795f46e2636f43672c632))
+* update display strings for Bluetooth and setup mode to English ([a95d635](https://github.com/AtaCanYmc/SmartcaleESP32/commit/a95d635f06e90694a54359fce4ebb9eff2cf9b69))
+* update padding and viewport settings for improved layout and responsiveness ([45199fb](https://github.com/AtaCanYmc/SmartcaleESP32/commit/45199fb4bac6e179090d0b972ecfa0cf5abc5700))
+* update settings modal with Bluetooth and Wi-Fi configuration sections ([4ca9730](https://github.com/AtaCanYmc/SmartcaleESP32/commit/4ca9730bb8f5ce47a99c91a963ddc887297e894d))
+
+
+### Bug Fixes
+
+* correct spelling of "SmartScale" to "Smartcale" in multiple files and update theme colors in web manifest ([8566d3c](https://github.com/AtaCanYmc/SmartcaleESP32/commit/8566d3c94db2eb11c921f48f42c30c63048a5676))
+
 ## [1.1.0](https://github.com/AtaCanYmc/SmartcaleESP32/compare/smartscale-esp32-v1.0.0...smartscale-esp32-v1.1.0) (2026-10-25)
 
 
