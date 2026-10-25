@@ -17,10 +17,17 @@ import {
   Monitor,
   Check,
   Settings,
-  Languages as LanguagesIcon
+  Languages as LanguagesIcon,
+  ScanLine,
+  Search,
+  Utensils,
+  CameraOff,
+  Trash2
 } from 'lucide-react';
 import { scaleBle } from './services/bleService';
+import { foodService, calculateNutrition } from './services/foodService';
 import type { WeightUnit, ConnectionStatus } from './types/scale';
+import type { FoodProduct } from './types/food';
 import { translations, getInitialLanguage, LANGUAGES, type Language } from './i18n';
 
 type ThemeMode = 'dark' | 'light' | 'system';
@@ -49,12 +56,126 @@ export const App: React.FC = () => {
   // Modals
   const [showCalModal, setShowCalModal] = useState<boolean>(false);
   const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false);
+  const [showFoodModal, setShowFoodModal] = useState<boolean>(false);
   const [refWeightGrams, setRefWeightGrams] = useState<string>('500');
   const [rawAdcInput, setRawAdcInput] = useState<string>('210000');
+
+  // Food & Barcode state
+  const [activeProduct, setActiveProduct] = useState<FoodProduct | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [searchResults, setSearchResults] = useState<FoodProduct[]>([]);
+  const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [isScanning, setIsScanning] = useState<boolean>(false);
+  const [scannerSupported, setScannerSupported] = useState<boolean>(true);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const scanStreamRef = useRef<MediaStream | null>(null);
+  const scanIntervalRef = useRef<number | null>(null);
 
   const [history, setHistory] = useState<number[]>(new Array(25).fill(0));
   const tareFeedbackTimeout = useRef<number | null>(null);
   const [isTared, setIsTared] = useState<boolean>(false);
+
+  // Stop scanner safely
+  const stopScanner = () => {
+    if (scanIntervalRef.current) {
+      clearInterval(scanIntervalRef.current);
+      scanIntervalRef.current = null;
+    }
+    if (scanStreamRef.current) {
+      scanStreamRef.current.getTracks().forEach((track) => track.stop());
+      scanStreamRef.current = null;
+    }
+    setIsScanning(false);
+  };
+
+  const startScanner = async () => {
+    setSearchError(null);
+    if (!('BarcodeDetector' in window)) {
+      setScannerSupported(false);
+      setIsScanning(true);
+      return;
+    }
+
+    setScannerSupported(true);
+    setIsScanning(true);
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' },
+      });
+      scanStreamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+
+      // @ts-expect-error Native Web BarcodeDetector API
+      const detector = new window.BarcodeDetector({
+        formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'qr_code'],
+      });
+
+      scanIntervalRef.current = window.setInterval(async () => {
+        if (!videoRef.current || videoRef.current.readyState < 2) return;
+        try {
+          const barcodes = await detector.detect(videoRef.current);
+          if (barcodes && barcodes.length > 0) {
+            const rawVal = barcodes[0].rawValue;
+            if (rawVal) {
+              stopScanner();
+              setIsSearching(true);
+              const found = await foodService.getByBarcode(rawVal);
+              setIsSearching(false);
+              if (found) {
+                setActiveProduct(found);
+                setShowFoodModal(false);
+              } else {
+                setSearchError(`${t.noProductsFound} (${rawVal})`);
+              }
+            }
+          }
+        } catch {
+          // ignore detection frame errors
+        }
+      }, 350);
+    } catch (err) {
+      console.error('Camera access error:', err);
+      stopScanner();
+      setSearchError(t.connFailed);
+    }
+  };
+
+  const handleSearch = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const query = searchQuery.trim();
+    if (!query) return;
+
+    setIsSearching(true);
+    setSearchError(null);
+    stopScanner();
+
+    try {
+      if (/^\d{8,14}$/.test(query)) {
+        const direct = await foodService.getByBarcode(query);
+        if (direct) {
+          setSearchResults([direct]);
+          setIsSearching(false);
+          return;
+        }
+      }
+
+      const results = await foodService.search(query);
+      setSearchResults(results);
+      if (results.length === 0) {
+        setSearchError(t.noProductsFound);
+      }
+    } catch (err) {
+      console.error('Search error:', err);
+      setSearchError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -83,16 +204,25 @@ export const App: React.FC = () => {
 
   // Close modals with Escape key
   useEffect(() => {
-    if (!showCalModal && !showSettingsModal) return;
+    if (!showCalModal && !showSettingsModal && !showFoodModal) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setShowCalModal(false);
         setShowSettingsModal(false);
+        setShowFoodModal(false);
+        stopScanner();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showCalModal, showSettingsModal]);
+  }, [showCalModal, showSettingsModal, showFoodModal]);
+
+  // Clean up scanner on unmount
+  useEffect(() => {
+    return () => {
+      stopScanner();
+    };
+  }, []);
 
   useEffect(() => {
     let interval: number | undefined;
@@ -192,6 +322,10 @@ export const App: React.FC = () => {
       return `${x},${y}`;
     })
     .join(' ');
+
+  const liveNutrition = activeProduct
+    ? calculateNutrition(activeProduct.nutriments, weightGrams)
+    : null;
 
   return (
     <div className="app-container">
@@ -319,6 +453,15 @@ export const App: React.FC = () => {
 
         <button
           className="btn btn-secondary"
+          onClick={() => setShowFoodModal(true)}
+          aria-label={t.foodSearchOrScan}
+        >
+          <ScanLine size={18} aria-hidden="true" />
+          <span>{t.foodNutritionTitle}</span>
+        </button>
+
+        <button
+          className="btn btn-secondary"
           onClick={() => setShowCalModal(true)}
           aria-label={t.calibrationAria}
         >
@@ -331,7 +474,7 @@ export const App: React.FC = () => {
           href="http://192.168.4.1"
           target="_blank"
           rel="noreferrer"
-          style={{ textDecoration: 'none' }}
+          style={{ textDecoration: 'none', gridColumn: 'span 2' }}
           aria-label={t.wifiPortalAria}
         >
           <Wifi size={18} aria-hidden="true" />
@@ -339,6 +482,53 @@ export const App: React.FC = () => {
           <ExternalLink size={13} style={{ opacity: 0.6 }} aria-hidden="true" />
         </a>
       </div>
+
+      {activeProduct && liveNutrition && (
+        <section className="nutrition-card" aria-label={t.foodNutritionTitle}>
+          <div className="nutrition-product-header">
+            {activeProduct.imageUrl ? (
+              <img src={activeProduct.imageUrl} alt="" className="nutrition-thumb" />
+            ) : (
+              <div className="nutrition-thumb-fallback">
+                <Utensils size={22} />
+              </div>
+            )}
+            <div className="nutrition-title-area">
+              <div className="nutrition-product-name">{activeProduct.name}</div>
+              <div className="nutrition-product-brand">
+                {activeProduct.brands || activeProduct.code} • {activeProduct.nutriments.calories100g} kcal {t.per100gSuffix}
+              </div>
+            </div>
+            <button
+              className="icon-btn"
+              onClick={() => setActiveProduct(null)}
+              aria-label={t.removeProduct}
+              title={t.removeProduct}
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
+
+          <div className="macros-grid">
+            <div className="macro-box calories">
+              <span className="macro-value">{liveNutrition.calories}</span>
+              <span className="macro-label">kcal</span>
+            </div>
+            <div className="macro-box">
+              <span className="macro-value">{liveNutrition.proteins}g</span>
+              <span className="macro-label">{t.proteinLabel}</span>
+            </div>
+            <div className="macro-box">
+              <span className="macro-value">{liveNutrition.carbs}g</span>
+              <span className="macro-label">{t.carbsLabel}</span>
+            </div>
+            <div className="macro-box">
+              <span className="macro-value">{liveNutrition.fat}g</span>
+              <span className="macro-label">{t.fatLabel}</span>
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="feature-card" aria-label={t.timerAria}>
         <div className="card-header">
@@ -557,6 +747,135 @@ export const App: React.FC = () => {
             >
               {t.calDone}
             </button>
+          </div>
+        </div>
+      )}
+
+      {showFoodModal && (
+        <div
+          className="modal-overlay"
+          onClick={() => {
+            setShowFoodModal(false);
+            stopScanner();
+          }}
+        >
+          <div
+            className="modal-content"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="food-modal-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 id="food-modal-title" className="modal-title">{t.foodNutritionTitle}</h2>
+              <button
+                className="icon-btn"
+                onClick={() => {
+                  setShowFoodModal(false);
+                  stopScanner();
+                }}
+                aria-label={t.calClose}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSearch} className="food-search-row">
+              <div className="search-input-wrapper">
+                <Search size={16} className="search-icon" aria-hidden="true" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={t.foodSearchPlaceholder}
+                  aria-label={t.foodSearchPlaceholder}
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="btn btn-primary"
+                style={{ padding: '10px 14px', flexShrink: 0 }}
+                disabled={isSearching}
+              >
+                {isSearching ? t.searchingProducts : t.searchBtn}
+              </button>
+
+              <button
+                type="button"
+                className="icon-btn"
+                onClick={isScanning ? stopScanner : startScanner}
+                aria-label={isScanning ? t.stopScannerBtn : t.scanBarcodeBtn}
+                title={isScanning ? t.stopScannerBtn : t.scanBarcodeBtn}
+                style={{
+                  background: isScanning ? 'var(--accent-red)' : 'var(--bg-tertiary)',
+                  color: '#fff',
+                  minWidth: '42px',
+                  minHeight: '42px',
+                  flexShrink: 0
+                }}
+              >
+                {isScanning ? <CameraOff size={18} /> : <ScanLine size={18} />}
+              </button>
+            </form>
+
+            {isScanning && (
+              <div className="scanner-container">
+                {scannerSupported ? (
+                  <>
+                    <video ref={videoRef} className="scanner-video" playsInline muted autoPlay />
+                    <div className="scanner-overlay">
+                      <div className="scanner-guide-box">
+                        <div className="scanner-laser" />
+                      </div>
+                      <span className="scanner-prompt">{t.scannerHint}</span>
+                    </div>
+                  </>
+                ) : (
+                  <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
+                    <AlertCircle size={24} style={{ color: 'var(--accent-amber)', marginBottom: '8px' }} />
+                    <p>{t.scannerNotSupported}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {searchError && (
+              <div className="error-alert">
+                <AlertCircle size={16} aria-hidden="true" />
+                <span>{searchError}</span>
+              </div>
+            )}
+
+            <div className="products-results-list">
+              {searchResults.map((product) => (
+                <button
+                  key={product.code}
+                  type="button"
+                  className="product-result-item"
+                  onClick={() => {
+                    setActiveProduct(product);
+                    setShowFoodModal(false);
+                    stopScanner();
+                  }}
+                >
+                  {product.imageUrl ? (
+                    <img src={product.imageUrl} alt="" className="nutrition-thumb" />
+                  ) : (
+                    <div className="nutrition-thumb-fallback">
+                      <Utensils size={20} />
+                    </div>
+                  )}
+                  <div className="product-result-info">
+                    <div className="product-result-name">{product.name}</div>
+                    <div className="product-result-sub">{product.brands || product.code}</div>
+                  </div>
+                  <div className="product-result-badge">
+                    {product.nutriments.calories100g} kcal
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}
