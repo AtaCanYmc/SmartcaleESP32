@@ -150,6 +150,11 @@ export interface Translations {
   shareAiBtn: string;
   shareAiSuccessToast: string;
   exportAiPrompt: string;
+  bleReconnecting: string;
+  bleLostWarning: string;
+  bleReconnectedToast: string;
+  bleReconnectFailed: string;
+  retryBtn: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -286,6 +291,11 @@ export const translations: Record<Language, Translations> = {
     shareAiBtn: 'AI İçin Paylaş',
     shareAiSuccessToast: 'AI beslenme istemi panoya kopyalandı! AI sohbetine yapıştırabilirsiniz.',
     exportAiPrompt: 'AI Analiz İstemini Kopyala',
+    bleReconnecting: 'Yeniden bağlanılıyor...',
+    bleLostWarning: 'Tartı ile Bluetooth bağlantısı koptu.',
+    bleReconnectedToast: 'Tartıya başarıyla yeniden bağlandı!',
+    bleReconnectFailed: 'Tartıya otomatik yeniden bağlanılamadı. Cihazın açık ve yakında olduğunu kontrol edin.',
+    retryBtn: 'Tekrar Dene',
   },
   en: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -420,6 +430,11 @@ export const translations: Record<Language, Translations> = {
     shareAiBtn: 'Share for AI',
     shareAiSuccessToast: 'AI nutrition prompt copied to clipboard! Paste it into your AI chat.',
     exportAiPrompt: 'Copy AI Analysis Prompt',
+    bleReconnecting: 'Reconnecting...',
+    bleLostWarning: 'Bluetooth connection to scale was lost.',
+    bleReconnectedToast: 'Successfully reconnected to scale!',
+    bleReconnectFailed: 'Auto-reconnect to scale failed. Ensure device is powered on and in range.',
+    retryBtn: 'Retry',
   },
   de: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -554,6 +569,11 @@ export const translations: Record<Language, Translations> = {
     shareAiBtn: 'Für KI teilen',
     shareAiSuccessToast: 'KI-Ernährungs-Prompt in die Zwischenablage kopiert! Fügen Sie ihn in Ihren KI-Chat ein.',
     exportAiPrompt: 'KI-Analyse-Prompt kopieren',
+    bleReconnecting: 'Wiederverbindung...',
+    bleLostWarning: 'Bluetooth-Verbindung zur Waage wurde unterbrochen.',
+    bleReconnectedToast: 'Erfolgreich wieder mit der Waage verbunden!',
+    bleReconnectFailed: 'Automatische Wiederverbindung fehlgeschlagen. Stellen Sie sicher, dass die Waage eingeschaltet und in Reichweite ist.',
+    retryBtn: 'Wiederholen',
   },
   fr: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -688,6 +708,11 @@ export const translations: Record<Language, Translations> = {
     shareAiBtn: 'Partager pour l\'IA',
     shareAiSuccessToast: 'Prompt nutritionnel copié dans le presse-papiers ! Collez-le dans votre chat IA.',
     exportAiPrompt: 'Copier le prompt d\'analyse IA',
+    bleReconnecting: 'Reconnexion en cours...',
+    bleLostWarning: 'La connexion Bluetooth à la balance a été perdue.',
+    bleReconnectedToast: 'Reconnexion à la balance réussie !',
+    bleReconnectFailed: 'Échec de la reconnexion automatique. Vérifiez que la balance est allumée et à portée.',
+    retryBtn: 'Réessayer',
   },
   es: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -822,6 +847,11 @@ export const translations: Record<Language, Translations> = {
     shareAiBtn: 'Compartir para IA',
     shareAiSuccessToast: '¡Mensaje nutricional para IA copiado al portapapeles! Péguelo en su chat de IA.',
     exportAiPrompt: 'Copiar prompt de análisis para IA',
+    bleReconnecting: 'Reconectando...',
+    bleLostWarning: 'Se perdió la conexión Bluetooth con la báscula.',
+    bleReconnectedToast: '¡Reconectado con éxito a la báscula!',
+    bleReconnectFailed: 'Falló la reconexión automática. Asegúrese de que la báscula esté encendida y cerca.',
+    retryBtn: 'Reintentar',
   },
   zh: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -956,6 +986,11 @@ export const translations: Record<Language, Translations> = {
     shareAiBtn: '分享给 AI',
     shareAiSuccessToast: 'AI 营养分析提示词已复制到剪贴板！可直接粘贴至 AI 对话。',
     exportAiPrompt: '复制 AI 分析提示词',
+    bleReconnecting: '正在重新连接...',
+    bleLostWarning: '与智能秤的蓝牙连接已断开。',
+    bleReconnectedToast: '已成功重新连接至智能秤！',
+    bleReconnectFailed: '自动重新连接失败，请确认智能秤已开启且在有效范围内。',
+    retryBtn: '重试',
   },
   ja: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -1090,6 +1125,11 @@ export const translations: Record<Language, Translations> = {
     shareAiBtn: 'AI用に共有',
     shareAiSuccessToast: 'AI栄養プロンプトをクリップボードにコピーしました！AIチャットに貼り付けてください。',
     exportAiPrompt: 'AI分析プロンプトをコピー',
+    bleReconnecting: '再接続中...',
+    bleLostWarning: 'スケールとのBluetooth接続が切断されました。',
+    bleReconnectedToast: 'スケールに再接続しました！',
+    bleReconnectFailed: '自動再接続に失敗しました。スケールの電源がオンで近くにあることを確認してください。',
+    retryBtn: '再試行',
   },
   ru: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -1224,6 +1264,11 @@ export const translations: Record<Language, Translations> = {
     shareAiBtn: 'Поделиться для ИИ',
     shareAiSuccessToast: 'Промпт питания для ИИ скопирован в буфер обмена! Вставьте его в чат с ИИ.',
     exportAiPrompt: 'Копировать промпт для ИИ-анализа',
+    bleReconnecting: 'Переподключение...',
+    bleLostWarning: 'Связь с весами по Bluetooth потеряна.',
+    bleReconnectedToast: 'Успешно переподключено к весам!',
+    bleReconnectFailed: 'Автопереподключение не удалось. Убедитесь, что весы включены и находятся рядом.',
+    retryBtn: 'Повторить',
   },
 };
 
