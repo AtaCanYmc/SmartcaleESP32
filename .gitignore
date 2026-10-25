@@ -22,6 +22,10 @@ Thumbs.db
 .env.*
 *.local
 
+# Node & Frontend App
+app/node_modules/
+app/dist/
+
 # Logs and temporary files
 *.log
 *.tmp
