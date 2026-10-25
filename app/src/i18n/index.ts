@@ -337,7 +337,7 @@ export const translations: Record<Language, Translations> = {
 };
 
 export const getInitialLanguage = (): Language => {
-  const saved = localStorage.getItem('smartscale-lang');
+  const saved = localStorage.getItem('smartcale-lang') || localStorage.getItem('smartscale-lang');
   if (saved && ['tr', 'en', 'de', 'fr', 'es'].includes(saved)) {
     return saved as Language;
   }

@@ -26,7 +26,7 @@ import { translations, getInitialLanguage, LANGUAGES, type Language } from './i1
 type ThemeMode = 'dark' | 'light' | 'system';
 
 const getInitialTheme = (): ThemeMode => {
-  const saved = localStorage.getItem('smartscale-theme');
+  const saved = localStorage.getItem('smartcale-theme') || localStorage.getItem('smartscale-theme');
   if (saved === 'dark' || saved === 'light' || saved === 'system') return saved;
   return 'system';
 };
@@ -58,7 +58,7 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     document.documentElement.lang = lang;
-    localStorage.setItem('smartscale-lang', lang);
+    localStorage.setItem('smartcale-lang', lang);
   }, [lang]);
 
   useEffect(() => {
@@ -71,7 +71,7 @@ export const App: React.FC = () => {
     };
 
     applyTheme();
-    localStorage.setItem('smartscale-theme', theme);
+    localStorage.setItem('smartcale-theme', theme);
 
     if (theme === 'system' && window.matchMedia) {
       const media = window.matchMedia('(prefers-color-scheme: dark)');
@@ -201,7 +201,7 @@ export const App: React.FC = () => {
             <Scale size={20} />
           </div>
           <div>
-            <h1 className="brand-title">SmartScale</h1>
+            <h1 className="brand-title">Smartcale</h1>
             <p className="brand-subtitle">{t.brandSubtitle}</p>
           </div>
         </div>
@@ -547,7 +547,7 @@ export const App: React.FC = () => {
             </div>
 
             <div className="settings-about">
-              <span>SmartScale ESP32</span>
+              <span>Smartcale ESP32</span>
               <span>{t.versionLabel} 1.1.0</span>
             </div>
 

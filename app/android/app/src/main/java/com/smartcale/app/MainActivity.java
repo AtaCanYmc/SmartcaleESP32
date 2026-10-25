@@ -1,4 +1,4 @@
-package com.smartscale.app;
+package com.smartcale.app;
 
 import com.getcapacitor.BridgeActivity;
 

@@ -51,7 +51,7 @@ stateDiagram-v2
 ## Network & DNS Hijacking
 
 ### SoftAP Configuration
-- **SSID**: `SmartScale-Setup`
+- **SSID**: `Smartcale-Setup`
 - **Security**: Open (No WPA passphrase required for initial setup)
 - **Local IP**: `192.168.4.1`
 - **Subnet Mask**: `255.255.255.0`
@@ -97,7 +97,7 @@ Processes submitted configuration parameters:
 ### 3. `POST /reset`
 Executes factory wipe:
 
-- Clears all keys stored under the `"smartscale"` NVS namespace.
+- Clears all keys stored under the `"scale_cfg"` NVS namespace.
 - Renders a factory reset confirmation page.
 - Triggers `ESP.restart()` after 1500ms.
 
@@ -105,7 +105,7 @@ Executes factory wipe:
 
 ## NVS Storage Schema
 
-Parameters persist across power cycles using the ESP32 Preferences flash storage library under namespace `"smartscale"`:
+Parameters persist across power cycles using the ESP32 Preferences flash storage library under namespace `"scale_cfg"`:
 
 | Preference Key | Data Type | Maximum Length | Default Value | Description |
 | :--- | :--- | :--- | :--- | :--- |

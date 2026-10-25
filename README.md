@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo.jpg" alt="SmartScale ESP32 Logo" width="240" />
+  <img src="assets/logo.jpg" alt="Smartcale ESP32 Logo" width="240" />
 </p>
 
 <h1 align="center">Smart Kitchen Scale Firmware</h1>
@@ -40,7 +40,7 @@ This repository contains the production firmware for a digital kitchen scale bui
 
 ### Key Capabilities
 
-- **Wi-Fi Provisioning & Captive Portal**: Broadcasts SoftAP (`SmartScale-Setup`) with automatic DNS captive portal on first boot or button hold, enabling mobile-friendly configuration of Wi-Fi network, BLE device name, and calibration factor.
+- **Wi-Fi Provisioning & Captive Portal**: Broadcasts SoftAP (`Smartcale-Setup`) with automatic DNS captive portal on first boot or button hold, enabling mobile-friendly configuration of Wi-Fi network, BLE device name, and calibration factor.
 - **Non-blocking Dispatch Loop**: Driven entirely by `millis()` interval registers, maintaining responsive 100ms BLE updates and 200ms display frame rates.
 - **Hardware Interrupt Tare**: Falling-edge interrupt on GPIO 2 with 200ms hardware-debounced flag assertion.
 - **Noise Filtration & Deadband**: Exponential Moving Average (EMA, alpha = 0.25) combined with a +/- 0.4g zero-point deadband to suppress idle mechanical jitter.
@@ -129,7 +129,7 @@ The scale features an integrated SoftAP with an auto-redirecting DNS captive por
 
 | Parameter | Value |
 | :--- | :--- |
-| **Setup Wi-Fi SSID** | `SmartScale-Setup` (Open network, no password) |
+| **Setup Wi-Fi SSID** | `Smartcale-Setup` (Open network, no password) |
 | **Portal IP Address** | `192.168.4.1` |
 | **Captive Redirection** | Automatic on iOS, Android, macOS, and Windows |
 | **OLED Status** | Displays SSID and IP during setup |

@@ -25,7 +25,7 @@ class ScaleBleService {
   ): Promise<string> {
     await this.init();
 
-    // 1. Request device matching the SmartScale service
+    // 1. Request device matching the Smartcale service
     const device = await BleClient.requestDevice({
       services: [SCALE_SERVICE_UUID],
       optionalServices: [SCALE_SERVICE_UUID],

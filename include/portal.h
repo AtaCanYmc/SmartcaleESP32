@@ -89,7 +89,7 @@ private:
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SmartScale ESP32 Kurulum</title>
+<title>Smartcale ESP32 Kurulum</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
 body { background: #0f172a; color: #f8fafc; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 16px; }
@@ -115,7 +115,7 @@ function selectSsid(val) {
 </head>
 <body>
 <div class="card">
-    <h1>SmartScale ESP32</h1>
+    <h1>Smartcale ESP32</h1>
     <p class="desc">Cihaz Yapılandırma ve Ağ Ayarları</p>
     <form action="/save" method="POST">
         <label for="network_select">Mevcut Wi-Fi Ağları</label>

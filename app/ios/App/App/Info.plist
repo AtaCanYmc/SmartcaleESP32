@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>SmartScale</string>
+	<string>Smartcale</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -25,9 +25,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>SmartScale akıllı mutfak tartısına bağlanmak ve canlı ağırlık ölçümü almak için Bluetooth izni gereklidir.</string>
+	<string>Smartcale akıllı mutfak tartısına bağlanmak ve canlı ağırlık ölçümü almak için Bluetooth izni gereklidir.</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
-	<string>SmartScale akıllı mutfak tartısına bağlanmak için Bluetooth izni gereklidir.</string>
+	<string>Smartcale akıllı mutfak tartısına bağlanmak için Bluetooth izni gereklidir.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

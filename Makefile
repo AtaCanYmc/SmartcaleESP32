@@ -20,7 +20,7 @@ PIO_MONITOR_FLAGS := $(if $(PORT),--port $(PORT),) --baud $(BAUD)
 
 help:
 	@echo ""
-	@echo "$(BOLD)SmartScale ESP32 - Build & Developer Commands$(RESET)"
+	@echo "$(BOLD)Smartcale ESP32 - Build & Developer Commands$(RESET)"
 	@echo "Usage: make $(CYAN)<target>$(RESET) [PORT=/dev/...]"
 	@echo ""
 	@echo "$(BOLD)Firmware (ESP32-C3 / PlatformIO):$(RESET)"

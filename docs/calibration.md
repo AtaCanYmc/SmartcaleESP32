@@ -28,7 +28,7 @@ Calibration requires a reference weight of certified mass (e.g. 100g, 200g, or 5
 ### Method A: Web Portal (Runtime, No Reflashing Required)
 
 1. Power on the scale while holding the Tare button for 2 seconds to enter the setup portal.
-2. Connect to Wi-Fi network `SmartScale-Setup` on a phone or laptop.
+2. Connect to Wi-Fi network `Smartcale-Setup` on a phone or laptop.
 3. Open `http://192.168.4.1` in the browser.
 4. Set the **Calibration Factor** input field to `1.0` and click **Save Settings**. The scale will reboot.
 5. Place the scale on a rigid, level surface with no weight on the platter. Power on and wait for the display to settle at `0.0g`.

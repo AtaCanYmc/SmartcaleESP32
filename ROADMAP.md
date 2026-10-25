@@ -10,7 +10,7 @@ Milestones and upcoming engineering objectives for the ESP32-C3 Smart Kitchen Sc
 - [x] 1.3-inch SH1106 I2C OLED interface with BLE connection indicator.
 - [x] BLE GATT server providing 100ms weight notifications and remote tare write commands.
 - [x] Non-volatile storage (NVS / Preferences) for Wi-Fi credentials, BLE name, and calibration parameters.
-- [x] Wi-Fi SoftAP (`SmartScale-Setup`) and mobile-responsive captive portal web configurator.
+- [x] Wi-Fi SoftAP (`Smartcale-Setup`) and mobile-responsive captive portal web configurator.
 
 ## Version 1.1.0 (Planned)
 

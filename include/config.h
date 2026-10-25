@@ -19,7 +19,7 @@ static constexpr unsigned long INTERVAL_DISPLAY_MS    = 200;
 static constexpr unsigned long HOLD_TO_SETUP_MS       = 2000; // Hold Tare button on boot to force AP mode
 
 // Setup AP & Storage
-#define SETUP_AP_SSID              "SmartScale-Setup"
+#define SETUP_AP_SSID              "Smartcale-Setup"
 #define NVS_NAMESPACE              "scale_cfg"
 
 // BLE GATT Profile

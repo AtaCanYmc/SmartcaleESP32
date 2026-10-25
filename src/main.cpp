@@ -44,7 +44,7 @@ void setup() {
     Serial.begin(115200);
     while (!Serial && millis() < 1500);
 
-    LOG_I("BOOT", "=== SmartScale ESP32 Starting ===");
+    LOG_I("BOOT", "=== Smartcale ESP32 Starting ===");
 
     pinMode(PIN_TARE_BTN, INPUT_PULLUP);
     bool forceSetupMode = false;
