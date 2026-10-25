@@ -32,7 +32,7 @@ public:
         int n = WiFi.scanNetworks();
         LOG_I("PORTAL", "Found %d networks", n);
         if (n <= 0) {
-            s_networkListHtml = "<option value=\"\">Ağ bulunamadı</option>";
+            s_networkListHtml = "<option value=\"\">No networks found</option>";
         } else {
             for (int i = 0; i < n; ++i) {
                 String ssid = WiFi.SSID(i);
@@ -85,11 +85,11 @@ private:
 
     static void handleRoot() {
         String html = R"rawliteral(<!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smartcale ESP32 Kurulum</title>
+<title>Smartcale ESP32 Setup</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
 body { background: #0f172a; color: #f8fafc; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 16px; }
@@ -116,43 +116,43 @@ function selectSsid(val) {
 <body>
 <div class="card">
     <h1>Smartcale ESP32</h1>
-    <p class="desc">Cihaz Yapılandırma ve Ağ Ayarları</p>
+    <p class="desc">Device Configuration & Network Settings</p>
     <form action="/save" method="POST">
-        <label for="network_select">Mevcut Wi-Fi Ağları</label>
+        <label for="network_select">Available Wi-Fi Networks</label>
         <select id="network_select" onchange="selectSsid(this.value)">
-            <option value="">-- Ağ Seçiniz (veya elle yazınız) --</option>
+            <option value="">-- Select Network (or enter manually) --</option>
 )rawliteral";
 
         html += s_networkListHtml;
 
         html += R"rawliteral(
         </select>
-        <label for="ssid_input">Wi-Fi Ağı (SSID)</label>
+        <label for="ssid_input">Wi-Fi Network (SSID)</label>
         <input type="text" id="ssid_input" name="ssid" value=")rawliteral";
         html += s_config.wifiSsid;
-        html += R"rawliteral(" required placeholder="Bağlanılacak Ağ Adı">
+        html += R"rawliteral(" required placeholder="Network Name">
 
-        <label for="pass_input">Wi-Fi Şifresi</label>
+        <label for="pass_input">Wi-Fi Password</label>
         <input type="password" id="pass_input" name="pass" value=")rawliteral";
         html += s_config.wifiPass;
-        html += R"rawliteral(" placeholder="Ağ Şifresi">
+        html += R"rawliteral(" placeholder="Network Password">
 
-        <label for="blename_input">BLE Aygıt Adı</label>
+        <label for="blename_input">BLE Device Name</label>
         <input type="text" id="blename_input" name="blename" value=")rawliteral";
         html += s_config.bleName;
         html += R"rawliteral(" required placeholder="SmartKitchenScale">
-        <div class="hint">Mobilde görünecek Bluetooth adı</div>
+        <div class="hint">Bluetooth device name visible on mobile</div>
 
-        <label for="cal_input">Kalibrasyon Katsayısı</label>
+        <label for="cal_input">Calibration Factor</label>
         <input type="number" step="0.1" id="cal_input" name="cal" value=")rawliteral";
         html += String(s_config.calibrationFactor, 1);
         html += R"rawliteral(" required>
-        <div class="hint">Varsayılan: 420.0 (Ham Veri / Referans Ağırlık)</div>
+        <div class="hint">Default: 420.0 (Raw ADC / Reference Weight)</div>
 
-        <button type="submit" class="btn btn-primary">Kaydet ve Yeniden Başlat</button>
+        <button type="submit" class="btn btn-primary">Save and Restart</button>
     </form>
-    <form action="/reset" method="POST" onsubmit="return confirm('Tüm ayarlar sıfırlanacak. Emin misiniz?');">
-        <button type="submit" class="btn btn-danger">Fabrika Ayarlarına Sıfırla</button>
+    <form action="/reset" method="POST" onsubmit="return confirm('All settings will be reset to factory defaults. Are you sure?');">
+        <button type="submit" class="btn btn-danger">Reset to Factory Defaults</button>
     </form>
 </div>
 </body>
@@ -184,11 +184,11 @@ function selectSsid(val) {
         ConfigStorage::save(s_config);
 
         String responseHtml = R"rawliteral(<!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kaydedildi</title>
+<title>Saved</title>
 <style>
 body { background: #0f172a; color: #38bdf8; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; text-align: center; }
 .card { background: #1e293b; padding: 32px; border-radius: 16px; border: 1px solid #334155; }
@@ -198,8 +198,8 @@ p { color: #94a3b8; font-size: 14px; }
 </head>
 <body>
 <div class="card">
-    <h2>Ayarlar Başarıyla Kaydedildi!</h2>
-    <p>Tartı yeni ayarlarla yeniden başlatılıyor. Lütfen bekleyiniz...</p>
+    <h2>Settings Saved Successfully!</h2>
+    <p>The scale is restarting with new settings. Please wait...</p>
 </div>
 </body>
 </html>)rawliteral";
@@ -212,13 +212,13 @@ p { color: #94a3b8; font-size: 14px; }
     static void handleReset() {
         ConfigStorage::reset();
         String responseHtml = R"rawliteral(<!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
-<meta charset="UTF-8"><title>Sıfırlandı</title>
+<meta charset="UTF-8"><title>Reset</title>
 <style>body{background:#0f172a;color:#ef4444;display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;}</style>
 </head>
 <body>
-<div><h2>Cihaz Sıfırlandı!</h2><p style="color:#94a3b8;">Varsayılan ayarlarla yeniden başlatılıyor...</p></div>
+<div><h2>Device Reset!</h2><p style="color:#94a3b8;">Restarting with factory default settings...</p></div>
 </body></html>)rawliteral";
         s_webServer.send(200, "text/html", responseHtml);
         s_restartPending = true;

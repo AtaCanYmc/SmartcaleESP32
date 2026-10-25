@@ -22,7 +22,7 @@ inline void renderDisplay(float weightGrams, bool bleConnected) {
     u8g2.clearBuffer();
 
     u8g2.setFont(u8g2_font_6x10_tf);
-    u8g2.drawStr(0, 8, bleConnected ? "BLE: BAGLI" : "BLE: BEKLIYOR");
+    u8g2.drawStr(0, 8, bleConnected ? "BLE: CONNECTED" : "BLE: WAITING");
     u8g2.drawHLine(0, 11, 128);
 
     char weightStr[16];
@@ -51,7 +51,7 @@ inline void renderConfigPortal(const char* ssid, const char* ip) {
     u8g2.clearBuffer();
 
     u8g2.setFont(u8g2_font_6x10_tf);
-    u8g2.drawStr(0, 8, "KURULUM MODU (AP)");
+    u8g2.drawStr(0, 8, "SETUP MODE (AP)");
     u8g2.drawHLine(0, 11, 128);
 
     u8g2.setFont(u8g2_font_7x14_tf);
@@ -62,7 +62,7 @@ inline void renderConfigPortal(const char* ssid, const char* ip) {
     u8g2.drawStr(38, 42, ip);
 
     u8g2.setFont(u8g2_font_6x10_tf);
-    u8g2.drawStr(0, 60, "Webden ayarlayiniz");
+    u8g2.drawStr(0, 60, "Configure via portal");
 
     u8g2.sendBuffer();
 }
