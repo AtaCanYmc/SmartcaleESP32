@@ -29,3 +29,9 @@ app/dist/
 # Logs and temporary files
 *.log
 *.tmp
+
+# Release and distribution packages
+release_packages/
+dist_firmware/
+*.apk
+*.zip

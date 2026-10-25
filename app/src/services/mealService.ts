@@ -90,6 +90,36 @@ export const mealService = {
     return Array.from(dates).sort();
   },
 
+  exportAsJSON(): string {
+    const all = this.getAll();
+    return JSON.stringify(all, null, 2);
+  },
+
+  exportAsCSV(): string {
+    const all = this.getAll();
+    const headers = ['Date', 'Time', 'Meal', 'Food Name', 'Brand', 'Weight (g)', 'Calories (kcal)', 'Protein (g)', 'Carbs (g)', 'Fat (g)'];
+    const rows = all.map((e) => {
+      const timeStr = new Date(e.timestamp).toLocaleTimeString();
+      const escape = (val: string | number | undefined) => {
+        const s = String(val ?? '').replace(/"/g, '""');
+        return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s}"` : s;
+      };
+      return [
+        escape(e.date),
+        escape(timeStr),
+        escape(e.mealType),
+        escape(e.foodName),
+        escape(e.brand || ''),
+        escape(e.weightGrams),
+        escape(e.calories),
+        escape(e.proteins),
+        escape(e.carbs),
+        escape(e.fat),
+      ].join(',');
+    });
+    return [headers.join(','), ...rows].join('\n');
+  },
+
   clearAll(): void {
     const storage = getStorage();
     if (storage) {
@@ -97,3 +127,16 @@ export const mealService = {
     }
   },
 };
+
+export function downloadFile(content: string, filename: string, mimeType: string): void {
+  if (typeof window === 'undefined' || !window.document) return;
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}

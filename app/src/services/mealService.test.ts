@@ -95,4 +95,16 @@ mealService.delete(entry1.id);
 assert.equal(mealService.getByDate('2026-10-25').length, 1);
 assert.equal(mealService.getAll().length, 2);
 
+// Test exportAsJSON
+const jsonStr = mealService.exportAsJSON();
+const parsedJson = JSON.parse(jsonStr);
+assert.equal(parsedJson.length, 2);
+assert.equal(parsedJson[0].foodName, 'Grilled Chicken Breast');
+
+// Test exportAsCSV
+const csvStr = mealService.exportAsCSV();
+assert.ok(csvStr.startsWith('Date,Time,Meal,Food Name'));
+assert.ok(csvStr.includes('Grilled Chicken Breast'));
+assert.ok(csvStr.includes('Salmon Salad'));
+
 console.log('✓ All mealService tests passed!');

@@ -112,6 +112,22 @@ export interface Translations {
   preferencesSectionTitle: string;
   calAdvancedToggle: string;
   openWifiPortal: string;
+  navHome: string;
+  aboutTitle: string;
+  aboutTagline: string;
+  aboutDeveloper: string;
+  aboutHardwareTitle: string;
+  aboutFeaturesTitle: string;
+  aboutOpenSource: string;
+  manualAddBtn: string;
+  exportDataBtn: string;
+  exportJSON: string;
+  exportCSV: string;
+  foodNameLabel: string;
+  foodNamePlaceholder: string;
+  saveBtn: string;
+  cancelBtn: string;
+  quickAddMeal: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -152,7 +168,7 @@ export const translations: Record<Language, Translations> = {
     calClose: 'Kapat',
     calDesc: 'Tartınızın kalibrasyon katsayısını hesaplamak için bilinen bir ağırlık (örneğin 500g) kullanın:',
     calRefWeightLabel: 'Referans Ağırlık (Gram)',
-    calRawAdcLabel: 'Okunan Ham Değer (Katsayı 1.0 iken)',
+    calRawAdcLabel: 'Okunan Ham Değer',
     calFactorTitle: 'Hesaplanan Katsayı',
     calNote: 'Bu değeri 192.168.4.1 web arayüzüne girerek tartınıza kaydedebilirsiniz.',
     calDone: 'Tamam',
@@ -213,6 +229,22 @@ export const translations: Record<Language, Translations> = {
     preferencesSectionTitle: 'Uygulama Tercihleri',
     calAdvancedToggle: 'Kalibrasyon (Gelişmiş)',
     openWifiPortal: 'Portalı Aç',
+    navHome: 'Anasayfa',
+    aboutTitle: 'Hakkında',
+    aboutTagline: 'Hassas Akıllı Tartı & Beslenme Takip Asistanı',
+    aboutDeveloper: 'Geliştirici',
+    aboutHardwareTitle: 'Donanım & Mimari',
+    aboutFeaturesTitle: 'Öne Çıkan Özellikler',
+    aboutOpenSource: 'Açık Kaynak Kod',
+    manualAddBtn: 'Manuel Ekle',
+    exportDataBtn: 'Dışa Aktar',
+    exportJSON: 'JSON İndir',
+    exportCSV: 'CSV (Excel) İndir',
+    foodNameLabel: 'Besin / Yemek Adı',
+    foodNamePlaceholder: 'Örn. Izgara Tavuk, Salata...',
+    saveBtn: 'Kaydet',
+    cancelBtn: 'İptal',
+    quickAddMeal: 'Öğüne Ekle',
   },
   en: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -312,6 +344,22 @@ export const translations: Record<Language, Translations> = {
     preferencesSectionTitle: 'App Preferences',
     calAdvancedToggle: 'Calibration (Advanced)',
     openWifiPortal: 'Open Portal',
+    navHome: 'Home',
+    aboutTitle: 'About',
+    aboutTagline: 'Precision Smart Scale & Nutrition Companion',
+    aboutDeveloper: 'Developer',
+    aboutHardwareTitle: 'Hardware & Architecture',
+    aboutFeaturesTitle: 'Key Features',
+    aboutOpenSource: 'Open Source Code',
+    manualAddBtn: 'Add Manually',
+    exportDataBtn: 'Export',
+    exportJSON: 'Download JSON',
+    exportCSV: 'Download CSV (Excel)',
+    foodNameLabel: 'Food / Meal Name',
+    foodNamePlaceholder: 'e.g. Grilled Chicken, Salad...',
+    saveBtn: 'Save',
+    cancelBtn: 'Cancel',
+    quickAddMeal: 'Add to Meal',
   },
   de: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -411,6 +459,22 @@ export const translations: Record<Language, Translations> = {
     preferencesSectionTitle: 'App-Einstellungen',
     calAdvancedToggle: 'Kalibrierung (Erweitert)',
     openWifiPortal: 'Portal öffnen',
+    navHome: 'Start',
+    aboutTitle: 'Über',
+    aboutTagline: 'Präzisions-Smartwaage & Ernährungs-Assistent',
+    aboutDeveloper: 'Entwickler',
+    aboutHardwareTitle: 'Hardware & Architektur',
+    aboutFeaturesTitle: 'Hauptfunktionen',
+    aboutOpenSource: 'Open-Source-Code',
+    manualAddBtn: 'Manuell hinzufügen',
+    exportDataBtn: 'Exportieren',
+    exportJSON: 'JSON herunterladen',
+    exportCSV: 'CSV (Excel) herunterladen',
+    foodNameLabel: 'Lebensmittelname',
+    foodNamePlaceholder: 'z.B. Gegrilltes Hähnchen, Salat...',
+    saveBtn: 'Speichern',
+    cancelBtn: 'Abbrechen',
+    quickAddMeal: 'Zu Mahlzeit',
   },
   fr: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -510,6 +574,22 @@ export const translations: Record<Language, Translations> = {
     preferencesSectionTitle: "Préférences de l'application",
     calAdvancedToggle: 'Étalonnage (Avancé)',
     openWifiPortal: 'Ouvrir le portail',
+    navHome: 'Accueil',
+    aboutTitle: 'À propos',
+    aboutTagline: 'Balance connectée de précision & Suivi nutritionnel',
+    aboutDeveloper: 'Développeur',
+    aboutHardwareTitle: 'Matériel & Architecture',
+    aboutFeaturesTitle: 'Fonctionnalités clés',
+    aboutOpenSource: 'Code source ouvert',
+    manualAddBtn: 'Ajouter manuellement',
+    exportDataBtn: 'Exporter',
+    exportJSON: 'Télécharger JSON',
+    exportCSV: 'Télécharger CSV (Excel)',
+    foodNameLabel: "Nom de l'aliment",
+    foodNamePlaceholder: 'ex. Poulet grillé, Salade...',
+    saveBtn: 'Enregistrer',
+    cancelBtn: 'Annuler',
+    quickAddMeal: 'Ajouter au repas',
   },
   es: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -609,6 +689,22 @@ export const translations: Record<Language, Translations> = {
     preferencesSectionTitle: 'Preferencias de la aplicación',
     calAdvancedToggle: 'Calibración (Avanzado)',
     openWifiPortal: 'Abrir portal',
+    navHome: 'Inicio',
+    aboutTitle: 'Acerca de',
+    aboutTagline: 'Báscula inteligente de precisión y Asistente nutricional',
+    aboutDeveloper: 'Desarrollador',
+    aboutHardwareTitle: 'Hardware y Arquitectura',
+    aboutFeaturesTitle: 'Características principales',
+    aboutOpenSource: 'Código fuente abierto',
+    manualAddBtn: 'Añadir manualmente',
+    exportDataBtn: 'Exportar',
+    exportJSON: 'Descargar JSON',
+    exportCSV: 'Descargar CSV (Excel)',
+    foodNameLabel: 'Nombre del alimento',
+    foodNamePlaceholder: 'ej. Pollo a la plancha, Ensalada...',
+    saveBtn: 'Guardar',
+    cancelBtn: 'Cancelar',
+    quickAddMeal: 'Añadir a comida',
   },
 };
 

@@ -29,11 +29,19 @@ import {
   ChevronDown,
   ChevronUp,
   Cpu,
-  Globe
+  Globe,
+  Home,
+  Info,
+  Code,
+  Sparkles,
+  Download,
+  FileSpreadsheet,
+  FileText
 } from 'lucide-react';
+import logoUrl from './assets/logo.jpg';
 import { scaleBle } from './services/bleService';
 import { foodService, calculateNutrition } from './services/foodService';
-import { mealService, getLocalDateString } from './services/mealService';
+import { mealService, getLocalDateString, downloadFile } from './services/mealService';
 import type { WeightUnit, ConnectionStatus } from './types/scale';
 import type { FoodProduct } from './types/food';
 import type { MealType } from './types/meal';
@@ -62,11 +70,25 @@ export const App: React.FC = () => {
   const [timerSeconds, setTimerSeconds] = useState<number>(0);
   const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false);
 
+  type AppTab = 'scale' | 'diary' | 'about';
+  const [activeTab, setActiveTab] = useState<AppTab>('scale');
+
   // Modals
   const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false);
   const [showFoodModal, setShowFoodModal] = useState<boolean>(false);
-  const [showDiaryModal, setShowDiaryModal] = useState<boolean>(false);
   const [showMealPicker, setShowMealPicker] = useState<boolean>(false);
+  const [showManualAddModal, setShowManualAddModal] = useState<boolean>(false);
+  const [showExportModal, setShowExportModal] = useState<boolean>(false);
+
+  // Manual Food Form State
+  const [manualMealType, setManualMealType] = useState<MealType>('breakfast');
+  const [manualFoodName, setManualFoodName] = useState<string>('');
+  const [manualWeight, setManualWeight] = useState<string>('150');
+  const [manualCalories, setManualCalories] = useState<string>('');
+  const [manualProteins, setManualProteins] = useState<string>('');
+  const [manualCarbs, setManualCarbs] = useState<string>('');
+  const [manualFat, setManualFat] = useState<string>('');
+
   const [selectedDate, setSelectedDate] = useState<string>(getLocalDateString);
   const [, setDiaryRevision] = useState<number>(0);
   const mealEntries = mealService.getByDate(selectedDate);
@@ -74,6 +96,16 @@ export const App: React.FC = () => {
   const [refWeightGrams, setRefWeightGrams] = useState<string>('500');
   const [rawAdcInput, setRawAdcInput] = useState<string>('210000');
   const [isCalOpen, setIsCalOpen] = useState<boolean>(false);
+
+  const handleGoHome = () => {
+    setActiveTab('scale');
+    setShowSettingsModal(false);
+    setShowFoodModal(false);
+    setShowMealPicker(false);
+    setShowManualAddModal(false);
+    setShowExportModal(false);
+    stopScanner();
+  };
 
   // Food & Barcode state
   const [activeProduct, setActiveProduct] = useState<FoodProduct | null>(null);
@@ -219,19 +251,64 @@ export const App: React.FC = () => {
 
   // Close modals with Escape key
   useEffect(() => {
-    if (!showSettingsModal && !showFoodModal && !showDiaryModal && !showMealPicker) return;
+    if (!showSettingsModal && !showFoodModal && !showMealPicker && !showManualAddModal && !showExportModal) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setShowSettingsModal(false);
         setShowFoodModal(false);
-        setShowDiaryModal(false);
         setShowMealPicker(false);
+        setShowManualAddModal(false);
+        setShowExportModal(false);
         stopScanner();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showSettingsModal, showFoodModal, showDiaryModal, showMealPicker]);
+  }, [showSettingsModal, showFoodModal, showMealPicker, showManualAddModal, showExportModal]);
+
+  const handleManualAddSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const foodName = manualFoodName.trim();
+    if (!foodName) return;
+
+    const cals = parseFloat(manualCalories);
+    const weight = parseFloat(manualWeight) || 100;
+    if (isNaN(cals) || cals < 0) return;
+
+    const added = mealService.add({
+      date: selectedDate,
+      mealType: manualMealType,
+      foodName,
+      weightGrams: weight,
+      calories: cals,
+      proteins: parseFloat(manualProteins) || 0,
+      carbs: parseFloat(manualCarbs) || 0,
+      fat: parseFloat(manualFat) || 0,
+    });
+
+    setShowManualAddModal(false);
+    setDiaryRevision((r) => r + 1);
+    setManualFoodName('');
+    setManualCalories('');
+    setManualProteins('');
+    setManualCarbs('');
+    setManualFat('');
+
+    setLogSuccessToast(`${t[manualMealType]}: ${added.foodName} (${added.weightGrams.toFixed(0)}g • ${added.calories.toFixed(2)} kcal)`);
+    setTimeout(() => setLogSuccessToast(null), 2800);
+  };
+
+  const handleExportJSON = () => {
+    const data = mealService.exportAsJSON();
+    downloadFile(data, `smartcale-diary-${selectedDate}.json`, 'application/json');
+    setShowExportModal(false);
+  };
+
+  const handleExportCSV = () => {
+    const data = mealService.exportAsCSV();
+    downloadFile(data, `smartcale-diary-${selectedDate}.csv`, 'text/csv;charset=utf-8;');
+    setShowExportModal(false);
+  };
 
   const handleLogMeal = (mealType: MealType) => {
     if (!activeProduct) return;
@@ -427,148 +504,470 @@ export const App: React.FC = () => {
         </div>
       )}
 
-      <main className="scale-card">
-        <div className="unit-selector" role="group" aria-label={t.unitSelection}>
-          {(['g', 'oz', 'ml'] as WeightUnit[]).map((u) => (
-            <button
-              key={u}
-              className={`unit-btn ${unit === u ? 'active' : ''}`}
-              onClick={() => setUnit(u)}
-              aria-pressed={unit === u}
-              aria-label={t.unitAria(u)}
-            >
-              {u.toUpperCase()}
-            </button>
-          ))}
-        </div>
+      {activeTab === 'scale' ? (
+        <>
+          <main className="scale-card">
+            <div className="unit-selector" role="group" aria-label={t.unitSelection}>
+              {(['g', 'oz', 'ml'] as WeightUnit[]).map((u) => (
+                <button
+                  key={u}
+                  className={`unit-btn ${unit === u ? 'active' : ''}`}
+                  onClick={() => setUnit(u)}
+                  aria-pressed={unit === u}
+                  aria-label={t.unitAria(u)}
+                >
+                  {u.toUpperCase()}
+                </button>
+              ))}
+            </div>
 
-        <div className="weight-value-container" aria-live="polite">
-          <span className="weight-digits">{formatWeight(weightGrams)}</span>
-          <span className="weight-unit">{unit}</span>
-        </div>
+            <div className="weight-value-container" aria-live="polite">
+              <span className="weight-digits">{formatWeight(weightGrams)}</span>
+              <span className="weight-unit">{unit}</span>
+            </div>
 
-        <div style={{ width: '100%', height: '40px', padding: '0 10px', opacity: 0.8 }} aria-hidden="true">
-          <svg viewBox="0 0 100 40" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
-            <polyline
-              fill="none"
-              stroke="var(--accent-blue)"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              points={svgPoints}
-            />
-          </svg>
-        </div>
+            <div style={{ width: '100%', height: '40px', padding: '0 10px', opacity: 0.8 }} aria-hidden="true">
+              <svg viewBox="0 0 100 40" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
+                <polyline
+                  fill="none"
+                  stroke="var(--accent-blue)"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  points={svgPoints}
+                />
+              </svg>
+            </div>
 
-        <div className="weight-meta">
-          {isTared && (
-            <span style={{ color: 'var(--accent-green)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <CheckCircle2 size={13} aria-hidden="true" /> {t.tared}
-            </span>
-          )}
-          {!isTared && (
-            <span>{connectionStatus === 'connected' ? t.liveStream : t.standby}</span>
-          )}
-        </div>
-      </main>
+            <div className="weight-meta">
+              {isTared && (
+                <span style={{ color: 'var(--accent-green)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <CheckCircle2 size={13} aria-hidden="true" /> {t.tared}
+                </span>
+              )}
+              {!isTared && (
+                <span>{connectionStatus === 'connected' ? t.liveStream : t.standby}</span>
+              )}
+            </div>
+          </main>
 
-      <button
-        className="btn btn-primary btn-tare-huge"
-        onClick={handleTare}
-        aria-label={t.tareAria}
-      >
-        <RotateCcw size={22} aria-hidden="true" />
-        <span>{t.tareBtn}</span>
-      </button>
+          <button
+            className="btn btn-primary btn-tare-huge"
+            onClick={handleTare}
+            aria-label={t.tareAria}
+          >
+            <RotateCcw size={22} aria-hidden="true" />
+            <span>{t.tareBtn}</span>
+          </button>
 
-      {activeProduct && liveNutrition && (
-        <section className="nutrition-card" aria-label={t.foodNutritionTitle}>
-          <div className="nutrition-product-header">
-            {activeProduct.imageUrl ? (
-              <img src={activeProduct.imageUrl} alt="" className="nutrition-thumb" />
-            ) : (
-              <div className="nutrition-thumb-fallback">
-                <Utensils size={22} />
+          {activeProduct && liveNutrition && (
+            <section className="nutrition-card" aria-label={t.foodNutritionTitle}>
+              <div className="nutrition-product-header">
+                {activeProduct.imageUrl ? (
+                  <img src={activeProduct.imageUrl} alt="" className="nutrition-thumb" />
+                ) : (
+                  <div className="nutrition-thumb-fallback">
+                    <Utensils size={22} />
+                  </div>
+                )}
+                <div className="nutrition-title-area">
+                  <div className="nutrition-product-name">{activeProduct.name}</div>
+                  <div className="nutrition-product-brand">
+                    {activeProduct.brands || activeProduct.code} • {activeProduct.nutriments.calories100g.toFixed(2)} kcal {t.per100gSuffix}
+                  </div>
+                </div>
+                <button
+                  className="icon-btn"
+                  onClick={() => setActiveProduct(null)}
+                  aria-label={t.removeProduct}
+                  title={t.removeProduct}
+                >
+                  <Trash2 size={16} />
+                </button>
               </div>
-            )}
-            <div className="nutrition-title-area">
-              <div className="nutrition-product-name">{activeProduct.name}</div>
-              <div className="nutrition-product-brand">
-                {activeProduct.brands || activeProduct.code} • {activeProduct.nutriments.calories100g.toFixed(2)} kcal {t.per100gSuffix}
+
+              <div className="macros-grid">
+                <div className="macro-box calories">
+                  <span className="macro-value">{liveNutrition.calories.toFixed(2)}</span>
+                  <span className="macro-label">kcal</span>
+                </div>
+                <div className="macro-box">
+                  <span className="macro-value">{liveNutrition.proteins.toFixed(2)}g</span>
+                  <span className="macro-label">{t.proteinLabel}</span>
+                </div>
+                <div className="macro-box">
+                  <span className="macro-value">{liveNutrition.carbs.toFixed(2)}g</span>
+                  <span className="macro-label">{t.carbsLabel}</span>
+                </div>
+                <div className="macro-box">
+                  <span className="macro-value">{liveNutrition.fat.toFixed(2)}g</span>
+                  <span className="macro-label">{t.fatLabel}</span>
+                </div>
+              </div>
+
+              <div className="nutrition-actions-row">
+                <button
+                  type="button"
+                  className="btn btn-primary btn-log-meal"
+                  onClick={() => setShowMealPicker(true)}
+                >
+                  <Plus size={16} aria-hidden="true" />
+                  <span>{t.logMeal}</span>
+                </button>
+              </div>
+            </section>
+          )}
+
+          <section className="feature-card" aria-label={t.timerAria}>
+            <div className="card-header">
+              <span>{t.timerTitle}</span>
+              <span>{isTimerRunning ? t.timerRunning : t.timerStopped}</span>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span className="timer-digits" aria-live="off">{formatTimer(timerSeconds)}</span>
+
+              <div className="timer-actions">
+                <button
+                  className="icon-btn"
+                  onClick={() => setIsTimerRunning(!isTimerRunning)}
+                  aria-label={isTimerRunning ? t.timerStop : t.timerStart}
+                >
+                  {isTimerRunning ? <Pause size={18} /> : <Play size={18} />}
+                </button>
+                <button
+                  className="icon-btn"
+                  onClick={() => {
+                    setIsTimerRunning(false);
+                    setTimerSeconds(0);
+                  }}
+                  aria-label={t.timerReset}
+                >
+                  <RotateCcw size={18} />
+                </button>
               </div>
             </div>
-            <button
-              className="icon-btn"
-              onClick={() => setActiveProduct(null)}
-              aria-label={t.removeProduct}
-              title={t.removeProduct}
-            >
-              <Trash2 size={16} />
-            </button>
+          </section>
+        </>
+      ) : activeTab === 'diary' ? (
+        <div className="diary-screen">
+          <div className="diary-screen-header">
+            <div className="diary-title-area">
+              <h1 className="diary-screen-title">{t.mealTitle}</h1>
+              <span className="diary-screen-sub">{mealEntries.length} {t.logMeal.toLowerCase()}</span>
+            </div>
+
+            <div className="diary-header-actions">
+              <button
+                type="button"
+                className="btn btn-secondary btn-header-action"
+                onClick={() => setShowExportModal(true)}
+                title={t.exportDataBtn}
+                aria-label={t.exportDataBtn}
+              >
+                <Download size={15} aria-hidden="true" />
+                <span>{t.exportDataBtn}</span>
+              </button>
+
+              <button
+                type="button"
+                className="btn btn-primary btn-header-action"
+                onClick={() => {
+                  setManualMealType('breakfast');
+                  setShowManualAddModal(true);
+                }}
+                title={t.manualAddBtn}
+                aria-label={t.manualAddBtn}
+              >
+                <Plus size={15} aria-hidden="true" />
+                <span>{t.manualAddBtn}</span>
+              </button>
+            </div>
           </div>
 
-          <div className="macros-grid">
-            <div className="macro-box calories">
-              <span className="macro-value">{liveNutrition.calories.toFixed(2)}</span>
-              <span className="macro-label">kcal</span>
-            </div>
-            <div className="macro-box">
-              <span className="macro-value">{liveNutrition.proteins.toFixed(2)}g</span>
-              <span className="macro-label">{t.proteinLabel}</span>
-            </div>
-            <div className="macro-box">
-              <span className="macro-value">{liveNutrition.carbs.toFixed(2)}g</span>
-              <span className="macro-label">{t.carbsLabel}</span>
-            </div>
-            <div className="macro-box">
-              <span className="macro-value">{liveNutrition.fat.toFixed(2)}g</span>
-              <span className="macro-label">{t.fatLabel}</span>
-            </div>
-          </div>
-
-          <div className="nutrition-actions-row">
+          {/* Date Navigator & Native Calendar Picker */}
+          <div className="date-nav-bar">
             <button
               type="button"
-              className="btn btn-primary btn-log-meal"
-              onClick={() => setShowMealPicker(true)}
+              className="icon-btn"
+              onClick={() => stepDate(-1)}
+              aria-label="Previous day"
             >
-              <Plus size={16} aria-hidden="true" />
-              <span>{t.logMeal}</span>
+              <ChevronLeft size={18} />
+            </button>
+
+            <div className="date-picker-wrapper">
+              <label htmlFor="diary-date-input" className="date-display-btn">
+                <CalendarDays size={16} aria-hidden="true" />
+                <span>{formatDisplayDate(selectedDate)}</span>
+              </label>
+              <input
+                id="diary-date-input"
+                type="date"
+                className="sr-date-input"
+                value={selectedDate}
+                onChange={(e) => e.target.value && setSelectedDate(e.target.value)}
+              />
+            </div>
+
+            <button
+              type="button"
+              className="icon-btn"
+              onClick={() => stepDate(1)}
+              aria-label="Next day"
+            >
+              <ChevronRight size={18} />
+            </button>
+
+            {selectedDate !== getLocalDateString() && (
+              <button
+                type="button"
+                className="btn-today-chip"
+                onClick={() => setSelectedDate(getLocalDateString())}
+              >
+                {t.today}
+              </button>
+            )}
+          </div>
+
+          {/* Daily Total Summary Card */}
+          <div className="day-summary-card">
+            <div className="day-summary-header">
+              <span className="day-summary-title">{t.dailyTotal}</span>
+              <span className="day-summary-calories">
+                {mealService.calculateDaySummary(mealEntries).calories.toFixed(2)} kcal
+              </span>
+            </div>
+
+            <div className="day-summary-macros">
+              <div className="day-macro-box">
+                <span className="day-macro-value">
+                  {mealService.calculateDaySummary(mealEntries).proteins.toFixed(2)}g
+                </span>
+                <span className="day-macro-label">{t.proteinLabel}</span>
+              </div>
+              <div className="day-macro-box">
+                <span className="day-macro-value">
+                  {mealService.calculateDaySummary(mealEntries).carbs.toFixed(2)}g
+                </span>
+                <span className="day-macro-label">{t.carbsLabel}</span>
+              </div>
+              <div className="day-macro-box">
+                <span className="day-macro-value">
+                  {mealService.calculateDaySummary(mealEntries).fat.toFixed(2)}g
+                </span>
+                <span className="day-macro-label">{t.fatLabel}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Grouped Meals */}
+          {(['breakfast', 'lunch', 'dinner', 'snack'] as MealType[]).map((mType) => {
+            const groupEntries = mealEntries.filter((e) => e.mealType === mType);
+            const groupSummary = mealService.calculateDaySummary(groupEntries);
+
+            return (
+              <div key={mType} className="meal-group">
+                <div className="meal-group-header">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span>{t[mType]}</span>
+                    {groupEntries.length > 0 && (
+                      <span className="meal-group-cals">{groupSummary.calories.toFixed(2)} kcal</span>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    className="btn-meal-add-pill"
+                    onClick={() => {
+                      setManualMealType(mType);
+                      setShowManualAddModal(true);
+                    }}
+                    title={t.quickAddMeal}
+                  >
+                    <Plus size={13} />
+                    <span>{t.quickAddMeal}</span>
+                  </button>
+                </div>
+
+                {groupEntries.length === 0 ? (
+                  <div className="meal-empty-hint">-</div>
+                ) : (
+                  groupEntries.map((item) => (
+                    <div key={item.id} className="meal-item">
+                      <div className="meal-item-info">
+                        <span className="meal-item-name">{item.foodName}</span>
+                        <span className="meal-item-sub">
+                          {item.weightGrams.toFixed(0)}g {item.brand ? `• ${item.brand}` : ''}
+                        </span>
+                        <div className="meal-item-macros">
+                          <span className="macro-chip protein">P: {item.proteins.toFixed(2)}g</span>
+                          <span className="macro-chip carbs">K: {item.carbs.toFixed(2)}g</span>
+                          <span className="macro-chip fat">Y: {item.fat.toFixed(2)}g</span>
+                        </div>
+                      </div>
+
+                      <div className="meal-item-right">
+                        <span className="meal-item-cals">{item.calories.toFixed(2)} kcal</span>
+                        <button
+                          type="button"
+                          className="icon-btn"
+                          onClick={() => handleDeleteEntry(item.id)}
+                          aria-label={t.deleteEntry}
+                          title={t.deleteEntry}
+                          style={{ width: '32px', height: '32px', color: 'var(--accent-red)' }}
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            );
+          })}
+
+          {mealEntries.length === 0 && (
+            <div style={{ padding: '24px 12px', textAlign: 'center', color: 'var(--text-muted)' }}>
+              <Utensils size={32} style={{ margin: '0 auto 8px', opacity: 0.4 }} />
+              <p style={{ fontSize: '13px' }}>{t.noEntriesToday}</p>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="about-screen">
+          <div className="about-screen-header">
+            <div className="about-title-area">
+              <h1 className="about-screen-title">{t.aboutTitle}</h1>
+              <span className="about-screen-sub">{t.aboutTagline}</span>
+            </div>
+            <button
+              type="button"
+              className="icon-btn"
+              onClick={handleGoHome}
+              aria-label={t.navHome}
+              title={t.navHome}
+            >
+              <Home size={18} />
             </button>
           </div>
-        </section>
+
+          {/* Hero branding */}
+          <div className="about-hero">
+            <img src={logoUrl} alt="Smartcale Logo" className="about-logo" />
+            <h2 className="about-app-name">Smartcale ESP32</h2>
+            <p className="about-tagline">{t.aboutTagline}</p>
+            <div className="about-badges-row">
+              <span className="about-badge version">v1.1.0</span>
+              <span className="about-badge tag">ESP32-C3 GATT</span>
+              <span className="about-badge license">Apache 2.0 License</span>
+            </div>
+          </div>
+
+          {/* Developer & GitHub Card */}
+          <div className="about-section">
+            <span className="settings-group-title">
+              <Code size={14} aria-hidden="true" />
+              {t.aboutDeveloper} & {t.aboutOpenSource}
+            </span>
+
+            <div className="about-card">
+              <div className="about-dev-row">
+                <div className="about-dev-avatar">AC</div>
+                <div className="about-dev-info">
+                  <span className="about-dev-name">Ata Can Yaymacı</span>
+                  <span className="about-dev-sub">Embedded & Mobile Systems Developer</span>
+                </div>
+              </div>
+
+              <a
+                href="https://github.com/AtaCanYmc/SmartcaleESP32"
+                target="_blank"
+                rel="noreferrer"
+                className="btn btn-secondary about-github-btn"
+              >
+                <Code size={15} />
+                <span>github.com/AtaCanYmc/SmartcaleESP32</span>
+                <ExternalLink size={13} />
+              </a>
+            </div>
+          </div>
+
+          {/* Hardware & Tech Specs */}
+          <div className="about-section">
+            <span className="settings-group-title">
+              <Cpu size={14} aria-hidden="true" />
+              {t.aboutHardwareTitle}
+            </span>
+
+            <div className="about-specs-grid">
+              <div className="about-spec-item">
+                <span className="about-spec-label">MCU</span>
+                <span className="about-spec-val">ESP32-C3 SuperMini</span>
+                <span className="about-spec-desc">RISC-V 160MHz 32-bit</span>
+              </div>
+
+              <div className="about-spec-item">
+                <span className="about-spec-label">ADC & Sensor</span>
+                <span className="about-spec-val">HX711 (24-bit)</span>
+                <span className="about-spec-desc">Strain Gauge Load Cell</span>
+              </div>
+
+              <div className="about-spec-item">
+                <span className="about-spec-label">Wireless</span>
+                <span className="about-spec-val">BLE 5.0 + Wi-Fi</span>
+                <span className="about-spec-desc">Custom GATT + SoftAP</span>
+              </div>
+
+              <div className="about-spec-item">
+                <span className="about-spec-label">Software Stack</span>
+                <span className="about-spec-val">React 19 + Capacitor 8</span>
+                <span className="about-spec-desc">Vite, TypeScript, iOS/Android</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Key Features List */}
+          <div className="about-section">
+            <span className="settings-group-title">
+              <Sparkles size={14} aria-hidden="true" />
+              {t.aboutFeaturesTitle}
+            </span>
+
+            <div className="about-features-card">
+              <div className="about-feature-row">
+                <div className="about-feature-bullet" />
+                <span>Hassas Canlı Ağırlık Akışı & Tek Tıkla Dara (Tare)</span>
+              </div>
+              <div className="about-feature-row">
+                <div className="about-feature-bullet" />
+                <span>Open Food Facts Entegrasyonu & Barkod Tarayıcı</span>
+              </div>
+              <div className="about-feature-row">
+                <div className="about-feature-bullet" />
+                <span>Çevrimdışı Günlük Öğün Takibi & Takvim Geçmişi</span>
+              </div>
+              <div className="about-feature-row">
+                <div className="about-feature-bullet" />
+                <span>Wi-Fi Portal Erişimi & Yerleşik 2 Noktalı Kalibrasyon</span>
+              </div>
+              <div className="about-feature-row">
+                <div className="about-feature-bullet" />
+                <span>5 Dil (TR/EN/DE/FR/ES) & Otomatik Açık/Koyu Tema</span>
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={handleGoHome}
+          >
+            <Home size={16} aria-hidden="true" />
+            <span>{t.navHome}</span>
+          </button>
+        </div>
       )}
-
-      <section className="feature-card" aria-label={t.timerAria}>
-        <div className="card-header">
-          <span>{t.timerTitle}</span>
-          <span>{isTimerRunning ? t.timerRunning : t.timerStopped}</span>
-        </div>
-
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span className="timer-digits" aria-live="off">{formatTimer(timerSeconds)}</span>
-
-          <div className="timer-actions">
-            <button
-              className="icon-btn"
-              onClick={() => setIsTimerRunning(!isTimerRunning)}
-              aria-label={isTimerRunning ? t.timerStop : t.timerStart}
-            >
-              {isTimerRunning ? <Pause size={18} /> : <Play size={18} />}
-            </button>
-            <button
-              className="icon-btn"
-              onClick={() => {
-                setIsTimerRunning(false);
-                setTimerSeconds(0);
-              }}
-              aria-label={t.timerReset}
-            >
-              <RotateCcw size={18} />
-            </button>
-          </div>
-        </div>
-      </section>
 
       {showSettingsModal && (
         <div
@@ -823,9 +1222,39 @@ export const App: React.FC = () => {
               </div>
 
               {/* Category 3: About */}
-              <div className="settings-about" style={{ marginTop: '0', padding: '6px 0' }}>
-                <span>Smartcale ESP32 • AtaCanYmc</span>
-                <span>{t.versionLabel} 1.1.0</span>
+              <div className="settings-group">
+                <span className="settings-group-title">
+                  <Info size={14} aria-hidden="true" />
+                  {t.aboutTitle}
+                </span>
+
+                <div
+                  className="settings-card"
+                  onClick={() => {
+                    setActiveTab('about');
+                    setShowSettingsModal(false);
+                  }}
+                  style={{ cursor: 'pointer' }}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      setActiveTab('about');
+                      setShowSettingsModal(false);
+                    }
+                  }}
+                >
+                  <div className="settings-card-left">
+                    <div className="settings-card-icon">
+                      <Info size={18} />
+                    </div>
+                    <div className="settings-card-info">
+                      <span className="settings-card-title">Smartcale ESP32</span>
+                      <span className="settings-card-sub">{t.versionLabel} 1.1.0 • AtaCanYmc</span>
+                    </div>
+                  </div>
+                  <ChevronRight size={18} style={{ color: 'var(--text-muted)' }} />
+                </div>
               </div>
             </div>
 
@@ -1012,171 +1441,220 @@ export const App: React.FC = () => {
         </div>
       )}
 
-      {/* Diary / Calendar Modal */}
-      {showDiaryModal && (
+      {/* Manual Food Add Modal */}
+      {showManualAddModal && (
         <div
           className="modal-overlay"
-          onClick={() => setShowDiaryModal(false)}
+          onClick={() => setShowManualAddModal(false)}
         >
           <div
             className="modal-content"
             role="dialog"
             aria-modal="true"
-            aria-labelledby="diary-modal-title"
+            aria-labelledby="manual-add-title"
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 id="diary-modal-title" className="modal-title">{t.mealTitle}</h2>
+              <h2 id="manual-add-title" className="modal-title">{t.manualAddBtn}</h2>
               <button
                 className="icon-btn"
-                onClick={() => setShowDiaryModal(false)}
+                onClick={() => setShowManualAddModal(false)}
                 aria-label={t.calClose}
               >
                 <X size={18} />
               </button>
             </div>
 
-            {/* Date Navigator & Native Calendar Picker */}
-            <div className="date-nav-bar">
-              <button
-                type="button"
-                className="icon-btn"
-                onClick={() => stepDate(-1)}
-                aria-label="Previous day"
-              >
-                <ChevronLeft size={18} />
-              </button>
+            <form onSubmit={handleManualAddSubmit} className="settings-body" style={{ gap: '12px' }}>
+              {/* Meal Selector */}
+              <div>
+                <label className="input-label">{t.selectMeal}</label>
+                <div className="meal-picker-grid" style={{ marginTop: '0', gridTemplateColumns: 'repeat(4, 1fr)' }}>
+                  {(['breakfast', 'lunch', 'dinner', 'snack'] as MealType[]).map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      className={`meal-pill-btn ${manualMealType === m ? 'active' : ''}`}
+                      onClick={() => setManualMealType(m)}
+                    >
+                      {t[m]}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-              <div className="date-picker-wrapper">
-                <label htmlFor="diary-date-input" className="date-display-btn">
-                  <CalendarDays size={16} aria-hidden="true" />
-                  <span>{formatDisplayDate(selectedDate)}</span>
-                </label>
+              {/* Food Name */}
+              <div>
+                <label htmlFor="manual-food-name" className="input-label">{t.foodNameLabel} *</label>
                 <input
-                  id="diary-date-input"
-                  type="date"
-                  className="sr-date-input"
-                  value={selectedDate}
-                  onChange={(e) => e.target.value && setSelectedDate(e.target.value)}
+                  id="manual-food-name"
+                  type="text"
+                  required
+                  className="input-field"
+                  placeholder={t.foodNamePlaceholder}
+                  value={manualFoodName}
+                  onChange={(e) => setManualFoodName(e.target.value)}
                 />
               </div>
 
-              <button
-                type="button"
-                className="icon-btn"
-                onClick={() => stepDate(1)}
-                aria-label="Next day"
-              >
-                <ChevronRight size={18} />
-              </button>
-
-              {selectedDate !== getLocalDateString() && (
-                <button
-                  type="button"
-                  className="btn-today-chip"
-                  onClick={() => setSelectedDate(getLocalDateString())}
-                >
-                  {t.today}
-                </button>
-              )}
-            </div>
-
-            <div className="settings-body">
-              {/* Daily Total Summary Card */}
-              <div className="day-summary-card">
-                <div className="day-summary-header">
-                  <span className="day-summary-title">{t.dailyTotal}</span>
-                  <span className="day-summary-calories">
-                    {mealService.calculateDaySummary(mealEntries).calories.toFixed(2)} kcal
-                  </span>
+              {/* Calories & Weight */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div>
+                  <label htmlFor="manual-calories" className="input-label">{t.caloriesLabel} (kcal) *</label>
+                  <input
+                    id="manual-calories"
+                    type="number"
+                    step="0.1"
+                    required
+                    className="input-field"
+                    placeholder="250"
+                    value={manualCalories}
+                    onChange={(e) => setManualCalories(e.target.value)}
+                  />
                 </div>
-
-                <div className="day-summary-macros">
-                  <div className="day-macro-box">
-                    <span className="day-macro-value">
-                      {mealService.calculateDaySummary(mealEntries).proteins.toFixed(2)}g
-                    </span>
-                    <span className="day-macro-label">{t.proteinLabel}</span>
-                  </div>
-                  <div className="day-macro-box">
-                    <span className="day-macro-value">
-                      {mealService.calculateDaySummary(mealEntries).carbs.toFixed(2)}g
-                    </span>
-                    <span className="day-macro-label">{t.carbsLabel}</span>
-                  </div>
-                  <div className="day-macro-box">
-                    <span className="day-macro-value">
-                      {mealService.calculateDaySummary(mealEntries).fat.toFixed(2)}g
-                    </span>
-                    <span className="day-macro-label">{t.fatLabel}</span>
-                  </div>
+                <div>
+                  <label htmlFor="manual-weight" className="input-label">{t.weightLabel} (g)</label>
+                  <input
+                    id="manual-weight"
+                    type="number"
+                    step="1"
+                    className="input-field"
+                    placeholder="150"
+                    value={manualWeight}
+                    onChange={(e) => setManualWeight(e.target.value)}
+                  />
                 </div>
               </div>
 
-              {/* Grouped Meals */}
-              {(['breakfast', 'lunch', 'dinner', 'snack'] as MealType[]).map((mType) => {
-                const groupEntries = mealEntries.filter((e) => e.mealType === mType);
-                const groupSummary = mealService.calculateDaySummary(groupEntries);
-
-                return (
-                  <div key={mType} className="meal-group">
-                    <div className="meal-group-header">
-                      <span>{t[mType]}</span>
-                      {groupEntries.length > 0 && (
-                        <span className="meal-group-cals">{groupSummary.calories.toFixed(2)} kcal</span>
-                      )}
-                    </div>
-
-                    {groupEntries.length === 0 ? (
-                      <div className="meal-empty-hint">-</div>
-                    ) : (
-                      groupEntries.map((item) => (
-                        <div key={item.id} className="meal-item">
-                          <div className="meal-item-info">
-                            <span className="meal-item-name">{item.foodName}</span>
-                            <span className="meal-item-sub">
-                              {item.weightGrams.toFixed(0)}g {item.brand ? `• ${item.brand}` : ''}
-                            </span>
-                            <div className="meal-item-macros">
-                              <span className="macro-chip protein">P: {item.proteins.toFixed(2)}g</span>
-                              <span className="macro-chip carbs">K: {item.carbs.toFixed(2)}g</span>
-                              <span className="macro-chip fat">Y: {item.fat.toFixed(2)}g</span>
-                            </div>
-                          </div>
-
-                          <div className="meal-item-right">
-                            <span className="meal-item-cals">{item.calories.toFixed(2)} kcal</span>
-                            <button
-                              type="button"
-                              className="icon-btn"
-                              onClick={() => handleDeleteEntry(item.id)}
-                              aria-label={t.deleteEntry}
-                              title={t.deleteEntry}
-                              style={{ width: '32px', height: '32px', color: 'var(--accent-red)' }}
-                            >
-                              <Trash2 size={15} />
-                            </button>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                );
-              })}
-
-              {mealEntries.length === 0 && (
-                <div style={{ padding: '20px 10px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                  <Utensils size={28} style={{ margin: '0 auto 8px', opacity: 0.5 }} />
-                  <p style={{ fontSize: '13px' }}>{t.noEntriesToday}</p>
+              {/* Optional Macros */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                <div>
+                  <label htmlFor="manual-protein" className="input-label">{t.proteinLabel} (g)</label>
+                  <input
+                    id="manual-protein"
+                    type="number"
+                    step="0.1"
+                    className="input-field"
+                    placeholder="0"
+                    value={manualProteins}
+                    onChange={(e) => setManualProteins(e.target.value)}
+                  />
                 </div>
-              )}
+                <div>
+                  <label htmlFor="manual-carbs" className="input-label">{t.carbsLabel} (g)</label>
+                  <input
+                    id="manual-carbs"
+                    type="number"
+                    step="0.1"
+                    className="input-field"
+                    placeholder="0"
+                    value={manualCarbs}
+                    onChange={(e) => setManualCarbs(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="manual-fat" className="input-label">{t.fatLabel} (g)</label>
+                  <input
+                    id="manual-fat"
+                    type="number"
+                    step="0.1"
+                    className="input-field"
+                    placeholder="0"
+                    value={manualFat}
+                    onChange={(e) => setManualFat(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  style={{ flex: 1 }}
+                  onClick={() => setShowManualAddModal(false)}
+                >
+                  {t.cancelBtn}
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  style={{ flex: 1 }}
+                >
+                  {t.saveBtn}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Export Data Modal */}
+      {showExportModal && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowExportModal(false)}
+        >
+          <div
+            className="modal-content"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="export-modal-title"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '380px' }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 id="export-modal-title" className="modal-title">{t.exportDataBtn}</h2>
+              <button
+                className="icon-btn"
+                onClick={() => setShowExportModal(false)}
+                aria-label={t.calClose}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <p className="modal-desc" style={{ marginBottom: '6px' }}>
+              {mealService.getAll().length} kayıt mevcut. Format seçin:
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <button
+                type="button"
+                className="export-card-btn"
+                onClick={handleExportCSV}
+              >
+                <div className="export-card-icon csv">
+                  <FileSpreadsheet size={22} />
+                </div>
+                <div className="export-card-info">
+                  <span className="export-card-title">{t.exportCSV}</span>
+                  <span className="export-card-sub">Excel, Google E-Tablolar & Numbers uyumlu</span>
+                </div>
+                <Download size={16} style={{ color: 'var(--text-muted)', marginLeft: 'auto' }} />
+              </button>
+
+              <button
+                type="button"
+                className="export-card-btn"
+                onClick={handleExportJSON}
+              >
+                <div className="export-card-icon json">
+                  <FileText size={22} />
+                </div>
+                <div className="export-card-info">
+                  <span className="export-card-title">{t.exportJSON}</span>
+                  <span className="export-card-sub">Ham JSON yedekleme formatı</span>
+                </div>
+                <Download size={16} style={{ color: 'var(--text-muted)', marginLeft: 'auto' }} />
+              </button>
             </div>
 
             <button
-              className="btn btn-primary"
-              onClick={() => setShowDiaryModal(false)}
+              className="btn btn-secondary"
+              style={{ marginTop: '8px' }}
+              onClick={() => setShowExportModal(false)}
             >
-              {t.calDone}
+              {t.cancelBtn}
             </button>
           </div>
         </div>
@@ -1192,8 +1670,21 @@ export const App: React.FC = () => {
       <nav className="bottom-nav" aria-label="Bottom Navigation">
         <button
           type="button"
+          className={`bottom-nav-item ${activeTab === 'scale' && !showFoodModal && !showSettingsModal ? 'active' : ''}`}
+          onClick={handleGoHome}
+          aria-label={t.navHome}
+        >
+          <Home size={20} aria-hidden="true" />
+          <span>{t.navHome}</span>
+        </button>
+
+        <button
+          type="button"
           className={`bottom-nav-item ${showFoodModal ? 'active' : ''}`}
-          onClick={() => setShowFoodModal(true)}
+          onClick={() => {
+            setShowFoodModal(true);
+            setShowSettingsModal(false);
+          }}
           aria-label={t.foodSearchOrScan}
         >
           <ScanLine size={20} aria-hidden="true" />
@@ -1202,8 +1693,12 @@ export const App: React.FC = () => {
 
         <button
           type="button"
-          className={`bottom-nav-item ${showDiaryModal ? 'active' : ''}`}
-          onClick={() => setShowDiaryModal(true)}
+          className={`bottom-nav-item ${activeTab === 'diary' && !showFoodModal && !showSettingsModal ? 'active' : ''}`}
+          onClick={() => {
+            setActiveTab('diary');
+            setShowFoodModal(false);
+            setShowSettingsModal(false);
+          }}
           aria-label={t.mealTitle}
         >
           <CalendarDays size={20} aria-hidden="true" />
@@ -1213,7 +1708,10 @@ export const App: React.FC = () => {
         <button
           type="button"
           className={`bottom-nav-item ${showSettingsModal ? 'active' : ''}`}
-          onClick={() => setShowSettingsModal(true)}
+          onClick={() => {
+            setShowSettingsModal(true);
+            setShowFoodModal(false);
+          }}
           aria-label={t.settingsBtnAria}
         >
           <div className="nav-icon-wrapper">
@@ -1221,6 +1719,20 @@ export const App: React.FC = () => {
             <span className={`nav-dot ${connectionStatus}`} />
           </div>
           <span>{t.navSettings}</span>
+        </button>
+
+        <button
+          type="button"
+          className={`bottom-nav-item ${activeTab === 'about' && !showFoodModal && !showSettingsModal ? 'active' : ''}`}
+          onClick={() => {
+            setActiveTab('about');
+            setShowFoodModal(false);
+            setShowSettingsModal(false);
+          }}
+          aria-label={t.aboutTitle}
+        >
+          <Info size={20} aria-hidden="true" />
+          <span>{t.aboutTitle}</span>
         </button>
       </nav>
     </div>

@@ -16,7 +16,7 @@ PIO_UPLOAD_FLAGS  := $(if $(PORT),--upload-port $(PORT),)
 PIO_MONITOR_FLAGS := $(if $(PORT),--port $(PORT),) --baud $(BAUD)
 
 .PHONY: all help build build-firmware build-fw flash upload monitor flash-monitor clean-firmware \
-        app-install app-dev app-build app-sync app-android app-ios app-lint clean-app clean ci
+        app-install app-dev app-build app-sync app-android app-ios app-lint app-test clean-app clean ci package
 
 help:
 	@echo ""
@@ -38,11 +38,13 @@ help:
 	@echo "  $(CYAN)app-android$(RESET)      Open Android Studio project"
 	@echo "  $(CYAN)app-ios$(RESET)          Open Xcode project (Swift Package Manager)"
 	@echo "  $(CYAN)app-lint$(RESET)         Run frontend linter (oxlint)"
+	@echo "  $(CYAN)app-test$(RESET)         Run frontend service tests"
 	@echo "  $(CYAN)clean-app$(RESET)        Clean app/dist directory"
 	@echo ""
 	@echo "$(BOLD)Project-wide & CI:$(RESET)"
 	@echo "  $(CYAN)all$(RESET)              Build both firmware and companion web app"
-	@echo "  $(CYAN)ci$(RESET)               Run full verification (firmware build + app lint & build)"
+	@echo "  $(CYAN)package$(RESET)          Build and bundle all firmware & web packages into release_packages/"
+	@echo "  $(CYAN)ci$(RESET)               Run full verification (firmware build + app lint, test & build)"
 	@echo "  $(CYAN)clean$(RESET)            Clean all build artifacts (firmware & app)"
 	@echo ""
 
@@ -100,6 +102,10 @@ app-lint:
 	@echo "$(BOLD)$(GREEN)==> Linting companion app...$(RESET)"
 	cd app && npm run lint
 
+app-test:
+	@echo "$(BOLD)$(GREEN)==> Running companion app tests...$(RESET)"
+	cd app && npm test
+
 clean-app:
 	@echo "$(BOLD)$(YELLOW)==> Cleaning companion app dist directory...$(RESET)"
 	rm -rf app/dist
@@ -109,9 +115,18 @@ all: build-firmware app-build
 	@echo ""
 	@echo "$(BOLD)$(GREEN)✔ Both firmware and companion app built successfully.$(RESET)"
 
+package: app-build
+	@echo "$(BOLD)$(GREEN)==> Creating packages in release_packages/...$(RESET)"
+	mkdir -p release_packages
+	@if [ -d .pio/build/esp32-c3-devkitm-1 ]; then \
+		cp .pio/build/esp32-c3-devkitm-1/*.bin release_packages/ 2>/dev/null || true; \
+	fi
+	cd app/dist && zip -r ../../release_packages/smartcale-companion-web.zip .
+	@echo "$(BOLD)$(GREEN)✔ Release packages created successfully in release_packages/$(RESET)"
+
 clean: clean-firmware clean-app
 	@echo "$(BOLD)$(GREEN)✔ Clean complete.$(RESET)"
 
-ci: build-firmware app-lint app-build
+ci: build-firmware app-lint app-test app-build
 	@echo ""
 	@echo "$(BOLD)$(GREEN)✔ All CI verification checks passed.$(RESET)"

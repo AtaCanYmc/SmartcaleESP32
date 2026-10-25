@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - master
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -12,7 +13,7 @@ permissions:
 
 jobs:
   release-please:
-    name: Release Please & Firmware Artifacts
+    name: Release Please & Release Packages
     runs-on: ubuntu-latest
     steps:
       - name: Run Release Please
@@ -22,7 +23,7 @@ jobs:
           config-file: .release-please-config.json
           manifest-file: .release-please-manifest.json
 
-      # Build and attach ESP32-C3 firmware assets when a release is cut
+      # Build and attach packages when a release is cut
       - name: Checkout repository for release build
         if: ${{ steps.release.outputs.release_created }}
         uses: actions/checkout@v7
@@ -53,13 +54,61 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
         run: pio run
 
-      - name: Upload Firmware Assets to GitHub Release
+      - name: Assemble Firmware Package Bundle
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          mkdir -p release_packages/firmware
+          cp .pio/build/esp32-c3-devkitm-1/firmware.bin release_packages/
+          cp .pio/build/esp32-c3-devkitm-1/bootloader.bin release_packages/
+          cp .pio/build/esp32-c3-devkitm-1/partitions.bin release_packages/
+          cp .pio/build/esp32-c3-devkitm-1/*.bin release_packages/firmware/
+          printf "%s\n" \
+            "Smartcale ESP32 Firmware Flashing Instructions" \
+            "==============================================" \
+            "Requirements: Python 3 and esptool (pip install esptool)" \
+            "" \
+            "Flash command:" \
+            "esptool.py --chip esp32c3 --port <PORT> --baud 921600 write_flash 0x0 bootloader.bin 0x8000 partitions.bin 0x10000 firmware.bin" \
+            > release_packages/firmware/FLASHING.txt
+          cd release_packages/firmware && zip -r ../smartcale-esp32c3-firmware-bundle.zip . && cd ../..
+          rm -rf release_packages/firmware
+
+      # Build Companion App (Web & Android APK)
+      - name: Set up Node.js
+        if: ${{ steps.release.outputs.release_created }}
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: app/package-lock.json
+
+      - name: Set up JDK 21
+        if: ${{ steps.release.outputs.release_created }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Build Web & Android Companion Packages
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          cd app
+          npm ci
+          npm test
+          npm run build
+          cd dist && zip -r ../../release_packages/smartcale-companion-web.zip . && cd ..
+          npx cap sync
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+          cp app/build/outputs/apk/debug/app-debug.apk ../../release_packages/smartcale-companion-android.apk
+          cd ../..
+
+      - name: Upload All Release Packages to GitHub Release
         if: ${{ steps.release.outputs.release_created }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release upload "${{ steps.release.outputs.tag_name }}" \
-            .pio/build/esp32-c3-devkitm-1/firmware.bin \
-            .pio/build/esp32-c3-devkitm-1/bootloader.bin \
-            .pio/build/esp32-c3-devkitm-1/partitions.bin \
+            release_packages/* \
             --clobber

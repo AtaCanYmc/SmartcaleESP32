@@ -1,0 +1,146 @@
+name: Build Packages
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  firmware-package:
+    name: Build Firmware Package (ESP32-C3)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+
+      - name: Cache PlatformIO packages and pip
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.platformio
+            ~/.cache/pip
+            .pio
+          key: ${{ runner.os }}-pio-${{ hashFiles('platformio.ini') }}
+          restore-keys: |
+            ${{ runner.os }}-pio-
+
+      - name: Install PlatformIO Core
+        run: pip install --upgrade platformio
+
+      - name: Compile ESP32-C3 Firmware
+        run: pio run
+
+      - name: Assemble Firmware Package Bundle
+        run: |
+          mkdir -p dist_firmware
+          cp .pio/build/esp32-c3-devkitm-1/firmware.bin dist_firmware/
+          cp .pio/build/esp32-c3-devkitm-1/bootloader.bin dist_firmware/
+          cp .pio/build/esp32-c3-devkitm-1/partitions.bin dist_firmware/
+          printf "%s\n" \
+            "Smartcale ESP32 Firmware Flashing Instructions" \
+            "==============================================" \
+            "Requirements: Python 3 and esptool (pip install esptool)" \
+            "" \
+            "Flash command:" \
+            "esptool.py --chip esp32c3 --port <PORT> --baud 921600 write_flash 0x0 bootloader.bin 0x8000 partitions.bin 0x10000 firmware.bin" \
+            > dist_firmware/FLASHING.txt
+          cd dist_firmware && zip -r ../smartcale-esp32c3-firmware-bundle.zip . && cd ..
+
+      - name: Upload Firmware Artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: smartcale-firmware-package
+          path: |
+            dist_firmware/firmware.bin
+            dist_firmware/bootloader.bin
+            dist_firmware/partitions.bin
+            smartcale-esp32c3-firmware-bundle.zip
+          if-no-files-found: error
+
+  app-packages:
+    name: Build Companion App Packages (Android APK & Web)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: app/package-lock.json
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Run unit & service tests
+        run: npm test
+
+      - name: Build Web Bundle & Typecheck
+        run: npm run build
+
+      - name: Package Web Distribution
+        run: |
+          cd dist
+          zip -r ../smartcale-companion-web.zip .
+          cd ..
+
+      - name: Sync Capacitor Native Platforms
+        run: npx cap sync
+
+      - name: Build Android Debug APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+          cp app/build/outputs/apk/debug/app-debug.apk ../smartcale-companion-android.apk
+          cd ..
+
+      - name: Upload App Artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: smartcale-app-packages
+          path: |
+            app/smartcale-companion-android.apk
+            app/smartcale-companion-web.zip
+          if-no-files-found: error
+
+  publish-to-release:
+    name: Attach Packages to GitHub Release (Tag Triggers)
+    needs: [firmware-package, app-packages]
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v7
+        with:
+          path: release_artifacts
+
+      - name: Upload to Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          find release_artifacts -type f -exec gh release upload "$TAG_NAME" {} --clobber +

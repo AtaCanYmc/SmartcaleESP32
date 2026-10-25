@@ -12,7 +12,7 @@
   <a href="https://github.com/AtaCanYmc/SmartcaleESP32/actions/workflows/ci.yml"><img src="https://github.com/AtaCanYmc/SmartcaleESP32/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="https://platformio.org"><img src="https://img.shields.io/badge/PlatformIO-Core%206.x-orange.svg" alt="PlatformIO" /></a>
   <a href="https://www.espressif.com"><img src="https://img.shields.io/badge/MCU-ESP32--C3%20Super%20Mini-blue.svg" alt="ESP32-C3" /></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License: Apache 2.0" /></a>
 </p>
 
 ---
@@ -257,7 +257,7 @@ SmartcaleESP32/
 │   └── main.cpp            # Main entry point, interrupt handlers, and scheduling loop
 ├── .gitignore              # Build artifact exclusions (.pio, .vscode)
 ├── CONTRIBUTING.md         # Commit standards and pull request validation rules
-├── LICENSE                 # MIT License terms
+├── LICENSE                 # Apache 2.0 License terms
 ├── Makefile                # Unified build automation for firmware and companion app
 ├── platformio.ini          # Board definitions, build flags, and library dependencies
 ├── README.md               # Primary technical documentation
@@ -276,4 +276,4 @@ HX711 outputs data at a fixed 10Hz or 80Hz rate determined by its pin configurat
 
 ## License
 
-This project is licensed under the terms of the [MIT License](LICENSE).
+This project is licensed under the terms of the [Apache-2.0 License](LICENSE).
