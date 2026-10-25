@@ -37,10 +37,12 @@ import {
   FileText,
   UploadCloud,
   Share2,
-  RefreshCw
+  RefreshCw,
+  Zap
 } from 'lucide-react';
 import logoUrl from './assets/logo.jpg';
 import { scaleBle } from './services/bleService';
+import { barcodeScanner } from './services/barcodeScanner';
 import { foodService, calculateNutrition, getOpenFoodFactsEditUrl } from './services/foodService';
 import { mealService, getLocalDateString, downloadFile, generateAiPrompt } from './services/mealService';
 import type { WeightUnit, ConnectionStatus } from './types/scale';
@@ -137,9 +139,9 @@ export const App: React.FC = () => {
   const [showHomeSearch, setShowHomeSearch] = useState<boolean>(false);
   const [isScanning, setIsScanning] = useState<boolean>(false);
   const [scannerSupported, setScannerSupported] = useState<boolean>(true);
+  const [hasTorch, setHasTorch] = useState<boolean>(false);
+  const [isTorchOn, setIsTorchOn] = useState<boolean>(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const scanStreamRef = useRef<MediaStream | null>(null);
-  const scanIntervalRef = useRef<number | null>(null);
 
   const [history, setHistory] = useState<number[]>(new Array(25).fill(0));
   const tareFeedbackTimeout = useRef<number | null>(null);
@@ -147,20 +149,38 @@ export const App: React.FC = () => {
 
   // Stop scanner safely
   const stopScanner = () => {
-    if (scanIntervalRef.current) {
-      clearInterval(scanIntervalRef.current);
-      scanIntervalRef.current = null;
-    }
-    if (scanStreamRef.current) {
-      scanStreamRef.current.getTracks().forEach((track) => track.stop());
-      scanStreamRef.current = null;
-    }
+    barcodeScanner.stop();
     setIsScanning(false);
+    setHasTorch(false);
+    setIsTorchOn(false);
+  };
+
+  const handleBarcodeScanned = async (rawVal: string) => {
+    stopScanner();
+    setSearchQuery(rawVal);
+    setIsSearching(true);
+    setSearchError(null);
+    try {
+      const found = await foodService.getByBarcode(rawVal);
+      if (found) {
+        setActiveProduct(found);
+        setSearchResults([found]);
+        setSearchError(null);
+      } else {
+        setSearchResults([]);
+        setSearchError(`${t.noProductsFound} (${rawVal})`);
+      }
+    } catch (err) {
+      console.error('Barcode lookup error:', err);
+      setSearchError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   const startScanner = async () => {
     setSearchError(null);
-    if (!('BarcodeDetector' in window)) {
+    if (!barcodeScanner.isSupported()) {
       setScannerSupported(false);
       setIsScanning(true);
       return;
@@ -169,52 +189,31 @@ export const App: React.FC = () => {
     setScannerSupported(true);
     setIsScanning(true);
 
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
-      });
-      scanStreamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
-
-      // @ts-expect-error Native Web BarcodeDetector API
-      const detector = new window.BarcodeDetector({
-        formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'qr_code'],
-      });
-
-      scanIntervalRef.current = window.setInterval(async () => {
-        if (!videoRef.current || videoRef.current.readyState < 2) return;
-        try {
-          const barcodes = await detector.detect(videoRef.current);
-          if (barcodes && barcodes.length > 0) {
-            const rawVal = barcodes[0].rawValue;
-            if (rawVal) {
-              stopScanner();
-              setSearchQuery(rawVal);
-              setIsSearching(true);
-              const found = await foodService.getByBarcode(rawVal);
-              setIsSearching(false);
-              if (found) {
-                setActiveProduct(found);
-                setSearchResults([found]);
-                setSearchError(null);
-              } else {
-                setSearchResults([]);
-                setSearchError(`${t.noProductsFound} (${rawVal})`);
-              }
-            }
+    // Wait for video element to mount in the DOM
+    setTimeout(async () => {
+      if (!videoRef.current) return;
+      try {
+        await barcodeScanner.start(
+          videoRef.current,
+          (barcode) => {
+            handleBarcodeScanned(barcode);
+          },
+          (err) => {
+            console.warn('Scanner warning:', err);
           }
-        } catch {
-          // ignore detection frame errors
-        }
-      }, 350);
-    } catch (err) {
-      console.error('Camera access error:', err);
-      stopScanner();
-      setSearchError(t.connFailed);
-    }
+        );
+        setHasTorch(barcodeScanner.hasTorch());
+      } catch (err) {
+        console.error('Camera scanner start error:', err);
+        stopScanner();
+        setSearchError(t.connFailed);
+      }
+    }, 120);
+  };
+
+  const handleToggleTorch = async () => {
+    const nextTorch = await barcodeScanner.toggleTorch();
+    setIsTorchOn(nextTorch);
   };
 
   const handleSearch = async (e?: React.FormEvent) => {
@@ -993,6 +992,17 @@ export const App: React.FC = () => {
                       <div className="scanner-laser" />
                     </div>
                     <span className="scanner-prompt">{t.scannerHint}</span>
+                    {hasTorch && (
+                      <button
+                        type="button"
+                        className={`scanner-torch-btn ${isTorchOn ? 'active' : ''}`}
+                        onClick={handleToggleTorch}
+                        aria-label="Toggle Flashlight"
+                        title="Flaş / Torch"
+                      >
+                        <Zap size={16} />
+                      </button>
+                    )}
                   </div>
                 </>
               ) : (
