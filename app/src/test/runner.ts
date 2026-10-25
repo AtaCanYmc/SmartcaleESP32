@@ -10,30 +10,33 @@ console.log('========================================\n');
 const startTime = Date.now();
 
 try {
-  console.log('▶ [1/7] Running scaleMath tests...');
+  console.log('▶ [1/8] Running scaleMath tests...');
   await import('../utils/scaleMath.test');
 
-  console.log('▶ [2/7] Running calendar tests...');
+  console.log('▶ [2/8] Running calendar tests...');
   await import('../utils/calendar.test');
 
-  console.log('▶ [3/7] Running i18n parity tests...');
+  console.log('▶ [3/8] Running i18n parity tests...');
   await import('../i18n/index.test');
 
-  console.log('▶ [4/7] Running BLE scale service tests...');
+  console.log('▶ [4/8] Running BLE scale service tests...');
   await import('../services/bleService.test');
 
-  console.log('▶ [5/7] Running foodService & OpenFoodFacts tests...');
+  console.log('▶ [5/8] Running foodService & OpenFoodFacts tests...');
   await import('../services/foodService.test');
 
-  console.log('▶ [6/7] Running mealService & nutrition diary tests...');
+  console.log('▶ [6/8] Running mealService & nutrition diary tests...');
   await import('../services/mealService.test');
 
-  console.log('▶ [7/7] Running barcodeScanner tests...');
+  console.log('▶ [7/8] Running barcodeScanner tests...');
   await import('../services/barcodeScanner.test');
+
+  console.log('▶ [8/8] Running recipeService & mixing mode tests...');
+  await import('../services/recipeService.test');
 
   const elapsedMs = Date.now() - startTime;
   console.log('\n========================================');
-  console.log(`✓ All 7 test suites passed in ${elapsedMs}ms!`);
+  console.log(`✓ All 8 test suites passed in ${elapsedMs}ms!`);
   console.log('========================================\n');
 } catch (err) {
   console.error('\n❌ Test suite failure:', err);

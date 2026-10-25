@@ -174,6 +174,20 @@ export interface Translations {
   nextBtn: string;
   prevBtn: string;
   finishBtn: string;
+  recipeModeTitle: string;
+  recipeModeSub: string;
+  recipeNamePlaceholder: string;
+  addIngredientAndTare: string;
+  recipeIngredientsTitle: string;
+  noIngredientsYet: string;
+  recipeTotalWeight: string;
+  servingsLabel: string;
+  perServingLabel: string;
+  logRecipeToDiary: string;
+  recipeAddedToDiaryToast: string;
+  recipeAiShareBtn: string;
+  clearRecipeBtn: string;
+  activeIngredientLabel: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -334,6 +348,20 @@ export const translations: Record<Language, Translations> = {
     nextBtn: 'İleri',
     prevBtn: 'Geri',
     finishBtn: 'Tamamla',
+    recipeModeTitle: 'Tarif & Karışım Modu',
+    recipeModeSub: 'Sırayla malzeme ekleyip dara alarak tam kıvamında tarifler oluşturun',
+    recipeNamePlaceholder: 'Tarif Adı (örn. Çikolatalı Kek)',
+    addIngredientAndTare: 'Malzemeyi Ekle & Dara Al',
+    recipeIngredientsTitle: 'Eklenen Malzemeler',
+    noIngredientsYet: 'Henüz malzeme eklenmedi. Teraziye malzeme döküp yukarıdaki butona basın.',
+    recipeTotalWeight: 'Toplam Ağırlık',
+    servingsLabel: 'Porsiyon',
+    perServingLabel: 'Porsiyon Başı',
+    logRecipeToDiary: 'Öğün Günlüğüne Kaydet',
+    recipeAddedToDiaryToast: 'Tarif besin günlüğünüze başarıyla kaydedildi!',
+    recipeAiShareBtn: 'AI Şef İstemi Paylaş',
+    clearRecipeBtn: 'Tarifi Temizle',
+    activeIngredientLabel: 'Aktif Malzeme Adı',
   },
   en: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -492,6 +520,20 @@ export const translations: Record<Language, Translations> = {
     nextBtn: 'Next',
     prevBtn: 'Back',
     finishBtn: 'Finish',
+    recipeModeTitle: 'Recipe & Mixing Mode',
+    recipeModeSub: 'Add ingredients sequentially with auto-tare to build exact recipes',
+    recipeNamePlaceholder: 'Recipe Name (e.g. Chocolate Cake)',
+    addIngredientAndTare: 'Add Ingredient & Tare',
+    recipeIngredientsTitle: 'Added Ingredients',
+    noIngredientsYet: 'No ingredients yet. Pour an ingredient onto the scale and tap Add & Tare.',
+    recipeTotalWeight: 'Total Weight',
+    servingsLabel: 'Servings',
+    perServingLabel: 'Per Serving',
+    logRecipeToDiary: 'Log to Diary',
+    recipeAddedToDiaryToast: 'Recipe successfully logged to your diary!',
+    recipeAiShareBtn: 'Share AI Chef Prompt',
+    clearRecipeBtn: 'Clear Recipe',
+    activeIngredientLabel: 'Active Ingredient Name',
   },
   de: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -650,6 +692,20 @@ export const translations: Record<Language, Translations> = {
     nextBtn: 'Weiter',
     prevBtn: 'Zurück',
     finishBtn: 'Fertigstellen',
+    recipeModeTitle: 'Rezept- & Mischmodus',
+    recipeModeSub: 'Zutaten nacheinander mit automatischem Tarieren für perfekte Rezepte hinzufügen',
+    recipeNamePlaceholder: 'Rezeptname (z. B. Schokokuchen)',
+    addIngredientAndTare: 'Zutat hinzufügen & tarieren',
+    recipeIngredientsTitle: 'Hinzugefügte Zutaten',
+    noIngredientsYet: 'Noch keine Zutaten. Zutat auf die Waage geben und auf Hinzufügen & Tarieren tippen.',
+    recipeTotalWeight: 'Gesamtgewicht',
+    servingsLabel: 'Portionen',
+    perServingLabel: 'Pro Portion',
+    logRecipeToDiary: 'Ins Tagebuch eintragen',
+    recipeAddedToDiaryToast: 'Rezept erfolgreich in Ihr Tagebuch eingetragen!',
+    recipeAiShareBtn: 'KI-Chef-Prompt teilen',
+    clearRecipeBtn: 'Rezept leeren',
+    activeIngredientLabel: 'Aktiver Zutatenname',
   },
   fr: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -808,6 +864,20 @@ export const translations: Record<Language, Translations> = {
     nextBtn: 'Suivant',
     prevBtn: 'Précédent',
     finishBtn: 'Terminer',
+    recipeModeTitle: 'Mode Recette & Mélange',
+    recipeModeSub: 'Ajoutez des ingrédients successivement avec tare automatique',
+    recipeNamePlaceholder: 'Nom de la recette (ex. Gâteau au chocolat)',
+    addIngredientAndTare: 'Ajouter l\'ingrédient & tarer',
+    recipeIngredientsTitle: 'Ingrédients ajoutés',
+    noIngredientsYet: 'Aucun ingrédient pour l\'instant. Versez un ingrédient et appuyez sur Ajouter & Tarer.',
+    recipeTotalWeight: 'Poids total',
+    servingsLabel: 'Portions',
+    perServingLabel: 'Par portion',
+    logRecipeToDiary: 'Enregistrer au journal',
+    recipeAddedToDiaryToast: 'Recette enregistrée avec succès dans votre journal !',
+    recipeAiShareBtn: 'Partager prompt Chef IA',
+    clearRecipeBtn: 'Effacer la recette',
+    activeIngredientLabel: 'Nom de l\'ingrédient actif',
   },
   es: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -966,6 +1036,20 @@ export const translations: Record<Language, Translations> = {
     nextBtn: 'Siguiente',
     prevBtn: 'Atrás',
     finishBtn: 'Finalizar',
+    recipeModeTitle: 'Modo Receta y Mezcla',
+    recipeModeSub: 'Añada ingredientes sucesivamente con tara automática para recetas exactas',
+    recipeNamePlaceholder: 'Nombre de la receta (ej. Pastel de chocolate)',
+    addIngredientAndTare: 'Añadir ingrediente y tarar',
+    recipeIngredientsTitle: 'Ingredientes añadidos',
+    noIngredientsYet: 'Sin ingredientes aún. Vierta un ingrediente en la báscula y pulse Añadir y Tarar.',
+    recipeTotalWeight: 'Peso total',
+    servingsLabel: 'Porciones',
+    perServingLabel: 'Por porción',
+    logRecipeToDiary: 'Registrar en el diario',
+    recipeAddedToDiaryToast: '¡Receta registrada con éxito en su diario!',
+    recipeAiShareBtn: 'Compartir prompt Chef IA',
+    clearRecipeBtn: 'Borrar receta',
+    activeIngredientLabel: 'Nombre del ingrediente activo',
   },
   zh: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -1124,6 +1208,20 @@ export const translations: Record<Language, Translations> = {
     nextBtn: '下一步',
     prevBtn: '上一步',
     finishBtn: '完成',
+    recipeModeTitle: '食谱与配料混合模式',
+    recipeModeSub: '按顺序添加配料并去皮，精确构建完美食谱',
+    recipeNamePlaceholder: '食谱名称（例如：巧克力蛋糕）',
+    addIngredientAndTare: '添加配料并去皮',
+    recipeIngredientsTitle: '已添加配料',
+    noIngredientsYet: '暂无配料。请将配料倒入秤上并点击“添加配料并去皮”。',
+    recipeTotalWeight: '总重量',
+    servingsLabel: '份数',
+    perServingLabel: '每份',
+    logRecipeToDiary: '记录至饮食日记',
+    recipeAddedToDiaryToast: '食谱已成功记录到您的日记中！',
+    recipeAiShareBtn: '分享 AI 主厨分析指令',
+    clearRecipeBtn: '清空食谱',
+    activeIngredientLabel: '当前配料名称',
   },
   ja: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -1282,6 +1380,20 @@ export const translations: Record<Language, Translations> = {
     nextBtn: '次へ',
     prevBtn: '戻る',
     finishBtn: '完了',
+    recipeModeTitle: 'レシピ＆ミキシングモード',
+    recipeModeSub: '自動風袋引きで材料を順番に追加して正確なレシピを作成',
+    recipeNamePlaceholder: 'レシピ名（例：チョコケーキ）',
+    addIngredientAndTare: '材料を追加して風袋引き',
+    recipeIngredientsTitle: '追加された材料',
+    noIngredientsYet: '材料がまだありません。秤に材料を入れて「追加して風袋引き」を押してください。',
+    recipeTotalWeight: '総重量',
+    servingsLabel: '人数分',
+    perServingLabel: '1食あたり',
+    logRecipeToDiary: '日記に記録',
+    recipeAddedToDiaryToast: 'レシピが日記に正常に記録されました！',
+    recipeAiShareBtn: 'AIシェフプロンプトを共有',
+    clearRecipeBtn: 'レシピをクリア',
+    activeIngredientLabel: '追加する材料名',
   },
   ru: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -1440,6 +1552,20 @@ export const translations: Record<Language, Translations> = {
     nextBtn: 'Далее',
     prevBtn: 'Назад',
     finishBtn: 'Завершить',
+    recipeModeTitle: 'Режим рецепта и смешивания',
+    recipeModeSub: 'Добавляйте ингредиенты по очереди с тарированием для точных рецептов',
+    recipeNamePlaceholder: 'Название рецепта (напр. Шоколадный кекс)',
+    addIngredientAndTare: 'Добавить ингредиент и тарировать',
+    recipeIngredientsTitle: 'Добавленные ингредиенты',
+    noIngredientsYet: 'Ингредиенты еще не добавлены. Положите ингредиент на весы и нажмите «Добавить и тарировать».',
+    recipeTotalWeight: 'Общий вес',
+    servingsLabel: 'Порции',
+    perServingLabel: 'На порцию',
+    logRecipeToDiary: 'Записать в дневник',
+    recipeAddedToDiaryToast: 'Рецепт успешно записан в ваш дневник питания!',
+    recipeAiShareBtn: 'Поделиться промптом Шеф-ИИ',
+    clearRecipeBtn: 'Очистить рецепт',
+    activeIngredientLabel: 'Название текущего ингредиента',
   },
 };
 

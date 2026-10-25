@@ -38,11 +38,13 @@ import {
   UploadCloud,
   Share2,
   RefreshCw,
-  Zap
+  Zap,
+  ChefHat
 } from 'lucide-react';
 import logoUrl from './assets/logo.jpg';
 import { scaleBle } from './services/bleService';
 import { barcodeScanner } from './services/barcodeScanner';
+import { recipeService, type RecipeIngredient } from './services/recipeService';
 import { foodService, calculateNutrition, getOpenFoodFactsEditUrl } from './services/foodService';
 import { mealService, getLocalDateString, downloadFile, generateAiPrompt } from './services/mealService';
 import type { WeightUnit, ConnectionStatus } from './types/scale';
@@ -115,6 +117,14 @@ export const App: React.FC = () => {
   const [isCalApplying, setIsCalApplying] = useState<boolean>(false);
   const [calSuccessMsg, setCalSuccessMsg] = useState<string | null>(null);
 
+  // Recipe Mode State
+  const [showRecipeModal, setShowRecipeModal] = useState<boolean>(false);
+  const [recipeTitle, setRecipeTitle] = useState<string>('');
+  const [recipeServings, setRecipeServings] = useState<number>(4);
+  const [recipeIngredients, setRecipeIngredients] = useState<RecipeIngredient[]>([]);
+  const [recipeActiveName, setRecipeActiveName] = useState<string>('');
+  const [recipeSuccessToast, setRecipeSuccessToast] = useState<string | null>(null);
+
   const handleGoHome = () => {
     setActiveTab('scale');
     setShowSettingsModal(false);
@@ -123,6 +133,7 @@ export const App: React.FC = () => {
     setShowExportModal(false);
     setShowCalendarModal(false);
     setShowCalWizard(false);
+    setShowRecipeModal(false);
     stopScanner();
   };
 
@@ -623,6 +634,88 @@ export const App: React.FC = () => {
     }
   };
 
+  // Recipe Mode Calculations and Handlers
+  const recipeTotals = recipeService.calculateTotals(recipeIngredients);
+  const recipePerServing = recipeService.calculatePerServing(recipeTotals, recipeServings);
+
+  const handleAddIngredientAndTare = async () => {
+    const w = Math.round(weightGrams * 10) / 10;
+    if (w <= 0) return;
+
+    const name = recipeActiveName.trim() || `${t.recipeIngredientsTitle} #${recipeIngredients.length + 1}`;
+    let newIngredient: RecipeIngredient;
+
+    if (activeProduct) {
+      newIngredient = recipeService.createIngredientFromProduct(activeProduct, w);
+    } else {
+      newIngredient = recipeService.createManualIngredient(name, w);
+    }
+
+    setRecipeIngredients((prev) => [...prev, newIngredient]);
+    setRecipeActiveName('');
+
+    try {
+      await handleTare();
+    } catch {
+      // ignore
+    }
+
+    setRecipeSuccessToast(`+ ${newIngredient.name} (${w}g)`);
+    window.setTimeout(() => setRecipeSuccessToast(null), 2500);
+  };
+
+  const handleRemoveIngredient = (id: string) => {
+    setRecipeIngredients((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const handleClearRecipe = () => {
+    setRecipeIngredients([]);
+    setRecipeTitle('');
+    setRecipeActiveName('');
+  };
+
+  const handleLogRecipeToDiary = () => {
+    if (recipeIngredients.length === 0) return;
+    const title = recipeTitle.trim() || 'Özel Tarif / Karışım';
+    mealService.add({
+      date: selectedDate,
+      mealType: 'snack',
+      foodName: title,
+      weightGrams: recipeTotals.totalWeight,
+      calories: recipeTotals.calories,
+      proteins: recipeTotals.proteins,
+      carbs: recipeTotals.carbs,
+      fat: recipeTotals.fat,
+    });
+    setDiaryRevision((r) => r + 1);
+    setLogSuccessToast(t.recipeAddedToDiaryToast);
+    window.setTimeout(() => setLogSuccessToast(null), 3000);
+    setShowRecipeModal(false);
+  };
+
+  const handleShareRecipeAi = async () => {
+    if (recipeIngredients.length === 0) return;
+    const promptText = recipeService.generateAiRecipePrompt(recipeTitle, recipeIngredients, recipeServings);
+
+    if (typeof navigator !== 'undefined' && 'share' in navigator) {
+      try {
+        await navigator.share({
+          title: recipeTitle || t.recipeModeTitle,
+          text: promptText,
+        });
+        return;
+      } catch {
+        // Fallback to clipboard
+      }
+    }
+
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      await navigator.clipboard.writeText(promptText);
+      setLogSuccessToast(t.shareAiSuccessToast);
+      window.setTimeout(() => setLogSuccessToast(null), 3000);
+    }
+  };
+
   const liveNutrition = activeProduct
     ? calculateNutrition(activeProduct.nutriments, weightGrams)
     : null;
@@ -741,6 +834,21 @@ export const App: React.FC = () => {
             <RotateCcw size={22} aria-hidden="true" />
             <span>{t.tareBtn}</span>
           </button>
+
+          {/* Quick Recipe / Mixing Mode Action */}
+          <div className="home-recipe-trigger-row">
+            <button
+              type="button"
+              className="btn btn-secondary btn-home-recipe"
+              onClick={() => setShowRecipeModal(true)}
+            >
+              <ChefHat size={18} style={{ color: 'var(--accent-amber, #f59e0b)' }} />
+              <span>{t.recipeModeTitle}</span>
+              {recipeIngredients.length > 0 && (
+                <span className="recipe-count-badge">{recipeIngredients.length}</span>
+              )}
+            </button>
+          </div>
 
           {/* Home Screen Nutrition & Search Section */}
           <section className="home-nutrition-section" aria-label={t.foodNutritionTitle}>
@@ -2559,6 +2667,249 @@ export const App: React.FC = () => {
                   <span>{t.finishBtn}</span>
                 </button>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Recipe / Mixing Mode Modal */}
+      {showRecipeModal && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowRecipeModal(false)}
+        >
+          <div
+            className="modal-content recipe-modal-content"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="recipe-modal-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <ChefHat size={20} style={{ color: 'var(--accent-amber, #f59e0b)' }} />
+                <h2 id="recipe-modal-title" className="modal-title">
+                  {t.recipeModeTitle}
+                </h2>
+              </div>
+              <button
+                type="button"
+                className="icon-btn"
+                onClick={() => setShowRecipeModal(false)}
+                aria-label={t.cancelBtn}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <p className="modal-desc" style={{ marginBottom: '12px' }}>
+              {t.recipeModeSub}
+            </p>
+
+            {/* Recipe Metadata: Name & Servings */}
+            <div className="recipe-meta-row">
+              <div style={{ flex: 1 }}>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder={t.recipeNamePlaceholder}
+                  value={recipeTitle}
+                  onChange={(e) => setRecipeTitle(e.target.value)}
+                  style={{ minHeight: '38px', fontSize: '13px' }}
+                />
+              </div>
+              <div className="recipe-servings-box">
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{t.servingsLabel}:</span>
+                <button
+                  type="button"
+                  className="icon-btn"
+                  onClick={() => setRecipeServings((prev) => Math.max(1, prev - 1))}
+                  style={{ width: '28px', height: '28px' }}
+                  aria-label="Decrease servings"
+                >
+                  <ChevronDown size={14} />
+                </button>
+                <span style={{ fontWeight: 700, fontSize: '14px', minWidth: '18px', textAlign: 'center' }}>
+                  {recipeServings}
+                </span>
+                <button
+                  type="button"
+                  className="icon-btn"
+                  onClick={() => setRecipeServings((prev) => Math.min(24, prev + 1))}
+                  style={{ width: '28px', height: '28px' }}
+                  aria-label="Increase servings"
+                >
+                  <ChevronUp size={14} />
+                </button>
+              </div>
+            </div>
+
+            {/* Live Scale Bowl & Next Ingredient Section */}
+            <div className="recipe-live-box">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>
+                  {connectionStatus === 'connected' ? t.liveStream : t.standby}
+                </span>
+                <span className={`nav-dot ${connectionStatus}`} style={{ position: 'static', display: 'inline-block' }} />
+              </div>
+
+              <div className="recipe-live-reading">
+                <span className="recipe-live-digits">{formatWeight(weightGrams, 'g')}</span>
+                <span className="recipe-live-unit">g</span>
+              </div>
+
+              {recipeSuccessToast && (
+                <div className="recipe-tare-feedback">
+                  <CheckCircle2 size={14} />
+                  <span>{recipeSuccessToast}</span>
+                </div>
+              )}
+
+              {/* Active ingredient name input */}
+              <div style={{ marginTop: '4px', width: '100%' }}>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder={activeProduct ? activeProduct.name : t.activeIngredientLabel}
+                  value={recipeActiveName}
+                  onChange={(e) => setRecipeActiveName(e.target.value)}
+                  style={{ minHeight: '36px', fontSize: '13px' }}
+                />
+              </div>
+
+              {/* Huge Add Ingredient & Tare Button */}
+              <button
+                type="button"
+                className="btn btn-primary btn-recipe-add-tare"
+                onClick={handleAddIngredientAndTare}
+                disabled={weightGrams <= 0}
+              >
+                <RotateCcw size={18} />
+                <span>
+                  {t.addIngredientAndTare} ({formatWeight(weightGrams, 'g')}g)
+                </span>
+              </button>
+            </div>
+
+            {/* List of Added Ingredients */}
+            <div className="recipe-ingredients-section">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)' }}>
+                  {t.recipeIngredientsTitle} ({recipeIngredients.length})
+                </span>
+                {recipeIngredients.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleClearRecipe}
+                    className="icon-btn"
+                    title={t.clearRecipeBtn}
+                    aria-label={t.clearRecipeBtn}
+                    style={{ color: 'var(--accent-red)', width: '28px', height: '28px' }}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
+              </div>
+
+              {recipeIngredients.length === 0 ? (
+                <div className="recipe-empty-box">
+                  <ChefHat size={32} style={{ opacity: 0.35, marginBottom: '6px' }} />
+                  <p>{t.noIngredientsYet}</p>
+                </div>
+              ) : (
+                <div className="recipe-items-list">
+                  {recipeIngredients.map((item, idx) => (
+                    <div key={item.id} className="recipe-item-row">
+                      <span className="recipe-item-num">{idx + 1}</span>
+                      <div className="recipe-item-info">
+                        <span className="recipe-item-name">{item.name}</span>
+                        <span className="recipe-item-macros">
+                          {item.calories} kcal · P:{item.proteins}g · K:{item.carbs}g · Y:{item.fat}g
+                        </span>
+                      </div>
+                      <span className="recipe-item-weight">{item.weightGrams}g</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveIngredient(item.id)}
+                        className="icon-btn"
+                        style={{ width: '28px', height: '28px', color: 'var(--text-muted)' }}
+                        aria-label={`Remove ${item.name}`}
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Nutrition & Totals Card */}
+            {recipeIngredients.length > 0 && (
+              <div className="recipe-totals-card">
+                <div className="recipe-totals-row">
+                  <div>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{t.recipeTotalWeight}:</span>
+                    <span style={{ fontSize: '16px', fontWeight: 800, marginLeft: '6px' }}>
+                      {recipeTotals.totalWeight}g
+                    </span>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{t.servingsLabel}:</span>
+                    <span style={{ fontSize: '14px', fontWeight: 700, marginLeft: '6px', color: 'var(--accent-blue)' }}>
+                      {recipeServings}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="recipe-macro-grid">
+                  <div className="recipe-macro-item">
+                    <span className="recipe-macro-label">{t.caloriesLabel}</span>
+                    <span className="recipe-macro-val">{recipeTotals.calories}</span>
+                    <span className="recipe-macro-sub">({recipePerServing.calories} / {t.perServingLabel})</span>
+                  </div>
+                  <div className="recipe-macro-item">
+                    <span className="recipe-macro-label">{t.proteinLabel}</span>
+                    <span className="recipe-macro-val">{recipeTotals.proteins}g</span>
+                    <span className="recipe-macro-sub">({recipePerServing.proteins}g / {t.perServingLabel})</span>
+                  </div>
+                  <div className="recipe-macro-item">
+                    <span className="recipe-macro-label">{t.carbsLabel}</span>
+                    <span className="recipe-macro-val">{recipeTotals.carbs}g</span>
+                    <span className="recipe-macro-sub">({recipePerServing.carbs}g / {t.perServingLabel})</span>
+                  </div>
+                  <div className="recipe-macro-item">
+                    <span className="recipe-macro-label">{t.fatLabel}</span>
+                    <span className="recipe-macro-val">{recipeTotals.fat}g</span>
+                    <span className="recipe-macro-sub">({recipePerServing.fat}g / {t.perServingLabel})</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Actions Footer */}
+            <div className="recipe-modal-footer">
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={handleLogRecipeToDiary}
+                disabled={recipeIngredients.length === 0}
+                style={{ flex: 1, minHeight: '40px' }}
+              >
+                <Plus size={16} />
+                <span>{t.logRecipeToDiary}</span>
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={handleShareRecipeAi}
+                disabled={recipeIngredients.length === 0}
+                style={{ minHeight: '40px', padding: '8px 12px' }}
+                title={t.recipeAiShareBtn}
+                aria-label={t.recipeAiShareBtn}
+              >
+                <Sparkles size={16} style={{ color: 'var(--accent-purple, #a855f7)' }} />
+              </button>
             </div>
           </div>
         </div>
