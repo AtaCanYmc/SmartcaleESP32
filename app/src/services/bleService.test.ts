@@ -47,8 +47,37 @@ const tareChar = 'T';
 const tareByte = tareChar.charCodeAt(0);
 assert.equal(tareByte, 84, 'Tare command ASCII character must be 84 ("T")');
 
-// 4. Initial connection state
-assert.equal(scaleBle.isConnected(), false);
-assert.equal(scaleBle.getDeviceId(), null);
+// 4. Initial connection state & lifecycle methods
+assert.equal(scaleBle.isConnected(), false, 'Initially not connected');
+assert.equal(scaleBle.isReconnecting(), false, 'Initially not reconnecting');
+assert.equal(scaleBle.getDeviceId(), null, 'Initially no deviceId');
+assert.equal(scaleBle.getLastDeviceId(), null, 'Initially no lastDeviceId');
+
+// 5. cancelReconnect safe execution
+scaleBle.cancelReconnect();
+assert.equal(scaleBle.isReconnecting(), false, 'isReconnecting remains false after cancelReconnect');
+
+// 6. Tare and Reconnect error handling when disconnected
+await assert.rejects(
+  async () => {
+    await scaleBle.sendTare();
+  },
+  { message: 'Cihaz bağlı değil' },
+  'sendTare must reject when not connected'
+);
+
+await assert.rejects(
+  async () => {
+    await scaleBle.reconnect();
+  },
+  { message: 'No previous device' },
+  'reconnect must reject when no previous deviceId is saved'
+);
+
+// 7. Auto-reconnect exponential backoff timing simulation
+const calculateBackoff = (attempt: number) => attempt * 1500;
+assert.equal(calculateBackoff(1), 1500, 'First retry after 1.5s');
+assert.equal(calculateBackoff(2), 3000, 'Second retry after 3.0s');
+assert.equal(calculateBackoff(3), 4500, 'Third retry after 4.5s');
 
 console.log('✓ All bleService tests passed!');

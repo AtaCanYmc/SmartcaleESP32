@@ -36,7 +36,8 @@ import {
   FileSpreadsheet,
   FileText,
   UploadCloud,
-  Share2
+  Share2,
+  RefreshCw
 } from 'lucide-react';
 import logoUrl from './assets/logo.jpg';
 import { scaleBle } from './services/bleService';
@@ -67,6 +68,7 @@ export const App: React.FC = () => {
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected');
   const [deviceName, setDeviceName] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [bleReconnectInfo, setBleReconnectInfo] = useState<{ attempt: number; max: number } | null>(null);
 
   type AppTab = 'scale' | 'food' | 'diary' | 'about';
   const [activeTab, setActiveTab] = useState<AppTab>('scale');
@@ -495,27 +497,65 @@ export const App: React.FC = () => {
   }, []);
 
   // Connect BLE handler
-  const handleConnect = async () => {
+  const handleConnect = async (directReconnect = false) => {
     try {
       setConnectionStatus('connecting');
       setErrorMessage(null);
+      setBleReconnectInfo(null);
 
-      const name = await scaleBle.connect(
-        (weight) => {
+      const callbacks = {
+        onWeightUpdate: (weight: number) => {
           setWeightGrams(weight);
           setHistory((prev) => [...prev.slice(1), weight]);
         },
-        () => {
+        onDisconnected: (unexpected: boolean) => {
+          if (!unexpected) {
+            setConnectionStatus('disconnected');
+            setDeviceName('');
+            setBleReconnectInfo(null);
+          } else {
+            setConnectionStatus('reconnecting');
+            setErrorMessage(t.bleLostWarning);
+          }
+        },
+        onReconnecting: (attempt: number, maxAttempts: number) => {
+          setConnectionStatus('reconnecting');
+          setBleReconnectInfo({ attempt, max: maxAttempts });
+          setErrorMessage(`${t.bleLostWarning} ${t.bleReconnecting} (${attempt}/${maxAttempts})`);
+        },
+        onReconnected: (name: string) => {
+          setConnectionStatus('connected');
+          setDeviceName(name);
+          setErrorMessage(null);
+          setBleReconnectInfo(null);
+          setLogSuccessToast(t.bleReconnectedToast);
+          window.setTimeout(() => setLogSuccessToast(null), 3000);
+        },
+        onReconnectFailed: () => {
           setConnectionStatus('disconnected');
-          setDeviceName('');
+          setBleReconnectInfo(null);
+          setErrorMessage(t.bleReconnectFailed);
+        },
+      };
+
+      let name: string;
+      if (directReconnect && scaleBle.getLastDeviceId()) {
+        try {
+          name = await scaleBle.reconnect(callbacks);
+        } catch {
+          name = await scaleBle.connect(callbacks);
         }
-      );
+      } else {
+        name = await scaleBle.connect(callbacks);
+      }
 
       setDeviceName(name);
       setConnectionStatus('connected');
+      setErrorMessage(null);
     } catch (err: unknown) {
       console.error('BLE connection error:', err);
       setConnectionStatus('error');
+      setBleReconnectInfo(null);
       const msg = err instanceof Error ? err.message : String(err);
       setErrorMessage(msg.includes('cancelled') ? t.connCancelled : t.connFailed);
     }
@@ -525,6 +565,7 @@ export const App: React.FC = () => {
     await scaleBle.disconnect();
     setConnectionStatus('disconnected');
     setDeviceName('');
+    setBleReconnectInfo(null);
   };
 
   // Remote Tare command
@@ -551,9 +592,30 @@ export const App: React.FC = () => {
   return (
     <div className="app-container">
       {errorMessage && (
-        <div role="alert" className="error-alert">
-          <AlertCircle size={16} aria-hidden="true" />
-          <span>{errorMessage}</span>
+        <div role="alert" className={`error-alert ${connectionStatus === 'reconnecting' ? 'warning-alert' : ''}`}>
+          {connectionStatus === 'reconnecting' ? (
+            <RefreshCw size={16} className="spin" aria-hidden="true" />
+          ) : (
+            <AlertCircle size={16} aria-hidden="true" />
+          )}
+          <span style={{ flex: 1 }}>{errorMessage}</span>
+          {connectionStatus === 'disconnected' && scaleBle.getLastDeviceId() && (
+            <button
+              type="button"
+              onClick={() => handleConnect(true)}
+              className="btn btn-secondary"
+              style={{
+                minHeight: '32px',
+                padding: '4px 10px',
+                fontSize: '12px',
+                marginRight: '6px',
+                borderRadius: '6px',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {t.retryBtn}
+            </button>
+          )}
           <button
             onClick={() => setErrorMessage(null)}
             className="icon-btn"
@@ -615,7 +677,20 @@ export const App: React.FC = () => {
                 </span>
               )}
               {!isTared && (
-                <span>{connectionStatus === 'connected' ? t.liveStream : t.standby}</span>
+                <span>
+                  {connectionStatus === 'connected' ? (
+                    t.liveStream
+                  ) : connectionStatus === 'reconnecting' ? (
+                    <span style={{ color: 'var(--accent-amber)', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                      <RefreshCw size={12} className="spin" aria-hidden="true" />
+                      {bleReconnectInfo
+                        ? `${t.bleReconnecting} (${bleReconnectInfo.attempt}/${bleReconnectInfo.max})`
+                        : t.bleReconnecting}
+                    </span>
+                  ) : (
+                    t.standby
+                  )}
+                </span>
               )}
             </div>
           </main>
@@ -1447,6 +1522,8 @@ export const App: React.FC = () => {
                           ? t.connected
                           : connectionStatus === 'connecting'
                           ? t.searching
+                          : connectionStatus === 'reconnecting'
+                          ? (bleReconnectInfo ? `${t.bleReconnecting} (${bleReconnectInfo.attempt}/${bleReconnectInfo.max})` : t.bleReconnecting)
                           : t.standby}
                       </span>
                     </div>
@@ -1455,14 +1532,16 @@ export const App: React.FC = () => {
                   <button
                     type="button"
                     className={`btn ${connectionStatus === 'connected' ? 'btn-secondary' : 'btn-primary'}`}
-                    onClick={connectionStatus === 'connected' ? handleDisconnect : handleConnect}
-                    disabled={connectionStatus === 'connecting'}
+                    onClick={connectionStatus === 'connected' ? handleDisconnect : () => handleConnect(false)}
+                    disabled={connectionStatus === 'connecting' || connectionStatus === 'reconnecting'}
                     style={{ minHeight: '36px', padding: '6px 12px', fontSize: '12px' }}
                   >
                     {connectionStatus === 'connected'
                       ? t.disconnect
                       : connectionStatus === 'connecting'
                       ? t.searching
+                      : connectionStatus === 'reconnecting'
+                      ? t.bleReconnecting
                       : t.connect}
                   </button>
                 </div>

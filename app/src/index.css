@@ -820,6 +820,25 @@ a:focus-visible {
   color: var(--accent-red);
 }
 
+.error-alert.warning-alert {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: var(--accent-amber);
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
 /* Food & Nutrition Styles */
 .home-nutrition-section {
   display: flex;
@@ -1338,6 +1357,11 @@ a:focus-visible {
 .nav-dot.connecting {
   background: var(--accent-amber);
   animation: pulse 1.5s infinite;
+}
+
+.nav-dot.reconnecting {
+  background: var(--accent-amber);
+  animation: pulse 0.75s infinite;
 }
 
 /* Nutrition Log & Toast */
