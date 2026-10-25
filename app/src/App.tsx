@@ -54,6 +54,80 @@ const getInitialTheme = (): ThemeMode => {
   return 'system';
 };
 
+const WEEKDAY_NAMES_BY_LANG: Record<Language, string[]> = {
+  tr: ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'],
+  en: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+  de: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
+  fr: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+  es: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+};
+
+interface CalendarDay {
+  dateStr: string;
+  dayNumber: number;
+  isCurrentMonth: boolean;
+  isToday: boolean;
+  isSelected: boolean;
+  hasLogs: boolean;
+}
+
+function getCalendarGrid(viewDate: Date, selectedDateStr: string, loggedDatesSet: Set<string>): CalendarDay[] {
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+  const todayStr = getLocalDateString();
+
+  const firstDay = new Date(year, month, 1);
+  const startDayOffset = (firstDay.getDay() + 6) % 7; // Monday = 0
+
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const prevMonthDays = new Date(year, month, 0).getDate();
+
+  const days: CalendarDay[] = [];
+
+  for (let i = startDayOffset - 1; i >= 0; i--) {
+    const d = prevMonthDays - i;
+    const prevDate = new Date(year, month - 1, d);
+    const dateStr = getLocalDateString(prevDate);
+    days.push({
+      dateStr,
+      dayNumber: d,
+      isCurrentMonth: false,
+      isToday: dateStr === todayStr,
+      isSelected: dateStr === selectedDateStr,
+      hasLogs: loggedDatesSet.has(dateStr),
+    });
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const curDate = new Date(year, month, d);
+    const dateStr = getLocalDateString(curDate);
+    days.push({
+      dateStr,
+      dayNumber: d,
+      isCurrentMonth: true,
+      isToday: dateStr === todayStr,
+      isSelected: dateStr === selectedDateStr,
+      hasLogs: loggedDatesSet.has(dateStr),
+    });
+  }
+
+  const remaining = (7 - (days.length % 7)) % 7;
+  for (let d = 1; d <= remaining; d++) {
+    const nextDate = new Date(year, month + 1, d);
+    const dateStr = getLocalDateString(nextDate);
+    days.push({
+      dateStr,
+      dayNumber: d,
+      isCurrentMonth: false,
+      isToday: dateStr === todayStr,
+      isSelected: dateStr === selectedDateStr,
+      hasLogs: loggedDatesSet.has(dateStr),
+    });
+  }
+
+  return days;
+}
+
 export const App: React.FC = () => {
   const [lang, setLang] = useState<Language>(getInitialLanguage);
   const t = translations[lang];
@@ -73,6 +147,8 @@ export const App: React.FC = () => {
   const [showMealPicker, setShowMealPicker] = useState<boolean>(false);
   const [showManualAddModal, setShowManualAddModal] = useState<boolean>(false);
   const [showExportModal, setShowExportModal] = useState<boolean>(false);
+  const [showCalendarModal, setShowCalendarModal] = useState<boolean>(false);
+  const [calendarViewDate, setCalendarViewDate] = useState<Date>(() => new Date());
 
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -103,6 +179,7 @@ export const App: React.FC = () => {
     setShowMealPicker(false);
     setShowManualAddModal(false);
     setShowExportModal(false);
+    setShowCalendarModal(false);
     stopScanner();
   };
 
@@ -112,6 +189,11 @@ export const App: React.FC = () => {
   const [searchResults, setSearchResults] = useState<FoodProduct[]>([]);
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [homeSearchQuery, setHomeSearchQuery] = useState<string>('');
+  const [homeSearchResults, setHomeSearchResults] = useState<FoodProduct[]>([]);
+  const [isHomeSearching, setIsHomeSearching] = useState<boolean>(false);
+  const [homeSearchError, setHomeSearchError] = useState<string | null>(null);
+  const [showHomeSearch, setShowHomeSearch] = useState<boolean>(false);
   const [isScanning, setIsScanning] = useState<boolean>(false);
   const [scannerSupported, setScannerSupported] = useState<boolean>(true);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -226,6 +308,37 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleHomeSearch = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const query = homeSearchQuery.trim();
+    if (!query) return;
+
+    setIsHomeSearching(true);
+    setHomeSearchError(null);
+
+    try {
+      if (/^\d{8,14}$/.test(query)) {
+        const direct = await foodService.getByBarcode(query);
+        if (direct) {
+          setHomeSearchResults([direct]);
+          setIsHomeSearching(false);
+          return;
+        }
+      }
+
+      const results = await foodService.search(query);
+      setHomeSearchResults(results);
+      if (results.length === 0) {
+        setHomeSearchError(t.noProductsFound);
+      }
+    } catch (err) {
+      console.error('Home search error:', err);
+      setHomeSearchError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setIsHomeSearching(false);
+    }
+  };
+
   useEffect(() => {
     document.documentElement.lang = lang;
     localStorage.setItem('smartcale-lang', lang);
@@ -253,19 +366,20 @@ export const App: React.FC = () => {
 
   // Close modals with Escape key
   useEffect(() => {
-    if (!showSettingsModal && !showMealPicker && !showManualAddModal && !showExportModal) return;
+    if (!showSettingsModal && !showMealPicker && !showManualAddModal && !showExportModal && !showCalendarModal) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setShowSettingsModal(false);
         setShowMealPicker(false);
         setShowManualAddModal(false);
         setShowExportModal(false);
+        setShowCalendarModal(false);
         stopScanner();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showSettingsModal, showMealPicker, showManualAddModal, showExportModal]);
+  }, [showSettingsModal, showMealPicker, showManualAddModal, showExportModal, showCalendarModal]);
 
   const handleManualAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -579,87 +693,188 @@ export const App: React.FC = () => {
             <span>{t.tareBtn}</span>
           </button>
 
-          {activeProduct && liveNutrition && (
-            <section className="nutrition-card" aria-label={t.foodNutritionTitle}>
-              <div className="nutrition-product-header">
-                {activeProduct.imageUrl ? (
-                  <img src={activeProduct.imageUrl} alt="" className="nutrition-thumb" />
-                ) : (
-                  <div className="nutrition-thumb-fallback">
-                    <Utensils size={22} />
+          {/* Home Screen Nutrition & Search Section */}
+          <section className="home-nutrition-section" aria-label={t.foodNutritionTitle}>
+            <div className="home-nutrition-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Utensils size={16} style={{ color: 'var(--accent-blue)' }} />
+                <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-main)' }}>
+                  {t.foodNutritionTitle}
+                </span>
+              </div>
+              {activeProduct && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <button
+                    type="button"
+                    className="icon-btn"
+                    style={{ minWidth: '32px', minHeight: '32px', width: '32px', height: '32px' }}
+                    onClick={() => setShowHomeSearch((prev) => !prev)}
+                    title={showHomeSearch ? t.cancelBtn : t.searchBtn}
+                    aria-label={showHomeSearch ? t.cancelBtn : t.searchBtn}
+                  >
+                    <Search size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    className="icon-btn"
+                    style={{ minWidth: '32px', minHeight: '32px', width: '32px', height: '32px' }}
+                    onClick={() => {
+                      setActiveProduct(null);
+                      setShowHomeSearch(true);
+                    }}
+                    title={t.removeProduct}
+                    aria-label={t.removeProduct}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Inline Search: visible when no product is selected OR user clicked search toggle */}
+            {(!activeProduct || showHomeSearch) && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <form onSubmit={handleHomeSearch} className="food-search-row" style={{ marginTop: '2px' }}>
+                  <div className="search-input-wrapper">
+                    <Search size={16} className="search-icon" aria-hidden="true" />
+                    <input
+                      type="text"
+                      value={homeSearchQuery}
+                      onChange={(e) => setHomeSearchQuery(e.target.value)}
+                      placeholder={t.foodSearchPlaceholder}
+                      aria-label={t.foodSearchPlaceholder}
+                    />
+                    {homeSearchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setHomeSearchQuery('');
+                          setHomeSearchResults([]);
+                          setHomeSearchError(null);
+                        }}
+                        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '2px 6px', display: 'flex' }}
+                        aria-label="Clear search"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    style={{ padding: '8px 14px', flexShrink: 0, minHeight: '40px' }}
+                    disabled={isHomeSearching}
+                  >
+                    {isHomeSearching ? t.searchingProducts : t.searchBtn}
+                  </button>
+                </form>
+
+                {homeSearchError && (
+                  <div className="error-alert" style={{ fontSize: '12px', padding: '8px 12px' }}>
+                    <AlertCircle size={14} aria-hidden="true" />
+                    <span>{homeSearchError}</span>
                   </div>
                 )}
-                <div className="nutrition-title-area">
-                  <div className="nutrition-product-name">{activeProduct.name}</div>
-                  <div className="nutrition-product-brand">
-                    {activeProduct.brands || activeProduct.code} • {activeProduct.nutriments.calories100g.toFixed(2)} kcal {t.per100gSuffix}
+
+                {/* Inline Results List */}
+                {homeSearchResults.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '220px', overflowY: 'auto' }}>
+                    {homeSearchResults.map((prod) => (
+                      <div
+                        key={prod.code}
+                        className="home-search-result-item"
+                        onClick={() => {
+                          setActiveProduct(prod);
+                          setHomeSearchResults([]);
+                          setHomeSearchQuery('');
+                          setShowHomeSearch(false);
+                          setHomeSearchError(null);
+                        }}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            setActiveProduct(prod);
+                            setHomeSearchResults([]);
+                            setHomeSearchQuery('');
+                            setShowHomeSearch(false);
+                            setHomeSearchError(null);
+                          }
+                        }}
+                      >
+                        {prod.imageUrl ? (
+                          <img src={prod.imageUrl} alt="" className="home-search-thumb" />
+                        ) : (
+                          <div className="home-search-thumb-fallback">
+                            <Utensils size={16} />
+                          </div>
+                        )}
+                        <div className="home-search-info">
+                          <span className="home-search-name">{prod.name}</span>
+                          <span className="home-search-brand">{prod.brands || prod.code}</span>
+                        </div>
+                        <div className="home-search-kcal">
+                          {prod.nutriments.calories100g.toFixed(1)} kcal
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Active Product Details & Live Macro Scaling from Scale Weight */}
+            {activeProduct && liveNutrition && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: showHomeSearch ? '8px' : '0' }}>
+                <div className="nutrition-product-header">
+                  {activeProduct.imageUrl ? (
+                    <img src={activeProduct.imageUrl} alt="" className="nutrition-thumb" />
+                  ) : (
+                    <div className="nutrition-thumb-fallback">
+                      <Utensils size={22} />
+                    </div>
+                  )}
+                  <div className="nutrition-title-area">
+                    <div className="nutrition-product-name">{activeProduct.name}</div>
+                    <div className="nutrition-product-brand">
+                      {activeProduct.brands || activeProduct.code} • {activeProduct.nutriments.calories100g.toFixed(2)} kcal {t.per100gSuffix}
+                    </div>
                   </div>
                 </div>
-                <button
-                  className="icon-btn"
-                  onClick={() => setActiveProduct(null)}
-                  aria-label={t.removeProduct}
-                  title={t.removeProduct}
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
 
-              <div className="macros-grid">
-                <div className="macro-box calories">
-                  <span className="macro-value">{liveNutrition.calories.toFixed(2)}</span>
-                  <span className="macro-label">kcal</span>
+                <div className="macros-grid">
+                  <div className="macro-box calories">
+                    <span className="macro-value">{liveNutrition.calories.toFixed(2)}</span>
+                    <span className="macro-label">kcal</span>
+                  </div>
+                  <div className="macro-box">
+                    <span className="macro-value">{liveNutrition.proteins.toFixed(2)}g</span>
+                    <span className="macro-label">{t.proteinLabel}</span>
+                  </div>
+                  <div className="macro-box">
+                    <span className="macro-value">{liveNutrition.carbs.toFixed(2)}g</span>
+                    <span className="macro-label">{t.carbsLabel}</span>
+                  </div>
+                  <div className="macro-box">
+                    <span className="macro-value">{liveNutrition.fat.toFixed(2)}g</span>
+                    <span className="macro-label">{t.fatLabel}</span>
+                  </div>
                 </div>
-                <div className="macro-box">
-                  <span className="macro-value">{liveNutrition.proteins.toFixed(2)}g</span>
-                  <span className="macro-label">{t.proteinLabel}</span>
-                </div>
-                <div className="macro-box">
-                  <span className="macro-value">{liveNutrition.carbs.toFixed(2)}g</span>
-                  <span className="macro-label">{t.carbsLabel}</span>
-                </div>
-                <div className="macro-box">
-                  <span className="macro-value">{liveNutrition.fat.toFixed(2)}g</span>
-                  <span className="macro-label">{t.fatLabel}</span>
-                </div>
-              </div>
 
-              <div className="nutrition-actions-row">
-                <button
-                  type="button"
-                  className="btn btn-primary btn-log-meal"
-                  onClick={() => setShowMealPicker(true)}
-                >
-                  <Plus size={16} aria-hidden="true" />
-                  <span>{t.logMeal}</span>
-                </button>
-              </div>
-            </section>
-          )}
-
-          {!activeProduct && (
-            <div
-              className="settings-card"
-              onClick={() => setActiveTab('food')}
-              style={{ cursor: 'pointer', marginTop: '6px' }}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') setActiveTab('food');
-              }}
-            >
-              <div className="settings-card-left">
-                <div className="settings-card-icon" style={{ background: 'rgba(56, 189, 248, 0.15)', color: 'var(--accent-blue)' }}>
-                  <Search size={18} />
-                </div>
-                <div className="settings-card-info">
-                  <span className="settings-card-title">{t.foodNutritionTitle}</span>
-                  <span className="settings-card-sub">{t.foodSearchPlaceholder}</span>
+                <div className="nutrition-actions-row">
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-log-meal"
+                    onClick={() => setShowMealPicker(true)}
+                  >
+                    <Plus size={16} aria-hidden="true" />
+                    <span>{t.logMeal}</span>
+                  </button>
                 </div>
               </div>
-              <ChevronRight size={18} style={{ color: 'var(--text-muted)' }} />
-            </div>
-          )}
+            )}
+          </section>
         </>
       ) : activeTab === 'food' ? (
         <div className="food-screen">
@@ -680,8 +895,7 @@ export const App: React.FC = () => {
                 title={t.manualAddBtn}
                 aria-label={t.manualAddBtn}
               >
-                <Plus size={15} aria-hidden="true" />
-                <span>{t.manualAddBtn}</span>
+                <Plus size={18} aria-hidden="true" />
               </button>
             </div>
           </div>
@@ -893,8 +1107,7 @@ export const App: React.FC = () => {
                 title={t.exportDataBtn}
                 aria-label={t.exportDataBtn}
               >
-                <Download size={15} aria-hidden="true" />
-                <span>{t.exportDataBtn}</span>
+                <Download size={18} aria-hidden="true" />
               </button>
 
               <button
@@ -907,8 +1120,7 @@ export const App: React.FC = () => {
                 title={t.manualAddBtn}
                 aria-label={t.manualAddBtn}
               >
-                <Plus size={15} aria-hidden="true" />
-                <span>{t.manualAddBtn}</span>
+                <Plus size={18} aria-hidden="true" />
               </button>
             </div>
           </div>
@@ -924,19 +1136,20 @@ export const App: React.FC = () => {
               <ChevronLeft size={18} />
             </button>
 
-            <div className="date-picker-wrapper">
-              <label htmlFor="diary-date-input" className="date-display-btn">
-                <CalendarDays size={16} aria-hidden="true" />
-                <span>{formatDisplayDate(selectedDate)}</span>
-              </label>
-              <input
-                id="diary-date-input"
-                type="date"
-                className="sr-date-input"
-                value={selectedDate}
-                onChange={(e) => e.target.value && setSelectedDate(e.target.value)}
-              />
-            </div>
+            <button
+              type="button"
+              className="date-display-btn"
+              onClick={() => {
+                const [y, m, d] = selectedDate.split('-').map(Number);
+                setCalendarViewDate(new Date(y, (m || 1) - 1, d || 1));
+                setShowCalendarModal(true);
+              }}
+              aria-label={t.selectDate}
+              title={t.selectDate}
+            >
+              <CalendarDays size={16} aria-hidden="true" />
+              <span>{formatDisplayDate(selectedDate)}</span>
+            </button>
 
             <button
               type="button"
@@ -1847,6 +2060,123 @@ export const App: React.FC = () => {
             >
               {t.cancelBtn}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Calendar Picker Modal */}
+      {showCalendarModal && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowCalendarModal(false)}
+        >
+          <div
+            className="modal-content calendar-modal-content"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="calendar-modal-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="calendar-modal-header">
+              <h2 id="calendar-modal-title" className="modal-title">
+                {t.selectDate}
+              </h2>
+              <button
+                className="icon-btn"
+                onClick={() => setShowCalendarModal(false)}
+                aria-label={t.calClose}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Month & Year Navigation */}
+            <div className="calendar-nav-row">
+              <button
+                type="button"
+                className="icon-btn calendar-nav-btn"
+                onClick={() => {
+                  setCalendarViewDate(
+                    new Date(calendarViewDate.getFullYear(), calendarViewDate.getMonth() - 1, 1)
+                  );
+                }}
+                aria-label="Previous month"
+              >
+                <ChevronLeft size={18} />
+              </button>
+
+              <span className="calendar-month-title">
+                {calendarViewDate.toLocaleDateString(lang, { month: 'long', year: 'numeric' })}
+              </span>
+
+              <button
+                type="button"
+                className="icon-btn calendar-nav-btn"
+                onClick={() => {
+                  setCalendarViewDate(
+                    new Date(calendarViewDate.getFullYear(), calendarViewDate.getMonth() + 1, 1)
+                  );
+                }}
+                aria-label="Next month"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+
+            {/* Weekday Row */}
+            <div className="calendar-weekdays-row">
+              {WEEKDAY_NAMES_BY_LANG[lang].map((dayName, idx) => (
+                <div key={idx} className="calendar-weekday-cell">
+                  {dayName}
+                </div>
+              ))}
+            </div>
+
+            {/* Days Grid */}
+            <div className="calendar-days-grid">
+              {getCalendarGrid(calendarViewDate, selectedDate, new Set(mealService.getLoggedDates())).map((day, idx) => (
+                <button
+                  key={`${day.dateStr}-${idx}`}
+                  type="button"
+                  className={`calendar-day-cell ${
+                    !day.isCurrentMonth ? 'other-month' : ''
+                  } ${day.isToday ? 'is-today' : ''} ${
+                    day.isSelected ? 'is-selected' : ''
+                  }`}
+                  onClick={() => {
+                    setSelectedDate(day.dateStr);
+                    setShowCalendarModal(false);
+                  }}
+                  aria-label={day.dateStr}
+                >
+                  <span className="calendar-day-num">{day.dayNumber}</span>
+                  {day.hasLogs && <span className="calendar-day-dot" aria-hidden="true" />}
+                </button>
+              ))}
+            </div>
+
+            {/* Quick Actions Footer */}
+            <div className="calendar-modal-footer">
+              <button
+                type="button"
+                className="btn btn-secondary calendar-footer-btn"
+                onClick={() => {
+                  const today = getLocalDateString();
+                  setSelectedDate(today);
+                  setCalendarViewDate(new Date());
+                  setShowCalendarModal(false);
+                }}
+              >
+                {t.goToToday}
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary calendar-footer-btn"
+                onClick={() => setShowCalendarModal(false)}
+              >
+                {t.cancelBtn}
+              </button>
+            </div>
           </div>
         </div>
       )}

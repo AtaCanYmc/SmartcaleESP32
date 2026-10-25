@@ -537,6 +537,8 @@ export const translations: Record<Language, Translations> = {
     productNotFoundDesc: 'Dieser Barcode wurde nicht gefunden. Tragen Sie die Nährwerte ein, um ihn zum Tagebuch hinzuzufügen und zu Open Food Facts beizutragen.',
     offCommunityContribution: 'Open Food Facts Beitrag',
     offCommunityDesc: 'Damit Ihre Produkte weltweit mit Fotos verfügbar sind, können Sie auch die offizielle Open Food Facts-App (iOS/Android) nutzen.',
+    selectDate: 'Datum wählen',
+    goToToday: 'Zu Heute',
   },
   fr: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -666,6 +668,8 @@ export const translations: Record<Language, Translations> = {
     productNotFoundDesc: 'Ce code-barres est introuvable. Entrez ses valeurs nutritionnelles pour l\'ajouter au journal et contribuer à Open Food Facts.',
     offCommunityContribution: 'Contribution à Open Food Facts',
     offCommunityDesc: 'Pour rendre vos produits permanents et visibles dans le monde entier, vous pouvez aussi utiliser l\'application Open Food Facts (iOS/Android).',
+    selectDate: 'Sélectionner une date',
+    goToToday: 'Aller à aujourd\'hui',
   },
   es: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -795,6 +799,8 @@ export const translations: Record<Language, Translations> = {
     productNotFoundDesc: 'No se encontró este código. Ingrese sus valores nutricionales para añadirlo a su diario y contribuir a Open Food Facts.',
     offCommunityContribution: 'Contribución a Open Food Facts',
     offCommunityDesc: 'Para que sus productos estén disponibles en todo el mundo con fotos, también puede usar la aplicación oficial de Open Food Facts (iOS/Android).',
+    selectDate: 'Seleccionar fecha',
+    goToToday: 'Ir a hoy',
   },
 };
 
