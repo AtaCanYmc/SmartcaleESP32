@@ -32,7 +32,7 @@ public:
         int n = WiFi.scanNetworks();
         LOG_I("PORTAL", "Found %d networks", n);
         if (n <= 0) {
-            s_networkListHtml = "<option value=\"\">Ag bulunamadi</option>";
+            s_networkListHtml = "<option value=\"\">Ağ bulunamadı</option>";
         } else {
             for (int i = 0; i < n; ++i) {
                 String ssid = WiFi.SSID(i);
@@ -95,16 +95,17 @@ private:
 body { background: #0f172a; color: #f8fafc; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 16px; }
 .card { background: #1e293b; width: 100%; max-width: 420px; border-radius: 16px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid #334155; }
 h1 { font-size: 20px; font-weight: 700; color: #38bdf8; margin-bottom: 6px; text-align: center; }
-p.desc { font-size: 13px; color: #94a3b8; text-align: center; margin-bottom: 20px; }
+p.desc { font-size: 13px; color: #cbd5e1; text-align: center; margin-bottom: 20px; }
 label { display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #cbd5e1; margin-bottom: 6px; }
-input, select { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #fff; font-size: 14px; margin-bottom: 16px; outline: none; }
-input:focus, select:focus { border-color: #38bdf8; ring: 2px solid #38bdf8; }
-.btn { width: 100%; padding: 12px; border-radius: 8px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+input, select { width: 100%; min-height: 44px; padding: 10px 12px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #fff; font-size: 14px; margin-bottom: 16px; outline: none; }
+input:focus-visible, select:focus-visible { border-color: #38bdf8; outline: 2px solid #38bdf8; outline-offset: 2px; }
+.btn { width: 100%; min-height: 44px; padding: 12px; border-radius: 8px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+.btn:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }
 .btn-primary { background: #0284c7; color: white; margin-top: 8px; }
 .btn-primary:hover { background: #0369a1; }
 .btn-danger { background: transparent; color: #f87171; border: 1px solid #ef4444; margin-top: 14px; }
 .btn-danger:hover { background: rgba(239, 68, 68, 0.1); }
-.hint { font-size: 11px; color: #64748b; margin-top: -12px; margin-bottom: 14px; }
+.hint { font-size: 12px; color: #cbd5e1; margin-top: -12px; margin-bottom: 14px; }
 </style>
 <script>
 function selectSsid(val) {
@@ -117,8 +118,8 @@ function selectSsid(val) {
     <h1>SmartScale ESP32</h1>
     <p class="desc">Cihaz Yapılandırma ve Ağ Ayarları</p>
     <form action="/save" method="POST">
-        <label>Mevcut Wi-Fi Ağları</label>
-        <select onchange="selectSsid(this.value)">
+        <label for="network_select">Mevcut Wi-Fi Ağları</label>
+        <select id="network_select" onchange="selectSsid(this.value)">
             <option value="">-- Ağ Seçiniz (veya elle yazınız) --</option>
 )rawliteral";
 
@@ -126,31 +127,31 @@ function selectSsid(val) {
 
         html += R"rawliteral(
         </select>
-        <label>Wi-Fi Ağı (SSID)</label>
+        <label for="ssid_input">Wi-Fi Ağı (SSID)</label>
         <input type="text" id="ssid_input" name="ssid" value=")rawliteral";
         html += s_config.wifiSsid;
-        html += R"rawliteral(" required placeholder="Baglanilacak Ag Adi">
+        html += R"rawliteral(" required placeholder="Bağlanılacak Ağ Adı">
 
-        <label>Wi-Fi Şifresi</label>
-        <input type="password" name="pass" value=")rawliteral";
+        <label for="pass_input">Wi-Fi Şifresi</label>
+        <input type="password" id="pass_input" name="pass" value=")rawliteral";
         html += s_config.wifiPass;
-        html += R"rawliteral(" placeholder="Ag Sifresi">
+        html += R"rawliteral(" placeholder="Ağ Şifresi">
 
-        <label>BLE Aygıt Adı</label>
-        <input type="text" name="blename" value=")rawliteral";
+        <label for="blename_input">BLE Aygıt Adı</label>
+        <input type="text" id="blename_input" name="blename" value=")rawliteral";
         html += s_config.bleName;
         html += R"rawliteral(" required placeholder="SmartKitchenScale">
-        <div class="hint">Mobilde gorunecek Bluetooth adi</div>
+        <div class="hint">Mobilde görünecek Bluetooth adı</div>
 
-        <label>Kalibrasyon Katsayısı</label>
-        <input type="number" step="0.1" name="cal" value=")rawliteral";
+        <label for="cal_input">Kalibrasyon Katsayısı</label>
+        <input type="number" step="0.1" id="cal_input" name="cal" value=")rawliteral";
         html += String(s_config.calibrationFactor, 1);
         html += R"rawliteral(" required>
-        <div class="hint">Varsayilan: 420.0 (Ham Veri / Referans Agirlik)</div>
+        <div class="hint">Varsayılan: 420.0 (Ham Veri / Referans Ağırlık)</div>
 
         <button type="submit" class="btn btn-primary">Kaydet ve Yeniden Başlat</button>
     </form>
-    <form action="/reset" method="POST" onsubmit="return confirm('Tum ayarlar sifirlanacak. Emin misiniz?');">
+    <form action="/reset" method="POST" onsubmit="return confirm('Tüm ayarlar sıfırlanacak. Emin misiniz?');">
         <button type="submit" class="btn btn-danger">Fabrika Ayarlarına Sıfırla</button>
     </form>
 </div>

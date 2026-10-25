@@ -46,14 +46,12 @@ inline void initBle(const char* deviceName, void (*onTareFunc)()) {
 
     BLEService* pService = pBleServer->createService(SERVICE_UUID);
 
-    // Weight Characteristic (Notify & Read)
     pWeightCharacteristic = pService->createCharacteristic(
         CHARACTERISTIC_WEIGHT_UUID,
         BLECharacteristic::PROPERTY_NOTIFY | BLECharacteristic::PROPERTY_READ
     );
     pWeightCharacteristic->addDescriptor(new BLE2902());
 
-    // Command Characteristic (Write)
     pCmdCharacteristic = pService->createCharacteristic(
         CHARACTERISTIC_CMD_UUID,
         BLECharacteristic::PROPERTY_WRITE
@@ -62,7 +60,6 @@ inline void initBle(const char* deviceName, void (*onTareFunc)()) {
 
     pService->start();
 
-    // Advertising Setup
     BLEAdvertising* pAdvertising = BLEDevice::getAdvertising();
     pAdvertising->addServiceUUID(SERVICE_UUID);
     pAdvertising->setScanResponse(true);

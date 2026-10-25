@@ -15,9 +15,6 @@
 #include "ble_scale.h"
 #include "portal.h"
 
-// =============================================================================
-// Operating Mode & Global State
-// =============================================================================
 static bool g_setupMode = false;
 static AppConfig g_appConfig;
 
@@ -31,9 +28,6 @@ static float g_displayWeight = 0.0f;
 static unsigned long g_lastDisplayMs = 0;
 static unsigned long g_lastBleMs     = 0;
 
-// =============================================================================
-// Hardware ISR & Tare Handler
-// =============================================================================
 void IRAM_ATTR onTareButtonISR() {
     unsigned long now = millis();
     if (now - g_lastTareInterruptMs >= 200) {
@@ -46,17 +40,12 @@ void triggerTareFromBle() {
     g_tareRequested = true;
 }
 
-// =============================================================================
-// Setup & Loop
-// =============================================================================
 void setup() {
     Serial.begin(115200);
-    // Allow USB CDC time to attach
     while (!Serial && millis() < 1500);
 
     LOG_I("BOOT", "=== SmartScale ESP32 Starting ===");
 
-    // 1. Check if Tare button is held down at power-on to force setup mode
     pinMode(PIN_TARE_BTN, INPUT_PULLUP);
     bool forceSetupMode = false;
     if (digitalRead(PIN_TARE_BTN) == LOW) {
@@ -72,15 +61,12 @@ void setup() {
         }
     }
 
-    // 2. Initialize Core Hardware
     initDisplay();
 
-    // 3. Load Persistent Configuration from NVS
     bool isConfigured = ConfigStorage::load(g_appConfig);
     LOG_I("BOOT", "NVS Config: configured=%d, SSID='%s', BLE='%s', CAL=%.1f",
           isConfigured, g_appConfig.wifiSsid.c_str(), g_appConfig.bleName.c_str(), g_appConfig.calibrationFactor);
 
-    // 4. Branch to Captive Portal AP Setup if unconfigured or requested
     if (forceSetupMode || !isConfigured) {
         g_setupMode = true;
         LOG_W("BOOT", "Launching Setup AP Mode (SSID: %s)", SETUP_AP_SSID);
@@ -89,23 +75,20 @@ void setup() {
         return;
     }
 
-    // 5. Normal Scale Operation Mode
     LOG_I("BOOT", "Entering normal scale weighing mode");
     attachInterrupt(digitalPinToInterrupt(PIN_TARE_BTN), onTareButtonISR, FALLING);
     initBle(g_appConfig.bleName.c_str(), triggerTareFromBle);
 
-    // Optional background Wi-Fi connection
     if (g_appConfig.wifiSsid.length() > 0) {
         LOG_I("WIFI", "Connecting to Wi-Fi SSID '%s'...", g_appConfig.wifiSsid.c_str());
         WiFi.mode(WIFI_STA);
         WiFi.begin(g_appConfig.wifiSsid.c_str(), g_appConfig.wifiPass.c_str());
     }
 
-    // HX711 Setup with stored calibration factor
     scale.begin(PIN_HX711_DT, PIN_HX711_SCK);
     scale.set_scale(g_appConfig.calibrationFactor);
 
-    // Initial boot tare (wait up to 1.5s for sensor ready)
+    // Initial boot tare (sensor ready timeout: 1.5s)
     unsigned long bootStart = millis();
     while (!scale.is_ready() && (millis() - bootStart < 1500)) {
         delay(10);
@@ -121,9 +104,6 @@ void setup() {
 }
 
 void loop() {
-    // -------------------------------------------------------------------------
-    // Mode A: Captive Portal Configuration Loop
-    // -------------------------------------------------------------------------
     if (g_setupMode) {
         ConfigPortal::handle();
 
@@ -135,16 +115,12 @@ void loop() {
         return;
     }
 
-    // -------------------------------------------------------------------------
-    // Mode B: Normal Weighing & Telemetry Loop
-    // -------------------------------------------------------------------------
     unsigned long now = millis();
 
-    // 1. Process Pending Tare Request
     if (g_tareRequested) {
         g_tareRequested = false;
         if (scale.is_ready()) {
-            scale.tare(5);
+            scale.tare(3);
         } else {
             scale.set_offset(scale.read());
         }
@@ -152,20 +128,17 @@ void loop() {
         g_displayWeight = 0.0f;
     }
 
-    // 2. Read Weight Non-Blockingly
     if (scale.is_ready()) {
         float raw = scale.get_units(1);
         g_filteredWeight = (FILTER_ALPHA * raw) + ((1.0f - FILTER_ALPHA) * g_filteredWeight);
         g_displayWeight = (fabs(g_filteredWeight) <= DEADBAND_GRAMS) ? 0.0f : g_filteredWeight;
     }
 
-    // 3. BLE Notification (100ms)
     if (now - g_lastBleMs >= INTERVAL_BLE_NOTIFY_MS) {
         g_lastBleMs = now;
         notifyBleWeight(g_displayWeight);
     }
 
-    // 4. Display Update (200ms)
     if (now - g_lastDisplayMs >= INTERVAL_DISPLAY_MS) {
         g_lastDisplayMs = now;
         renderDisplay(g_displayWeight, isBleConnected());

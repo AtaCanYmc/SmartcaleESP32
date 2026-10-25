@@ -21,14 +21,10 @@ inline void initDisplay() {
 inline void renderDisplay(float weightGrams, bool bleConnected) {
     u8g2.clearBuffer();
 
-    // 1. Top Bar: BLE status
     u8g2.setFont(u8g2_font_6x10_tf);
     u8g2.drawStr(0, 8, bleConnected ? "BLE: BAGLI" : "BLE: BEKLIYOR");
-
-    // Separator line
     u8g2.drawHLine(0, 11, 128);
 
-    // 2. Center/Bottom: Large weight digits + unit "g"
     char weightStr[16];
     snprintf(weightStr, sizeof(weightStr), "%.1f", weightGrams);
 
@@ -54,12 +50,10 @@ inline void renderDisplay(float weightGrams, bool bleConnected) {
 inline void renderConfigPortal(const char* ssid, const char* ip) {
     u8g2.clearBuffer();
 
-    // Top Bar
     u8g2.setFont(u8g2_font_6x10_tf);
     u8g2.drawStr(0, 8, "KURULUM MODU (AP)");
     u8g2.drawHLine(0, 11, 128);
 
-    // Setup details
     u8g2.setFont(u8g2_font_7x14_tf);
     u8g2.drawStr(0, 26, "WiFi:");
     u8g2.drawStr(38, 26, ssid);

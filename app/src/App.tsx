@@ -32,12 +32,21 @@ export const App: React.FC = () => {
   const [refWeightGrams, setRefWeightGrams] = useState<string>('500');
   const [rawAdcInput, setRawAdcInput] = useState<string>('210000');
 
-  // Sparkline history (last 25 points)
   const [history, setHistory] = useState<number[]>(new Array(25).fill(0));
   const tareFeedbackTimeout = useRef<number | null>(null);
   const [isTared, setIsTared] = useState<boolean>(false);
 
-  // Timer interval
+  // Close calibration modal with Escape key
+  useEffect(() => {
+    if (!showCalModal) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowCalModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showCalModal]);
   useEffect(() => {
     let interval: number | undefined;
     if (isTimerRunning) {
@@ -139,10 +148,9 @@ export const App: React.FC = () => {
 
   return (
     <div className="app-container">
-      {/* 1. Header */}
       <header className="app-header">
         <div className="brand">
-          <div className="brand-icon">
+          <div className="brand-icon" aria-hidden="true">
             <Scale size={20} />
           </div>
           <div>
@@ -154,72 +162,82 @@ export const App: React.FC = () => {
         <button
           className={`status-pill ${connectionStatus}`}
           onClick={connectionStatus === 'connected' ? handleDisconnect : handleConnect}
-          title={connectionStatus === 'connected' ? 'Bağlantıyı Kes' : 'Tartıya Bağlan'}
+          aria-label={connectionStatus === 'connected' ? 'Bağlantıyı Kes' : 'Tartıya Bağlan'}
         >
-          <span className={`status-dot ${connectionStatus === 'connecting' ? 'pulse' : ''}`} />
+          <span className={`status-dot ${connectionStatus === 'connecting' ? 'pulse' : ''}`} aria-hidden="true" />
           {connectionStatus === 'connected' ? (
             <>
-              <BluetoothConnected size={14} />
+              <BluetoothConnected size={14} aria-hidden="true" />
               <span>{deviceName || 'Bağlı'}</span>
             </>
           ) : connectionStatus === 'connecting' ? (
             <span>Aranıyor...</span>
           ) : (
             <>
-              <Bluetooth size={14} />
+              <Bluetooth size={14} aria-hidden="true" />
               <span>Bağlan</span>
             </>
           )}
         </button>
       </header>
 
-      {/* Error alert if any */}
       {errorMessage && (
-        <div style={{
-          background: 'rgba(239, 68, 68, 0.15)',
-          border: '1px solid rgba(239, 68, 68, 0.4)',
-          borderRadius: '12px',
-          padding: '10px 14px',
-          fontSize: '13px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          color: '#fca5a5'
-        }}>
-          <AlertCircle size={16} />
+        <div
+          role="alert"
+          style={{
+            background: 'rgba(239, 68, 68, 0.15)',
+            border: '1px solid rgba(239, 68, 68, 0.4)',
+            borderRadius: '12px',
+            padding: '10px 14px',
+            fontSize: '13px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            color: '#fca5a5'
+          }}
+        >
+          <AlertCircle size={16} aria-hidden="true" />
           <span>{errorMessage}</span>
           <button
             onClick={() => setErrorMessage(null)}
-            style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: '#fca5a5', cursor: 'pointer' }}
+            className="icon-btn"
+            style={{
+              marginLeft: 'auto',
+              minWidth: '44px',
+              minHeight: '44px',
+              background: 'transparent',
+              border: 'none',
+              color: '#fca5a5',
+              cursor: 'pointer'
+            }}
+            aria-label="Hatayı kapat"
           >
-            <X size={14} />
+            <X size={16} />
           </button>
         </div>
       )}
 
-      {/* 2. Main Scale Weight Card */}
       <main className="scale-card">
-        {/* Unit Selector */}
-        <div className="unit-selector">
+        <div className="unit-selector" role="group" aria-label="Ağırlık birimi seçimi">
           {(['g', 'oz', 'ml'] as WeightUnit[]).map((u) => (
             <button
               key={u}
               className={`unit-btn ${unit === u ? 'active' : ''}`}
               onClick={() => setUnit(u)}
+              aria-pressed={unit === u}
+              aria-label={`${u.toUpperCase()} birimi`}
             >
               {u.toUpperCase()}
             </button>
           ))}
         </div>
 
-        {/* Big Weight Numbers */}
-        <div className="weight-value-container">
+        <div className="weight-value-container" aria-live="polite">
           <span className="weight-digits">{formatWeight(weightGrams)}</span>
           <span className="weight-unit">{unit}</span>
         </div>
 
-        {/* Live History SVG Sparkline */}
-        <div style={{ width: '100%', height: '40px', padding: '0 10px', opacity: 0.8 }}>
+        <div style={{ width: '100%', height: '40px', padding: '0 10px', opacity: 0.8 }} aria-hidden="true">
           <svg viewBox="0 0 100 40" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
             <polyline
               fill="none"
@@ -232,11 +250,10 @@ export const App: React.FC = () => {
           </svg>
         </div>
 
-        {/* Meta / Tare status */}
         <div className="weight-meta">
           {isTared && (
             <span style={{ color: '#22c55e', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <CheckCircle2 size={13} /> Dara Alındı
+              <CheckCircle2 size={13} aria-hidden="true" /> Dara Alındı
             </span>
           )}
           {!isTared && (
@@ -245,21 +262,22 @@ export const App: React.FC = () => {
         </div>
       </main>
 
-      {/* 3. Action Controls Grid */}
       <div className="controls-grid">
         <button
           className="btn btn-primary btn-tare-huge"
           onClick={handleTare}
+          aria-label="Tartının darasını al"
         >
-          <RotateCcw size={22} />
+          <RotateCcw size={22} aria-hidden="true" />
           <span>DARA AL (TARE)</span>
         </button>
 
         <button
           className="btn btn-secondary"
           onClick={() => setShowCalModal(true)}
+          aria-label="Kalibrasyon asistanını aç"
         >
-          <SlidersHorizontal size={18} />
+          <SlidersHorizontal size={18} aria-hidden="true" />
           <span>Kalibrasyon</span>
         </button>
 
@@ -269,28 +287,28 @@ export const App: React.FC = () => {
           target="_blank"
           rel="noreferrer"
           style={{ textDecoration: 'none' }}
+          aria-label="Wi-Fi Kurulum Paneli (yeni sekmede açılır)"
         >
-          <Wifi size={18} />
+          <Wifi size={18} aria-hidden="true" />
           <span>Wi-Fi Paneli</span>
-          <ExternalLink size={13} style={{ opacity: 0.5 }} />
+          <ExternalLink size={13} style={{ opacity: 0.6 }} aria-hidden="true" />
         </a>
       </div>
 
-      {/* 4. Pour-Over Timer Card */}
-      <section className="feature-card">
+      <section className="feature-card" aria-label="Demleme Kronometresi">
         <div className="card-header">
           <span>KRONOMETRE & DEMLEME</span>
           <span>{isTimerRunning ? 'ÇALIŞIYOR' : 'DURDU'}</span>
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span className="timer-digits">{formatTimer(timerSeconds)}</span>
+          <span className="timer-digits" aria-live="off">{formatTimer(timerSeconds)}</span>
 
           <div className="timer-actions">
             <button
               className="icon-btn"
               onClick={() => setIsTimerRunning(!isTimerRunning)}
-              title={isTimerRunning ? 'Durdur' : 'Başlat'}
+              aria-label={isTimerRunning ? 'Zamanlayıcıyı durdur' : 'Zamanlayıcıyı başlat'}
             >
               {isTimerRunning ? <Pause size={18} /> : <Play size={18} />}
             </button>
@@ -300,7 +318,7 @@ export const App: React.FC = () => {
                 setIsTimerRunning(false);
                 setTimerSeconds(0);
               }}
-              title="Sıfırla"
+              aria-label="Zamanlayıcıyı sıfırla"
             >
               <RotateCcw size={18} />
             </button>
@@ -308,30 +326,42 @@ export const App: React.FC = () => {
         </div>
       </section>
 
-      {/* 5. Calibration Assistant Modal */}
       {showCalModal && (
-        <div className="modal-overlay" onClick={() => setShowCalModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="modal-overlay"
+          onClick={() => setShowCalModal(false)}
+        >
+          <div
+            className="modal-content"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="cal-modal-title"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 className="modal-title">Kalibrasyon Asistanı</h2>
+              <h2 id="cal-modal-title" className="modal-title">Kalibrasyon Asistanı</h2>
               <button
                 className="icon-btn"
                 onClick={() => setShowCalModal(false)}
-                style={{ width: '30px', height: '30px' }}
+                aria-label="Kapat"
               >
-                <X size={16} />
+                <X size={18} />
               </button>
             </div>
 
-            <p style={{ fontSize: '13px', color: '#94a3b8', lineHeight: 1.4 }}>
+            <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: 1.4 }}>
               Tartınızın kalibrasyon katsayısını hesaplamak için bilinen bir ağırlık (örneğin 500g) kullanın:
             </p>
 
             <div>
-              <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '6px' }}>
+              <label
+                htmlFor="cal-ref-weight"
+                style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '6px' }}
+              >
                 Referans Ağırlık (Gram)
               </label>
               <input
+                id="cal-ref-weight"
                 type="number"
                 className="input-field"
                 value={refWeightGrams}
@@ -341,10 +371,14 @@ export const App: React.FC = () => {
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '6px' }}>
+              <label
+                htmlFor="cal-raw-adc"
+                style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '6px' }}
+              >
                 Okunan Ham Değer (Katsayı 1.0 iken)
               </label>
               <input
+                id="cal-raw-adc"
                 type="number"
                 className="input-field"
                 value={rawAdcInput}
@@ -360,7 +394,7 @@ export const App: React.FC = () => {
               border: '1px solid #334155',
               textAlign: 'center'
             }}>
-              <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase' }}>
+              <div style={{ fontSize: '11px', color: '#cbd5e1', textTransform: 'uppercase' }}>
                 Hesaplanan Katsayı
               </div>
               <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#38bdf8', marginTop: '2px' }}>
@@ -368,7 +402,7 @@ export const App: React.FC = () => {
               </div>
             </div>
 
-            <p style={{ fontSize: '11px', color: '#64748b', textAlign: 'center' }}>
+            <p style={{ fontSize: '12px', color: '#cbd5e1', textAlign: 'center' }}>
               Bu değeri 192.168.4.1 web arayüzüne girerek tartınıza kaydedebilirsiniz.
             </p>
 
