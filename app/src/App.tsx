@@ -1640,9 +1640,10 @@ export const App: React.FC = () => {
             aria-labelledby="settings-modal-title"
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="modal-header">
               <h2 id="settings-modal-title" className="modal-title">{t.settingsTitle}</h2>
               <button
+                type="button"
                 className="icon-btn"
                 onClick={() => setShowSettingsModal(false)}
                 aria-label={t.calClose}
@@ -1970,9 +1971,10 @@ export const App: React.FC = () => {
             onClick={(e) => e.stopPropagation()}
             style={{ maxWidth: '360px' }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="modal-header">
               <h2 id="meal-picker-title" className="modal-title">{t.selectMeal}</h2>
               <button
+                type="button"
                 className="icon-btn"
                 onClick={() => setShowMealPicker(false)}
                 aria-label={t.calClose}
@@ -2015,9 +2017,10 @@ export const App: React.FC = () => {
             aria-labelledby="manual-add-title"
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="modal-header">
               <h2 id="manual-add-title" className="modal-title">{t.manualAddBtn}</h2>
               <button
+                type="button"
                 className="icon-btn"
                 onClick={() => setShowManualAddModal(false)}
                 aria-label={t.calClose}
@@ -2213,9 +2216,10 @@ export const App: React.FC = () => {
             onClick={(e) => e.stopPropagation()}
             style={{ maxWidth: '380px' }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="modal-header">
               <h2 id="export-modal-title" className="modal-title">{t.exportDataBtn}</h2>
               <button
+                type="button"
                 className="icon-btn"
                 onClick={() => setShowExportModal(false)}
                 aria-label={t.calClose}
@@ -2302,11 +2306,12 @@ export const App: React.FC = () => {
             aria-labelledby="calendar-modal-title"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="calendar-modal-header">
+            <div className="modal-header calendar-modal-header">
               <h2 id="calendar-modal-title" className="modal-title">
                 {t.selectDate}
               </h2>
               <button
+                type="button"
                 className="icon-btn"
                 onClick={() => setShowCalendarModal(false)}
                 aria-label={t.calClose}
@@ -2421,8 +2426,8 @@ export const App: React.FC = () => {
           >
             {/* Modal Header */}
             <div className="modal-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <SlidersHorizontal size={18} style={{ color: 'var(--accent-blue)' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: '1 1 auto' }}>
+                <SlidersHorizontal size={18} style={{ color: 'var(--accent-blue)', flexShrink: 0 }} />
                 <h2 id="cal-wizard-title" className="modal-title">
                   {t.calWizardTitle}
                 </h2>
@@ -2693,8 +2698,8 @@ export const App: React.FC = () => {
           >
             {/* Modal Header */}
             <div className="modal-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <ChefHat size={20} style={{ color: 'var(--accent-amber, #f59e0b)' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: '1 1 auto' }}>
+                <ChefHat size={20} style={{ color: 'var(--accent-amber, #f59e0b)', flexShrink: 0 }} />
                 <h2 id="recipe-modal-title" className="modal-title">
                   {t.recipeModeTitle}
                 </h2>
