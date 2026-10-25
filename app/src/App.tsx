@@ -2462,7 +2462,9 @@ export const App: React.FC = () => {
                 <div className="cal-step-icon-badge">
                   <RotateCcw size={26} />
                 </div>
-                <h3 className="cal-step-heading">{t.calStep1Title}</h3>
+                <h3 className="cal-step-heading">
+                  {t.calStep1Title.includes(':') ? t.calStep1Title.split(':')[1].trim() : t.calStep1Title}
+                </h3>
                 <p className="cal-step-text">{t.calStep1Desc}</p>
 
                 <div className="cal-live-card">
@@ -2494,7 +2496,9 @@ export const App: React.FC = () => {
                 <div className="cal-step-icon-badge">
                   <SlidersHorizontal size={26} />
                 </div>
-                <h3 className="cal-step-heading">{t.calStep2Title}</h3>
+                <h3 className="cal-step-heading">
+                  {t.calStep2Title.includes(':') ? t.calStep2Title.split(':')[1].trim() : t.calStep2Title}
+                </h3>
                 <p className="cal-step-text">{t.calStep2Desc}</p>
 
                 {/* Preset Chips */}
@@ -2559,7 +2563,9 @@ export const App: React.FC = () => {
                 <div className="cal-step-icon-badge" style={{ background: 'rgba(34, 197, 94, 0.15)', color: 'var(--accent-green)' }}>
                   <CheckCircle2 size={26} />
                 </div>
-                <h3 className="cal-step-heading">{t.calStep3Title}</h3>
+                <h3 className="cal-step-heading">
+                  {t.calStep3Title.includes(':') ? t.calStep3Title.split(':')[1].trim() : t.calStep3Title}
+                </h3>
                 <p className="cal-step-text">{t.calStep3Desc}</p>
 
                 <div className="cal-result-box" style={{ padding: '14px', margin: '10px 0', width: '100%' }}>
