@@ -21,12 +21,22 @@ import {
   Utensils,
   CameraOff,
   Trash2,
-  ExternalLink
+  ExternalLink,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  ChevronDown,
+  ChevronUp,
+  Cpu,
+  Globe
 } from 'lucide-react';
 import { scaleBle } from './services/bleService';
 import { foodService, calculateNutrition } from './services/foodService';
+import { mealService, getLocalDateString } from './services/mealService';
 import type { WeightUnit, ConnectionStatus } from './types/scale';
 import type { FoodProduct } from './types/food';
+import type { MealType } from './types/meal';
 import { translations, getInitialLanguage, LANGUAGES, type Language } from './i18n';
 
 type ThemeMode = 'dark' | 'light' | 'system';
@@ -55,8 +65,15 @@ export const App: React.FC = () => {
   // Modals
   const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false);
   const [showFoodModal, setShowFoodModal] = useState<boolean>(false);
+  const [showDiaryModal, setShowDiaryModal] = useState<boolean>(false);
+  const [showMealPicker, setShowMealPicker] = useState<boolean>(false);
+  const [selectedDate, setSelectedDate] = useState<string>(getLocalDateString);
+  const [, setDiaryRevision] = useState<number>(0);
+  const mealEntries = mealService.getByDate(selectedDate);
+  const [logSuccessToast, setLogSuccessToast] = useState<string | null>(null);
   const [refWeightGrams, setRefWeightGrams] = useState<string>('500');
   const [rawAdcInput, setRawAdcInput] = useState<string>('210000');
+  const [isCalOpen, setIsCalOpen] = useState<boolean>(false);
 
   // Food & Barcode state
   const [activeProduct, setActiveProduct] = useState<FoodProduct | null>(null);
@@ -202,17 +219,78 @@ export const App: React.FC = () => {
 
   // Close modals with Escape key
   useEffect(() => {
-    if (!showSettingsModal && !showFoodModal) return;
+    if (!showSettingsModal && !showFoodModal && !showDiaryModal && !showMealPicker) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setShowSettingsModal(false);
         setShowFoodModal(false);
+        setShowDiaryModal(false);
+        setShowMealPicker(false);
         stopScanner();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showSettingsModal, showFoodModal]);
+  }, [showSettingsModal, showFoodModal, showDiaryModal, showMealPicker]);
+
+  const handleLogMeal = (mealType: MealType) => {
+    if (!activeProduct) return;
+    const effectiveWeight = weightGrams > 0 ? weightGrams : 100;
+    const scaled = calculateNutrition(activeProduct.nutriments, effectiveWeight);
+    const today = getLocalDateString();
+
+    const added = mealService.add({
+      date: today,
+      mealType,
+      foodName: activeProduct.name,
+      brand: activeProduct.brands,
+      weightGrams: effectiveWeight,
+      calories: scaled.calories,
+      proteins: scaled.proteins,
+      carbs: scaled.carbs,
+      fat: scaled.fat,
+    });
+
+    setShowMealPicker(false);
+    setDiaryRevision((r) => r + 1);
+
+    const mealLabel = t[mealType];
+    setLogSuccessToast(`${mealLabel}: ${activeProduct.name} (${added.weightGrams.toFixed(0)}g • ${added.calories.toFixed(2)} kcal)`);
+    setTimeout(() => {
+      setLogSuccessToast(null);
+    }, 2800);
+  };
+
+  const handleDeleteEntry = (id: string) => {
+    mealService.delete(id);
+    setDiaryRevision((r) => r + 1);
+  };
+
+  const stepDate = (days: number) => {
+    const [y, m, d] = selectedDate.split('-').map(Number);
+    const dateObj = new Date(y, m - 1, d);
+    dateObj.setDate(dateObj.getDate() + days);
+    setSelectedDate(getLocalDateString(dateObj));
+  };
+
+  const formatDisplayDate = (dateStr: string): string => {
+    const todayStr = getLocalDateString();
+    if (dateStr === todayStr) {
+      return `${t.today} (${dateStr})`;
+    }
+    try {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      const dateObj = new Date(y, m - 1, d);
+      return dateObj.toLocaleDateString(lang, {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      });
+    } catch {
+      return dateStr;
+    }
+  };
 
   // Clean up scanner on unmount
   useEffect(() => {
@@ -447,6 +525,17 @@ export const App: React.FC = () => {
               <span className="macro-label">{t.fatLabel}</span>
             </div>
           </div>
+
+          <div className="nutrition-actions-row">
+            <button
+              type="button"
+              className="btn btn-primary btn-log-meal"
+              onClick={() => setShowMealPicker(true)}
+            >
+              <Plus size={16} aria-hidden="true" />
+              <span>{t.logMeal}</span>
+            </button>
+          </div>
         </section>
       )}
 
@@ -505,35 +594,36 @@ export const App: React.FC = () => {
             </div>
 
             <div className="settings-body">
-              {/* Bluetooth Connection Section */}
-              <div className="settings-section">
-                <div className="settings-section-header">
-                  <span className="settings-section-title">
-                    {connectionStatus === 'connected' ? (
-                      <BluetoothConnected size={16} aria-hidden="true" style={{ color: 'var(--accent-green)' }} />
-                    ) : (
-                      <Bluetooth size={16} aria-hidden="true" />
-                    )}
-                    {t.bluetoothSection}
-                  </span>
-                  <span className="settings-section-desc">
-                    {connectionStatus === 'connected'
-                      ? (deviceName ? `${deviceName} (${t.connected})` : t.connected)
-                      : connectionStatus === 'connecting'
-                      ? t.searching
-                      : t.standby}
-                  </span>
-                </div>
+              {/* Category 1: Device & Connectivity */}
+              <div className="settings-group">
+                <span className="settings-group-title">
+                  <Cpu size={14} aria-hidden="true" />
+                  {t.deviceSectionTitle}
+                </span>
 
-                <div className="settings-device-row">
-                  <div className="settings-device-info">
-                    <span className="settings-device-name">
-                      {connectionStatus === 'connected' ? (deviceName || 'Smartcale ESP32') : 'Smartcale ESP32'}
-                    </span>
-                    <span className="settings-device-status">
-                      <span className={`nav-dot ${connectionStatus}`} style={{ position: 'static', display: 'inline-block' }} />
-                      {connectionStatus === 'connected' ? t.connected : connectionStatus === 'connecting' ? t.searching : t.standby}
-                    </span>
+                {/* Bluetooth Device Card */}
+                <div className="settings-card">
+                  <div className="settings-card-left">
+                    <div className="settings-card-icon">
+                      {connectionStatus === 'connected' ? (
+                        <BluetoothConnected size={18} style={{ color: 'var(--accent-green)' }} />
+                      ) : (
+                        <Bluetooth size={18} />
+                      )}
+                    </div>
+                    <div className="settings-card-info">
+                      <span className="settings-card-title">
+                        {connectionStatus === 'connected' ? (deviceName || 'Smartcale ESP32') : 'Smartcale ESP32'}
+                      </span>
+                      <span className="settings-card-sub">
+                        <span className={`nav-dot ${connectionStatus}`} style={{ position: 'static', display: 'inline-block' }} />
+                        {connectionStatus === 'connected'
+                          ? t.connected
+                          : connectionStatus === 'connecting'
+                          ? t.searching
+                          : t.standby}
+                      </span>
+                    </div>
                   </div>
 
                   <button
@@ -541,7 +631,7 @@ export const App: React.FC = () => {
                     className={`btn ${connectionStatus === 'connected' ? 'btn-secondary' : 'btn-primary'}`}
                     onClick={connectionStatus === 'connected' ? handleDisconnect : handleConnect}
                     disabled={connectionStatus === 'connecting'}
-                    style={{ minHeight: '38px', padding: '6px 14px', fontSize: '13px' }}
+                    style={{ minHeight: '36px', padding: '6px 12px', fontSize: '12px' }}
                   >
                     {connectionStatus === 'connected'
                       ? t.disconnect
@@ -550,168 +640,191 @@ export const App: React.FC = () => {
                       : t.connect}
                   </button>
                 </div>
-              </div>
 
-              {/* Wi-Fi Portal Section */}
-              <div className="settings-section">
-                <div className="settings-section-header">
-                  <span className="settings-section-title">
-                    <Wifi size={16} aria-hidden="true" />
-                    {t.wifiSection}
-                  </span>
-                  <span className="settings-section-desc">{t.wifiDesc}</span>
-                </div>
-
-                <a
-                  href="http://192.168.4.1"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn btn-secondary"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    textDecoration: 'none',
-                    minHeight: '42px',
-                    fontSize: '13px',
-                  }}
-                >
-                  <Wifi size={16} aria-hidden="true" />
-                  <span>{t.wifiPortalBtn}</span>
-                  <ExternalLink size={14} aria-hidden="true" />
-                </a>
-              </div>
-
-              {/* Calibration Section */}
-              <div className="settings-section">
-                <div className="settings-section-header">
-                  <span className="settings-section-title">
-                    <SlidersHorizontal size={16} aria-hidden="true" />
-                    {t.calTitle}
-                  </span>
-                  <span className="settings-section-desc">{t.calDesc}</span>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                  <div>
-                    <label htmlFor="cal-ref-weight" className="input-label">
-                      {t.calRefWeightLabel}
-                    </label>
-                    <input
-                      id="cal-ref-weight"
-                      type="number"
-                      className="input-field"
-                      value={refWeightGrams}
-                      onChange={(e) => setRefWeightGrams(e.target.value)}
-                      placeholder="500"
-                    />
+                {/* Wi-Fi Setup Portal Row */}
+                <div className="settings-card">
+                  <div className="settings-card-left">
+                    <div className="settings-card-icon">
+                      <Wifi size={18} />
+                    </div>
+                    <div className="settings-card-info">
+                      <span className="settings-card-title">{t.wifiSection}</span>
+                      <span className="settings-card-sub">192.168.4.1</span>
+                    </div>
                   </div>
 
-                  <div>
-                    <label htmlFor="cal-raw-adc" className="input-label">
-                      {t.calRawAdcLabel}
-                    </label>
-                    <input
-                      id="cal-raw-adc"
-                      type="number"
-                      className="input-field"
-                      value={rawAdcInput}
-                      onChange={(e) => setRawAdcInput(e.target.value)}
-                      placeholder="210000"
-                    />
+                  <a
+                    href="http://192.168.4.1"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn btn-secondary"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      textDecoration: 'none',
+                      minHeight: '36px',
+                      padding: '6px 12px',
+                      fontSize: '12px',
+                    }}
+                  >
+                    <span>{t.openWifiPortal}</span>
+                    <ExternalLink size={13} aria-hidden="true" />
+                  </a>
+                </div>
+
+                {/* Advanced Calibration Accordion */}
+                <div className="settings-accordion">
+                  <button
+                    type="button"
+                    className="settings-accordion-header"
+                    onClick={() => setIsCalOpen(!isCalOpen)}
+                    aria-expanded={isCalOpen}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <SlidersHorizontal size={15} />
+                      <span style={{ fontSize: '13px', fontWeight: 600 }}>{t.calAdvancedToggle}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span className="settings-tag">{computedCalFactor()}</span>
+                      {isCalOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </div>
+                  </button>
+
+                  {isCalOpen && (
+                    <div className="settings-accordion-content">
+                      <p className="modal-desc" style={{ marginBottom: '8px', fontSize: '12px' }}>
+                        {t.calDesc}
+                      </p>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                        <div>
+                          <label htmlFor="cal-ref-weight" className="input-label" style={{ fontSize: '11px' }}>
+                            {t.calRefWeightLabel}
+                          </label>
+                          <input
+                            id="cal-ref-weight"
+                            type="number"
+                            className="input-field"
+                            style={{ minHeight: '38px', padding: '6px 10px', fontSize: '13px' }}
+                            value={refWeightGrams}
+                            onChange={(e) => setRefWeightGrams(e.target.value)}
+                            placeholder="500"
+                          />
+                        </div>
+
+                        <div>
+                          <label htmlFor="cal-raw-adc" className="input-label" style={{ fontSize: '11px' }}>
+                            {t.calRawAdcLabel}
+                          </label>
+                          <input
+                            id="cal-raw-adc"
+                            type="number"
+                            className="input-field"
+                            style={{ minHeight: '38px', padding: '6px 10px', fontSize: '13px' }}
+                            value={rawAdcInput}
+                            onChange={(e) => setRawAdcInput(e.target.value)}
+                            placeholder="210000"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="cal-result-box" style={{ padding: '8px', marginTop: '8px' }}>
+                        <div className="cal-result-label">{t.calFactorTitle}</div>
+                        <div className="cal-result-value" style={{ fontSize: '20px' }}>{computedCalFactor()}</div>
+                      </div>
+
+                      <p className="modal-footer-note" style={{ textAlign: 'left', fontSize: '11px', marginTop: '6px' }}>
+                        {t.calNote}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Category 2: Preferences */}
+              <div className="settings-group">
+                <span className="settings-group-title">
+                  <Globe size={14} aria-hidden="true" />
+                  {t.preferencesSectionTitle}
+                </span>
+
+                {/* Theme Selector */}
+                <div className="settings-field-block">
+                  <div className="settings-field-header">
+                    <span className="settings-field-label">
+                      <Sun size={14} aria-hidden="true" />
+                      {t.themeSection}
+                    </span>
                   </div>
-                </div>
 
-                <div className="cal-result-box">
-                  <div className="cal-result-label">{t.calFactorTitle}</div>
-                  <div className="cal-result-value">{computedCalFactor()}</div>
-                </div>
-
-                <p className="modal-footer-note" style={{ textAlign: 'left', fontSize: '11px', margin: 0 }}>
-                  {t.calNote}
-                </p>
-              </div>
-
-              {/* Theme Section */}
-              <div className="settings-section">
-                <div className="settings-section-header">
-                  <span className="settings-section-title">
-                    <Sun size={15} aria-hidden="true" />
-                    {t.themeSection}
-                  </span>
-                  <span className="settings-section-desc">{t.themeSectionDesc}</span>
-                </div>
-
-                <div className="theme-segmented" role="radiogroup" aria-label={t.themeSection}>
-                  <button
-                    type="button"
-                    className={`theme-option ${theme === 'light' ? 'active' : ''}`}
-                    onClick={() => setTheme('light')}
-                    role="radio"
-                    aria-checked={theme === 'light'}
-                  >
-                    <Sun size={18} aria-hidden="true" />
-                    <span>{t.themeLightLabel}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className={`theme-option ${theme === 'dark' ? 'active' : ''}`}
-                    onClick={() => setTheme('dark')}
-                    role="radio"
-                    aria-checked={theme === 'dark'}
-                  >
-                    <Moon size={18} aria-hidden="true" />
-                    <span>{t.themeDarkLabel}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className={`theme-option ${theme === 'system' ? 'active' : ''}`}
-                    onClick={() => setTheme('system')}
-                    role="radio"
-                    aria-checked={theme === 'system'}
-                  >
-                    <Monitor size={18} aria-hidden="true" />
-                    <span>{t.themeSystemLabel}</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Language Section */}
-              <div className="settings-section">
-                <div className="settings-section-header">
-                  <span className="settings-section-title">
-                    <LanguagesIcon size={15} aria-hidden="true" />
-                    {t.langSection}
-                  </span>
-                  <span className="settings-section-desc">{t.langSectionDesc}</span>
-                </div>
-
-                <div className="lang-grid" role="radiogroup" aria-label={t.langSection}>
-                  {LANGUAGES.map((opt) => (
+                  <div className="theme-segmented" role="radiogroup" aria-label={t.themeSection}>
                     <button
-                      key={opt.code}
                       type="button"
-                      className={`lang-card ${lang === opt.code ? 'active' : ''}`}
-                      onClick={() => setLang(opt.code)}
+                      className={`theme-option ${theme === 'light' ? 'active' : ''}`}
+                      onClick={() => setTheme('light')}
                       role="radio"
-                      aria-checked={lang === opt.code}
+                      aria-checked={theme === 'light'}
                     >
-                      <div className="lang-card-left">
+                      <Sun size={16} aria-hidden="true" />
+                      <span>{t.themeLightLabel}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className={`theme-option ${theme === 'dark' ? 'active' : ''}`}
+                      onClick={() => setTheme('dark')}
+                      role="radio"
+                      aria-checked={theme === 'dark'}
+                    >
+                      <Moon size={16} aria-hidden="true" />
+                      <span>{t.themeDarkLabel}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className={`theme-option ${theme === 'system' ? 'active' : ''}`}
+                      onClick={() => setTheme('system')}
+                      role="radio"
+                      aria-checked={theme === 'system'}
+                    >
+                      <Monitor size={16} aria-hidden="true" />
+                      <span>{t.themeSystemLabel}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Language Selector (Clean compact grid) */}
+                <div className="settings-field-block">
+                  <div className="settings-field-header">
+                    <span className="settings-field-label">
+                      <LanguagesIcon size={14} aria-hidden="true" />
+                      {t.langSection}
+                    </span>
+                  </div>
+
+                  <div className="lang-compact-grid" role="radiogroup" aria-label={t.langSection}>
+                    {LANGUAGES.map((opt) => (
+                      <button
+                        key={opt.code}
+                        type="button"
+                        className={`lang-pill ${lang === opt.code ? 'active' : ''}`}
+                        onClick={() => setLang(opt.code)}
+                        role="radio"
+                        aria-checked={lang === opt.code}
+                      >
                         <span className="lang-badge">{opt.shortLabel}</span>
                         <span>{opt.label}</span>
-                      </div>
-                      {lang === opt.code && <Check size={16} aria-hidden="true" />}
-                    </button>
-                  ))}
+                        {lang === opt.code && <Check size={14} aria-hidden="true" style={{ marginLeft: 'auto' }} />}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              {/* About Section */}
-              <div className="settings-about">
-                <span>Smartcale ESP32</span>
+              {/* Category 3: About */}
+              <div className="settings-about" style={{ marginTop: '0', padding: '6px 0' }}>
+                <span>Smartcale ESP32 • AtaCanYmc</span>
                 <span>{t.versionLabel} 1.1.0</span>
               </div>
             </div>
@@ -853,6 +966,229 @@ export const App: React.FC = () => {
         </div>
       )}
 
+      {/* Quick Meal Picker Modal */}
+      {showMealPicker && activeProduct && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowMealPicker(false)}
+        >
+          <div
+            className="modal-content"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="meal-picker-title"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '360px' }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 id="meal-picker-title" className="modal-title">{t.selectMeal}</h2>
+              <button
+                className="icon-btn"
+                onClick={() => setShowMealPicker(false)}
+                aria-label={t.calClose}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <p className="modal-desc" style={{ marginBottom: '4px' }}>
+              {activeProduct.name} ({weightGrams > 0 ? `${weightGrams.toFixed(0)}g` : `100g ${t.standby}`})
+            </p>
+
+            <div className="meal-picker-grid">
+              {(['breakfast', 'lunch', 'dinner', 'snack'] as MealType[]).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  className="meal-picker-btn"
+                  onClick={() => handleLogMeal(m)}
+                >
+                  <Utensils size={18} />
+                  <span>{t[m]}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Diary / Calendar Modal */}
+      {showDiaryModal && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowDiaryModal(false)}
+        >
+          <div
+            className="modal-content"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="diary-modal-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 id="diary-modal-title" className="modal-title">{t.mealTitle}</h2>
+              <button
+                className="icon-btn"
+                onClick={() => setShowDiaryModal(false)}
+                aria-label={t.calClose}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Date Navigator & Native Calendar Picker */}
+            <div className="date-nav-bar">
+              <button
+                type="button"
+                className="icon-btn"
+                onClick={() => stepDate(-1)}
+                aria-label="Previous day"
+              >
+                <ChevronLeft size={18} />
+              </button>
+
+              <div className="date-picker-wrapper">
+                <label htmlFor="diary-date-input" className="date-display-btn">
+                  <CalendarDays size={16} aria-hidden="true" />
+                  <span>{formatDisplayDate(selectedDate)}</span>
+                </label>
+                <input
+                  id="diary-date-input"
+                  type="date"
+                  className="sr-date-input"
+                  value={selectedDate}
+                  onChange={(e) => e.target.value && setSelectedDate(e.target.value)}
+                />
+              </div>
+
+              <button
+                type="button"
+                className="icon-btn"
+                onClick={() => stepDate(1)}
+                aria-label="Next day"
+              >
+                <ChevronRight size={18} />
+              </button>
+
+              {selectedDate !== getLocalDateString() && (
+                <button
+                  type="button"
+                  className="btn-today-chip"
+                  onClick={() => setSelectedDate(getLocalDateString())}
+                >
+                  {t.today}
+                </button>
+              )}
+            </div>
+
+            <div className="settings-body">
+              {/* Daily Total Summary Card */}
+              <div className="day-summary-card">
+                <div className="day-summary-header">
+                  <span className="day-summary-title">{t.dailyTotal}</span>
+                  <span className="day-summary-calories">
+                    {mealService.calculateDaySummary(mealEntries).calories.toFixed(2)} kcal
+                  </span>
+                </div>
+
+                <div className="day-summary-macros">
+                  <div className="day-macro-box">
+                    <span className="day-macro-value">
+                      {mealService.calculateDaySummary(mealEntries).proteins.toFixed(2)}g
+                    </span>
+                    <span className="day-macro-label">{t.proteinLabel}</span>
+                  </div>
+                  <div className="day-macro-box">
+                    <span className="day-macro-value">
+                      {mealService.calculateDaySummary(mealEntries).carbs.toFixed(2)}g
+                    </span>
+                    <span className="day-macro-label">{t.carbsLabel}</span>
+                  </div>
+                  <div className="day-macro-box">
+                    <span className="day-macro-value">
+                      {mealService.calculateDaySummary(mealEntries).fat.toFixed(2)}g
+                    </span>
+                    <span className="day-macro-label">{t.fatLabel}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Grouped Meals */}
+              {(['breakfast', 'lunch', 'dinner', 'snack'] as MealType[]).map((mType) => {
+                const groupEntries = mealEntries.filter((e) => e.mealType === mType);
+                const groupSummary = mealService.calculateDaySummary(groupEntries);
+
+                return (
+                  <div key={mType} className="meal-group">
+                    <div className="meal-group-header">
+                      <span>{t[mType]}</span>
+                      {groupEntries.length > 0 && (
+                        <span className="meal-group-cals">{groupSummary.calories.toFixed(2)} kcal</span>
+                      )}
+                    </div>
+
+                    {groupEntries.length === 0 ? (
+                      <div className="meal-empty-hint">-</div>
+                    ) : (
+                      groupEntries.map((item) => (
+                        <div key={item.id} className="meal-item">
+                          <div className="meal-item-info">
+                            <span className="meal-item-name">{item.foodName}</span>
+                            <span className="meal-item-sub">
+                              {item.weightGrams.toFixed(0)}g {item.brand ? `• ${item.brand}` : ''}
+                            </span>
+                            <div className="meal-item-macros">
+                              <span className="macro-chip protein">P: {item.proteins.toFixed(2)}g</span>
+                              <span className="macro-chip carbs">K: {item.carbs.toFixed(2)}g</span>
+                              <span className="macro-chip fat">Y: {item.fat.toFixed(2)}g</span>
+                            </div>
+                          </div>
+
+                          <div className="meal-item-right">
+                            <span className="meal-item-cals">{item.calories.toFixed(2)} kcal</span>
+                            <button
+                              type="button"
+                              className="icon-btn"
+                              onClick={() => handleDeleteEntry(item.id)}
+                              aria-label={t.deleteEntry}
+                              title={t.deleteEntry}
+                              style={{ width: '32px', height: '32px', color: 'var(--accent-red)' }}
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                );
+              })}
+
+              {mealEntries.length === 0 && (
+                <div style={{ padding: '20px 10px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                  <Utensils size={28} style={{ margin: '0 auto 8px', opacity: 0.5 }} />
+                  <p style={{ fontSize: '13px' }}>{t.noEntriesToday}</p>
+                </div>
+              )}
+            </div>
+
+            <button
+              className="btn btn-primary"
+              onClick={() => setShowDiaryModal(false)}
+            >
+              {t.calDone}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {logSuccessToast && (
+        <div className="log-toast" role="status" aria-live="polite">
+          <CheckCircle2 size={16} />
+          <span>{logSuccessToast}</span>
+        </div>
+      )}
+
       <nav className="bottom-nav" aria-label="Bottom Navigation">
         <button
           type="button"
@@ -862,6 +1198,16 @@ export const App: React.FC = () => {
         >
           <ScanLine size={20} aria-hidden="true" />
           <span>{t.navFood}</span>
+        </button>
+
+        <button
+          type="button"
+          className={`bottom-nav-item ${showDiaryModal ? 'active' : ''}`}
+          onClick={() => setShowDiaryModal(true)}
+          aria-label={t.mealTitle}
+        >
+          <CalendarDays size={20} aria-hidden="true" />
+          <span>{t.navDiary}</span>
         </button>
 
         <button

@@ -94,6 +94,24 @@ export interface Translations {
   bluetoothSection: string;
   wifiSection: string;
   wifiDesc: string;
+  navDiary: string;
+  mealTitle: string;
+  logMeal: string;
+  selectMeal: string;
+  breakfast: string;
+  lunch: string;
+  dinner: string;
+  snack: string;
+  loggedSuccess: string;
+  noEntriesToday: string;
+  today: string;
+  dailyTotal: string;
+  deleteEntry: string;
+  weightLabel: string;
+  deviceSectionTitle: string;
+  preferencesSectionTitle: string;
+  calAdvancedToggle: string;
+  openWifiPortal: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -177,6 +195,24 @@ export const translations: Record<Language, Translations> = {
     bluetoothSection: 'Bluetooth Bağlantısı',
     wifiSection: 'Wi-Fi Kurulum Portalı',
     wifiDesc: 'Tartı ağı ve cihaz ayarları için 192.168.4.1 adresini açın',
+    navDiary: 'Günlük',
+    mealTitle: 'Öğün Günlüğü',
+    logMeal: 'Öğüne Ekle',
+    selectMeal: 'Öğün Seçin',
+    breakfast: 'Kahvaltı',
+    lunch: 'Öğle Yemeği',
+    dinner: 'Akşam Yemeği',
+    snack: 'Ara Öğün',
+    loggedSuccess: 'Öğüne kaydedildi!',
+    noEntriesToday: 'Bu tarihte henüz bir beslenme kaydı yok.',
+    today: 'Bugün',
+    dailyTotal: 'Günlük Toplam',
+    deleteEntry: 'Kaydı Sil',
+    weightLabel: 'Miktar',
+    deviceSectionTitle: 'Cihaz & Donanım',
+    preferencesSectionTitle: 'Uygulama Tercihleri',
+    calAdvancedToggle: 'Kalibrasyon (Gelişmiş)',
+    openWifiPortal: 'Portalı Aç',
   },
   en: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -258,6 +294,24 @@ export const translations: Record<Language, Translations> = {
     bluetoothSection: 'Bluetooth Connection',
     wifiSection: 'Wi-Fi Setup Portal',
     wifiDesc: 'Open 192.168.4.1 to configure scale Wi-Fi and device settings',
+    navDiary: 'Diary',
+    mealTitle: 'Meal Diary',
+    logMeal: 'Log to Meal',
+    selectMeal: 'Select Meal',
+    breakfast: 'Breakfast',
+    lunch: 'Lunch',
+    dinner: 'Dinner',
+    snack: 'Snack',
+    loggedSuccess: 'Logged to meal!',
+    noEntriesToday: 'No meal records logged for this date.',
+    today: 'Today',
+    dailyTotal: 'Daily Total',
+    deleteEntry: 'Delete Entry',
+    weightLabel: 'Amount',
+    deviceSectionTitle: 'Device & Hardware',
+    preferencesSectionTitle: 'App Preferences',
+    calAdvancedToggle: 'Calibration (Advanced)',
+    openWifiPortal: 'Open Portal',
   },
   de: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -339,6 +393,24 @@ export const translations: Record<Language, Translations> = {
     bluetoothSection: 'Bluetooth-Verbindung',
     wifiSection: 'WLAN-Einrichtungsportal',
     wifiDesc: 'Öffnen Sie 192.168.4.1 für WLAN- und Geräteeinstellungen',
+    navDiary: 'Tagebuch',
+    mealTitle: 'Mahlzeiten-Tagebuch',
+    logMeal: 'Zu Mahlzeit',
+    selectMeal: 'Mahlzeit wählen',
+    breakfast: 'Frühstück',
+    lunch: 'Mittagessen',
+    dinner: 'Abendessen',
+    snack: 'Snack',
+    loggedSuccess: 'Zur Mahlzeit hinzugefügt!',
+    noEntriesToday: 'Keine Mahlzeiten für dieses Datum eingetragen.',
+    today: 'Heute',
+    dailyTotal: 'Tagesgesamt',
+    deleteEntry: 'Eintrag löschen',
+    weightLabel: 'Menge',
+    deviceSectionTitle: 'Gerät & Hardware',
+    preferencesSectionTitle: 'App-Einstellungen',
+    calAdvancedToggle: 'Kalibrierung (Erweitert)',
+    openWifiPortal: 'Portal öffnen',
   },
   fr: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -420,6 +492,24 @@ export const translations: Record<Language, Translations> = {
     bluetoothSection: 'Connexion Bluetooth',
     wifiSection: 'Portail de configuration Wi-Fi',
     wifiDesc: 'Ouvrez 192.168.4.1 pour configurer le Wi-Fi et les paramètres',
+    navDiary: 'Journal',
+    mealTitle: 'Journal des repas',
+    logMeal: 'Ajouter au repas',
+    selectMeal: 'Choisir le repas',
+    breakfast: 'Petit-déjeuner',
+    lunch: 'Déjeuner',
+    dinner: 'Dîner',
+    snack: 'Collation',
+    loggedSuccess: 'Ajouté au repas !',
+    noEntriesToday: 'Aucun enregistrement pour cette date.',
+    today: "Aujourd'hui",
+    dailyTotal: 'Total du jour',
+    deleteEntry: "Supprimer l'entrée",
+    weightLabel: 'Quantité',
+    deviceSectionTitle: 'Appareil & Matériel',
+    preferencesSectionTitle: "Préférences de l'application",
+    calAdvancedToggle: 'Étalonnage (Avancé)',
+    openWifiPortal: 'Ouvrir le portail',
   },
   es: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -501,6 +591,24 @@ export const translations: Record<Language, Translations> = {
     bluetoothSection: 'Conexión Bluetooth',
     wifiSection: 'Portal de configuración Wi-Fi',
     wifiDesc: 'Abra 192.168.4.1 para configurar Wi-Fi y ajustes de la báscula',
+    navDiary: 'Diario',
+    mealTitle: 'Diario de comidas',
+    logMeal: 'Añadir a comida',
+    selectMeal: 'Elegir comida',
+    breakfast: 'Desayuno',
+    lunch: 'Almuerzo',
+    dinner: 'Cena',
+    snack: 'Merienda',
+    loggedSuccess: '¡Añadido a la comida!',
+    noEntriesToday: 'No hay registros para esta fecha.',
+    today: 'Hoy',
+    dailyTotal: 'Total diario',
+    deleteEntry: 'Eliminar registro',
+    weightLabel: 'Cantidad',
+    deviceSectionTitle: 'Dispositivo y Hardware',
+    preferencesSectionTitle: 'Preferencias de la aplicación',
+    calAdvancedToggle: 'Calibración (Avanzado)',
+    openWifiPortal: 'Abrir portal',
   },
 };
 
