@@ -16,6 +16,7 @@ PIO_UPLOAD_FLAGS  := $(if $(PORT),--upload-port $(PORT),)
 PIO_MONITOR_FLAGS := $(if $(PORT),--port $(PORT),) --baud $(BAUD)
 
 .PHONY: all help build build-firmware build-fw flash upload monitor flash-monitor clean-firmware \
+        flasher-build flasher-dev \
         app-install app-dev app-build app-sync app-android app-ios app-lint app-test clean-app clean ci package
 
 help:
@@ -29,6 +30,8 @@ help:
 	@echo "  $(CYAN)monitor$(RESET)          Open serial console (115200 baud) [optional: PORT=...]"
 	@echo "  $(CYAN)flash-monitor$(RESET)    Flash firmware and immediately open serial monitor"
 	@echo "  $(CYAN)clean-firmware$(RESET)   Clean PlatformIO build artifacts"
+	@echo "  $(CYAN)flasher-build$(RESET)    Build firmware & sync binaries to web-flasher/"
+	@echo "  $(CYAN)flasher-dev$(RESET)      Serve web flasher at http://localhost:8080"
 	@echo ""
 	@echo "$(BOLD)Companion App (Capacitor 8 / React):$(RESET)"
 	@echo "  $(CYAN)app-install$(RESET)      Install npm dependencies in app/"
@@ -72,6 +75,18 @@ flash-monitor: flash monitor
 clean-firmware:
 	@echo "$(BOLD)$(YELLOW)==> Cleaning PlatformIO build artifacts...$(RESET)"
 	pio run --target clean
+
+flasher-build: build-firmware
+	@echo "$(BOLD)$(GREEN)==> Updating web-flasher firmware binaries...$(RESET)"
+	mkdir -p web-flasher/firmware
+	cp .pio/build/esp32-c3-devkitm-1/bootloader.bin web-flasher/firmware/
+	cp .pio/build/esp32-c3-devkitm-1/partitions.bin web-flasher/firmware/
+	cp .pio/build/esp32-c3-devkitm-1/firmware.bin web-flasher/firmware/
+	@echo "$(BOLD)$(GREEN)✔ web-flasher binaries updated successfully.$(RESET)"
+
+flasher-dev: flasher-build
+	@echo "$(BOLD)$(CYAN)==> Serving web flasher at http://localhost:8080 (Press Ctrl+C to stop)...$(RESET)"
+	python3 -m http.server 8080 --directory web-flasher
 
 # App targets
 app-install:

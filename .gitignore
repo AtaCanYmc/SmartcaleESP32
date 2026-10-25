@@ -33,5 +33,6 @@ app/dist/
 # Release and distribution packages
 release_packages/
 dist_firmware/
+web-flasher/firmware/*.bin
 *.apk
 *.zip

@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smartcale ESP32 - Web Flasher & Installer</title>
+  <meta name="description" content="Flash and install Smartcale firmware directly to ESP32 / ESP32-C3 devices from your web browser using Web Serial." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2338bdf8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m21 16-4 4-4-4'/><path d='M17 20V4'/><path d='m3 8 4-4 4 4'/><path d='M7 4v16'/></svg>" />
+
+  <!-- ESP Web Tools component -->
+  <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: #111827;
+      --card-border: #1f293d;
+      --card-hover: #172033;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --accent-cyan: #06b6d4;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
+      --code-bg: #030712;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    header {
+      background-color: rgba(17, 24, 39, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--card-border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0.875rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: var(--text);
+    }
+
+    .brand-icon {
+      width: 34px;
+      height: 34px;
+      background: linear-gradient(135deg, #0ea5e9, #2563eb);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(14, 165, 233, 0.35);
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .brand-badge {
+      font-size: 0.75rem;
+      background: rgba(37, 99, 235, 0.2);
+      color: #60a5fa;
+      border: 1px solid rgba(37, 99, 235, 0.4);
+      padding: 0.15rem 0.5rem;
+      border-radius: 9999px;
+      margin-left: 0.5rem;
+      font-weight: 600;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: color 0.15s;
+    }
+
+    .nav-links a:hover {
+      color: var(--text);
+    }
+
+    /* Main Container */
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 4rem;
+      width: 100%;
+      flex: 1;
+    }
+
+    /* Hero */
+    .hero {
+      text-align: center;
+      margin-bottom: 2.25rem;
+    }
+
+    .hero h1 {
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(to right, #ffffff, #93c5fd);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      max-width: 650px;
+      margin: 0 auto 1.25rem;
+    }
+
+    /* Browser compatibility warning */
+    .compat-banner {
+      display: none;
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      border-radius: 10px;
+      padding: 0.875rem 1.25rem;
+      margin-bottom: 1.75rem;
+      color: #fde68a;
+      font-size: 0.9rem;
+      align-items: center;
+      gap: 0.75rem;
+      line-height: 1.5;
+    }
+
+    .compat-banner.show {
+      display: flex;
+    }
+
+    .compat-banner svg {
+      flex-shrink: 0;
+      color: var(--warning);
+    }
+
+    /* Tabs */
+    .tabs-nav {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--card-border);
+      margin-bottom: 1.75rem;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 0.75rem 1.25rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover {
+      color: var(--text);
+    }
+
+    .tab-btn.active {
+      color: #60a5fa;
+      border-bottom-color: #3b82f6;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card-subtitle {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      margin-bottom: 1.25rem;
+    }
+
+    /* Installation Box */
+    .install-box {
+      text-align: center;
+      padding: 2.5rem 1.5rem;
+      background: linear-gradient(180deg, rgba(37, 99, 235, 0.08) 0%, rgba(17, 24, 39, 0.6) 100%);
+      border: 1px solid rgba(59, 130, 246, 0.25);
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+    }
+
+    .install-box h3 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .install-box p {
+      color: var(--text-muted);
+      font-size: 0.925rem;
+      max-width: 520px;
+      margin: 0 auto 1.5rem;
+    }
+
+    /* Custom styling for esp-web-install-button */
+    esp-web-install-button {
+      --esp-tools-button-color: #2563eb;
+      --esp-tools-button-text-color: #ffffff;
+      --esp-tools-button-border-radius: 8px;
+      --esp-tools-button-padding: 0.85rem 2rem;
+      display: inline-block;
+    }
+
+    esp-web-install-button button {
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+      transition: all 0.15s ease;
+    }
+
+    esp-web-install-button button:hover {
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.6);
+      transform: translateY(-1px);
+    }
+
+    .unsupported-slot {
+      color: var(--warning);
+      font-size: 0.875rem;
+      padding: 0.5rem 1rem;
+      background: rgba(245, 158, 11, 0.1);
+      border-radius: 6px;
+      display: inline-block;
+    }
+
+    /* Hardware Specifications Table */
+    .specs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .spec-item {
+      background: rgba(3, 7, 18, 0.5);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+
+    .spec-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-dim);
+      margin-bottom: 0.25rem;
+    }
+
+    .spec-value {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .spec-detail {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.15rem;
+    }
+
+    /* Steps List */
+    .steps-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .step-entry {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+
+    .step-num {
+      width: 28px;
+      height: 28px;
+      background: rgba(37, 99, 235, 0.2);
+      border: 1px solid rgba(37, 99, 235, 0.5);
+      color: #93c5fd;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+    }
+
+    .step-body h4 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 0.2rem;
+    }
+
+    .step-body p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* Form Controls */
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+      color: var(--text);
+    }
+
+    .form-control, .form-select {
+      width: 100%;
+      background: var(--code-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 0.6rem 0.85rem;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .form-control:focus, .form-select:focus {
+      border-color: #3b82f6;
+    }
+
+    .form-file-row {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .form-file-offset {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      padding: 0.55rem 0.75rem;
+      border-radius: 6px;
+      width: 110px;
+      text-align: center;
+      color: #93c5fd;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 0.6rem 1.25rem;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.07);
+      border-color: var(--card-border);
+      color: var(--text);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: rgba(239, 68, 68, 0.3);
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    /* Terminal Console */
+    .terminal-container {
+      background: var(--code-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 420px;
+    }
+
+    .terminal-header {
+      background: rgba(17, 24, 39, 0.9);
+      padding: 0.6rem 1rem;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .terminal-title {
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .terminal-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-dim);
+    }
+
+    .terminal-status-dot.connected {
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+    }
+
+    .terminal-body {
+      flex: 1;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.825rem;
+      color: #d1d5db;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+      background: #030712;
+    }
+
+    .terminal-input-bar {
+      display: flex;
+      border-top: 1px solid var(--card-border);
+      background: rgba(17, 24, 39, 0.8);
+    }
+
+    .terminal-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      padding: 0.65rem 1rem;
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      outline: none;
+    }
+
+    /* Progress bar */
+    .progress-wrapper {
+      margin-top: 1rem;
+      display: none;
+    }
+
+    .progress-bar-bg {
+      background: rgba(255, 255, 255, 0.08);
+      height: 10px;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #0ea5e9, #2563eb);
+      width: 0%;
+      transition: width 0.15s ease;
+    }
+
+    .progress-text {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.4rem;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* Callout & FAQ */
+    .callout {
+      background: rgba(30, 41, 59, 0.6);
+      border-left: 4px solid #3b82f6;
+      padding: 0.875rem 1.25rem;
+      border-radius: 0 8px 8px 0;
+      margin: 1.25rem 0;
+      font-size: 0.875rem;
+      color: #cbd5e1;
+    }
+
+    .callout code {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 0.15rem 0.35rem;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      color: #93c5fd;
+    }
+
+    details {
+      background: rgba(3, 7, 18, 0.4);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    details summary {
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+
+    details p {
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Footer */
+    footer {
+      background: rgba(17, 24, 39, 0.7);
+      border-top: 1px solid var(--card-border);
+      padding: 1.5rem 1.25rem;
+      text-align: center;
+      font-size: 0.825rem;
+      color: var(--text-dim);
+    }
+
+    footer a {
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      color: var(--text);
+    }
+
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 1.75rem; }
+      .header-inner { flex-direction: column; gap: 0.5rem; align-items: flex-start; }
+      .form-file-row { flex-direction: column; align-items: stretch; }
+      .form-file-offset { width: 100%; text-align: left; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sticky Header -->
+  <header>
+    <div class="header-inner">
+      <a href="./" class="brand">
+        <div class="brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/>
+          </svg>
+        </div>
+        <div class="brand-title">Smartcale ESP32</div>
+        <span class="brand-badge">Web Flasher</span>
+      </a>
+
+      <nav class="nav-links">
+        <a href="https://github.com/atacan/SmartcaleESP32" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="./firmware/firmware.bin" download>Download .bin</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main>
+    <!-- Hero Header -->
+    <section class="hero">
+      <h1>Smartcale Firmware Web Flasher</h1>
+      <p>Flash, update, or troubleshoot your ESP32-C3 scale microcontroller directly from your browser. Zero command-line tools or driver installations needed.</p>
+    </section>
+
+    <!-- Compatibility Alert -->
+    <div id="compatBanner" class="compat-banner">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+      <div>
+        <strong>Web Serial is not supported in this browser.</strong><br />
+        To flash ESP devices directly via USB, please use a Chromium-based browser on desktop (Google Chrome, Microsoft Edge, Brave, or Opera).
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-btn active" data-tab="tab-official">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+        One-Click Flash
+      </button>
+
+      <button class="tab-btn" data-tab="tab-custom">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+        </svg>
+        Custom Firmware (.bin)
+      </button>
+
+      <button class="tab-btn" data-tab="tab-console">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+        </svg>
+        Serial Monitor
+      </button>
+    </div>
+
+    <!-- TAB 1: ONE-CLICK FLASH (ESP WEB TOOLS) -->
+    <div id="tab-official" class="tab-content active">
+      <div class="install-box">
+        <h3>Smartcale Release Firmware</h3>
+        <p>Precompiled release bundle including Bootloader (0x0), Partitions (0x8000), and Application (0x10000) for ESP32-C3 Super Mini / DevKit.</p>
+
+        <!-- ESP Web Tools Web Component Button -->
+        <esp-web-install-button manifest="./manifest.json">
+          <button slot="activate" class="btn btn-primary" style="padding: 0.85rem 2rem; font-size: 1.05rem;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Connect & Install Firmware
+          </button>
+          <span slot="unsupported" class="unsupported-slot">Web Serial is not supported in this browser.</span>
+        </esp-web-install-button>
+      </div>
+
+      <!-- Specs & Info -->
+      <div class="card">
+        <div class="card-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/>
+          </svg>
+          Hardware & Firmware Configuration
+        </div>
+        <div class="card-subtitle">Verified default settings embedded into this release build:</div>
+
+        <div class="specs-grid">
+          <div class="spec-item">
+            <div class="spec-label">Microcontroller</div>
+            <div class="spec-value">ESP32-C3 DevKit / Super Mini</div>
+            <div class="spec-detail">Single-core 32-bit RISC-V @ 160MHz</div>
+          </div>
+          <div class="spec-item">
+            <div class="spec-label">Flash Memory</div>
+            <div class="spec-value">4MB Flash (DIO @ 40MHz)</div>
+            <div class="spec-detail">huge_app.csv (3.14MB App Partition)</div>
+          </div>
+          <div class="spec-item">
+            <div class="spec-label">Weight Sensor (ADC)</div>
+            <div class="spec-value">HX711 24-bit ADC</div>
+            <div class="spec-detail">DT: GPIO 0 &bull; SCK: GPIO 1</div>
+          </div>
+          <div class="spec-item">
+            <div class="spec-label">Display & Button</div>
+            <div class="spec-value">SH1106 OLED (I2C)</div>
+            <div class="spec-detail">SDA: 8 &bull; SCL: 9 &bull; Tare: GPIO 2</div>
+          </div>
+        </div>
+
+        <div class="callout">
+          <strong>Initial Setup Note:</strong> After flashing, the device boots in SoftAP mode. Connect your phone or laptop to the <code>Smartcale-Setup</code> WiFi network (or open <code>http://192.168.4.1</code>) to configure WiFi credentials, MQTT, or load cell calibration parameters.
+        </div>
+      </div>
+
+      <!-- Step by step guide -->
+      <div class="card">
+        <div class="card-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/>
+          </svg>
+          Quick Connection Guide
+        </div>
+        <ol class="steps-list">
+          <li class="step-entry">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <h4>Connect USB-C Cable</h4>
+              <p>Plug the ESP32-C3 board into your computer with a high-quality USB data cable (ensure it is not a power-only charging cable).</p>
+            </div>
+          </li>
+          <li class="step-entry">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <h4>Click "Connect & Install Firmware"</h4>
+              <p>Your browser will display a security popup requesting access to the serial device (e.g. <code>USB JTAG/serial debug unit</code> or <code>CP2102/CH340</code>).</p>
+            </div>
+          </li>
+          <li class="step-entry">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <h4>Bootloader Mode (If device fails to respond)</h4>
+              <p>If the connection times out, hold down the <strong>BOOT (IO9)</strong> button, briefly press and release the <strong>RST</strong> button, then release <strong>BOOT</strong>. Click connect again.</p>
+            </div>
+          </li>
+          <li class="step-entry">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <h4>Erase & Flash</h4>
+              <p>Select "Install Smartcale ESP32". Choose "Erase device" for a fresh clean installation. The flash progress bar will take ~30 seconds.</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- TAB 2: CUSTOM FIRMWARE (.BIN) -->
+    <div id="tab-custom" class="tab-content">
+      <div class="card">
+        <div class="card-title">Custom Binary Flasher</div>
+        <div class="card-subtitle">Upload custom compiled binaries from PlatformIO or ESP-IDF directly to specified flash offsets.</div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+          <div class="form-group">
+            <label class="form-label">Serial Baud Rate</label>
+            <select id="customBaud" class="form-select">
+              <option value="921600" selected>921600 (High Speed - Recommended)</option>
+              <option value="460800">460800 (Fast)</option>
+              <option value="115200">115200 (Safe / Compatibility)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Chip Target</label>
+            <input type="text" class="form-control" value="ESP32-C3 (Auto-detects)" disabled />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Binary Files & Flash Offsets</label>
+
+          <!-- Bootloader -->
+          <div class="form-file-row">
+            <span class="form-file-offset">0x0000</span>
+            <input type="file" id="fileBootloader" class="form-control" accept=".bin" />
+          </div>
+
+          <!-- Partitions -->
+          <div class="form-file-row">
+            <span class="form-file-offset">0x8000</span>
+            <input type="file" id="filePartitions" class="form-control" accept=".bin" />
+          </div>
+
+          <!-- Firmware App -->
+          <div class="form-file-row">
+            <span class="form-file-offset">0x10000</span>
+            <input type="file" id="fileApp" class="form-control" accept=".bin" />
+          </div>
+        </div>
+
+        <div class="button-group">
+          <button id="btnCustomConnect" class="btn btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+            Connect Port
+          </button>
+          <button id="btnCustomProgram" class="btn btn-secondary" disabled>Program Device</button>
+          <button id="btnCustomErase" class="btn btn-danger" disabled>Erase Entire Chip</button>
+        </div>
+
+        <!-- Custom Flash Progress -->
+        <div id="customProgressWrapper" class="progress-wrapper">
+          <div class="progress-bar-bg">
+            <div id="customProgressBar" class="progress-bar-fill"></div>
+          </div>
+          <div class="progress-text">
+            <span id="customProgressLabel">Preparing...</span>
+            <span id="customProgressPct">0%</span>
+          </div>
+        </div>
+
+        <!-- Terminal log for custom flash -->
+        <div style="margin-top: 1.5rem;">
+          <div class="terminal-container" style="height: 220px;">
+            <div class="terminal-header">
+              <span class="terminal-title">Flasher Execution Log</span>
+              <button id="btnClearCustomLog" class="btn btn-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;">Clear</button>
+            </div>
+            <div id="customLogBody" class="terminal-body">Ready. Select binary files and click Connect Port to begin.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: SERIAL MONITOR -->
+    <div id="tab-console" class="tab-content">
+      <div class="card">
+        <div class="card-title">Live Serial Terminal</div>
+        <div class="card-subtitle">Connect to the ESP32 USB COM port to view live telemetry, HX711 grams output, and debug logs.</div>
+
+        <div style="display: flex; gap: 0.75rem; align-items: center; margin-bottom: 1rem; flex-wrap: wrap;">
+          <button id="btnConsoleToggle" class="btn btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/>
+            </svg>
+            Connect Console
+          </button>
+
+          <select id="consoleBaud" class="form-select" style="width: auto;">
+            <option value="115200" selected>115200 baud (Default)</option>
+            <option value="9600">9600 baud</option>
+            <option value="57600">57600 baud</option>
+            <option value="230400">230400 baud</option>
+            <option value="921600">921600 baud</option>
+          </select>
+
+          <button id="btnConsoleReset" class="btn btn-secondary" disabled title="Toggle RTS/DTR to restart the ESP32">
+            Restart ESP (RTS/DTR)
+          </button>
+
+          <button id="btnConsoleClear" class="btn btn-secondary">
+            Clear Logs
+          </button>
+
+          <button id="btnConsoleCopy" class="btn btn-secondary">
+            Copy All
+          </button>
+        </div>
+
+        <div class="terminal-container">
+          <div class="terminal-header">
+            <div class="terminal-title">
+              <span id="consoleStatusDot" class="terminal-status-dot"></span>
+              <span id="consoleStatusText">Disconnected</span>
+            </div>
+            <label style="font-size: 0.8rem; color: var(--text-dim); display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+              <input type="checkbox" id="chkAutoscroll" checked /> Autoscroll
+            </label>
+          </div>
+
+          <div id="consoleBody" class="terminal-body">[System] Click 'Connect Console' to select your ESP32 serial port.</div>
+
+          <form id="consoleInputForm" class="terminal-input-bar">
+            <input type="text" id="consoleInput" class="terminal-input" placeholder="Type serial command (e.g. 'tare' or 'help') and press Enter..." disabled />
+            <button type="submit" class="btn btn-primary" style="border-radius: 0; padding: 0.5rem 1.25rem;" disabled id="btnConsoleSend">Send</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Troubleshooting & Drivers Section -->
+    <section class="card" style="margin-top: 2rem;">
+      <div class="card-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        Troubleshooting & USB Drivers
+      </div>
+
+      <details>
+        <summary>No serial port shows up in the browser popup</summary>
+        <p>1. <strong>Cable Check:</strong> Many USB-C cables shipped with phones or power banks are power-only. Ensure you are using a data-capable USB cable.<br/>
+        2. <strong>USB Drivers:</strong> Depending on your ESP32 board chip:
+        &bull; ESP32-C3 Super Mini has native USB CDC (no extra drivers needed on macOS / Windows 10+).<br/>
+        &bull; DevKits with CP2102: Install <a href="https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers" target="_blank" rel="noopener" style="color: #60a5fa;">Silicon Labs CP210x Driver</a>.<br/>
+        &bull; DevKits with CH340 / CH341: Install <a href="https://www.wch-ic.com/downloads/CH341SER_ZIP.html" target="_blank" rel="noopener" style="color: #60a5fa;">WCH CH340 Driver</a>.<br/>
+        3. <strong>Permissions on Linux:</strong> Run <code>sudo usermod -a -G dialout $USER</code> and reboot to permit non-root access to serial devices.</p>
+      </details>
+
+      <details>
+        <summary>Error: "Failed to connect to ESP32" or "Timed out waiting for packet header"</summary>
+        <p>The microcontroller is not in ROM Bootloader mode. Force manual bootloader mode:<br/>
+        1. Hold the <strong>BOOT (IO9)</strong> button on the ESP32-C3 board.<br/>
+        2. Press and release the <strong>RST (Reset)</strong> button once.<br/>
+        3. Release the <strong>BOOT</strong> button.<br/>
+        4. Click "Connect & Install Firmware" again.</p>
+      </details>
+
+      <details>
+        <summary>Firmware successfully flashes, but display or load cell shows 0</summary>
+        <p>Verify that your hardware pins match the pinout configuration:<br/>
+        &bull; HX711: Data (DT) &rarr; GPIO 0, Clock (SCK) &rarr; GPIO 1<br/>
+        &bull; Tare Tactile Button: GPIO 2 &rarr; GND<br/>
+        &bull; OLED (SH1106 I2C): SDA &rarr; GPIO 8, SCL &rarr; GPIO 9<br/>
+        Open the <strong>Serial Monitor</strong> tab at 115200 baud to view startup self-checks and HX711 raw calibration ADC counts.</p>
+      </details>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div style="max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: gap: 1rem;">
+      <div>Smartcale ESP32 Firmware &bull; Apache-2.0 License</div>
+      <div>Hosted on <a href="https://pages.github.com/" target="_blank" rel="noopener">GitHub Pages</a> &bull; Powered by <a href="https://esphome.github.io/esp-web-tools/" target="_blank" rel="noopener">ESP Web Tools</a></div>
+    </div>
+  </footer>
+
+  <!-- Interactive JavaScript logic -->
+  <script type="module">
+    import { ESPLoader, Transport } from "https://unpkg.com/esptool-js@0.5.4/bundle.js";
+
+    // 1. Browser compatibility check
+    const isSerialSupported = "serial" in navigator;
+    if (!isSerialSupported) {
+      document.getElementById("compatBanner").classList.add("show");
+    }
+
+    // 2. Tab Navigation
+    const tabButtons = document.querySelectorAll(".tab-btn");
+    const tabContents = document.querySelectorAll(".tab-content");
+
+    tabButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        tabButtons.forEach(b => b.classList.remove("active"));
+        tabContents.forEach(c => c.classList.remove("active"));
+
+        btn.classList.add("active");
+        const targetId = btn.getAttribute("data-tab");
+        const targetContent = document.getElementById(targetId);
+        if (targetContent) targetContent.classList.add("active");
+      });
+    });
+
+    // 3. Serial Monitor State & Logic
+    let consolePort = null;
+    let consoleReader = null;
+    let consoleWriter = null;
+    let isConsoleConnected = false;
+
+    const btnConsoleToggle = document.getElementById("btnConsoleToggle");
+    const btnConsoleReset = document.getElementById("btnConsoleReset");
+    const btnConsoleClear = document.getElementById("btnConsoleClear");
+    const btnConsoleCopy = document.getElementById("btnConsoleCopy");
+    const consoleBody = document.getElementById("consoleBody");
+    const consoleInputForm = document.getElementById("consoleInputForm");
+    const consoleInput = document.getElementById("consoleInput");
+    const btnConsoleSend = document.getElementById("btnConsoleSend");
+    const consoleStatusDot = document.getElementById("consoleStatusDot");
+    const consoleStatusText = document.getElementById("consoleStatusText");
+    const consoleBaud = document.getElementById("consoleBaud");
+    const chkAutoscroll = document.getElementById("chkAutoscroll");
+
+    function appendConsole(msg) {
+      consoleBody.textContent += msg;
+      if (chkAutoscroll.checked) {
+        consoleBody.scrollTop = consoleBody.scrollHeight;
+      }
+    }
+
+    btnConsoleClear.addEventListener("click", () => {
+      consoleBody.textContent = "";
+    });
+
+    btnConsoleCopy.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(consoleBody.textContent);
+        const originalText = btnConsoleCopy.textContent;
+        btnConsoleCopy.textContent = "Copied!";
+        setTimeout(() => btnConsoleCopy.textContent = originalText, 1800);
+      } catch (err) {
+        alert("Clipboard copy failed: " + err);
+      }
+    });
+
+    btnConsoleToggle.addEventListener("click", async () => {
+      if (!isConsoleConnected) {
+        try {
+          if (!("serial" in navigator)) {
+            alert("Web Serial API is not supported in this browser. Please use Google Chrome or Edge.");
+            return;
+          }
+
+          consolePort = await navigator.serial.requestPort();
+          const baud = parseInt(consoleBaud.value, 10) || 115200;
+          await consolePort.open({ baudRate: baud });
+
+          isConsoleConnected = true;
+          consoleStatusDot.classList.add("connected");
+          consoleStatusText.textContent = `Connected (${baud} baud)`;
+          btnConsoleToggle.textContent = "Disconnect";
+          btnConsoleToggle.classList.replace("btn-primary", "btn-secondary");
+          btnConsoleReset.disabled = false;
+          consoleInput.disabled = false;
+          btnConsoleSend.disabled = false;
+          appendConsole(`\n[System] Connected to serial port at ${baud} baud.\n`);
+
+          // Read loop
+          const decoder = new TextDecoderStream();
+          const readableStreamClosed = consolePort.readable.pipeTo(decoder.writable);
+          consoleReader = decoder.readable.getReader();
+
+          const encoder = new TextEncoderStream();
+          const writableStreamClosed = encoder.readable.pipeTo(consolePort.writable);
+          consoleWriter = encoder.writable.getWriter();
+
+          (async () => {
+            try {
+              while (isConsoleConnected) {
+                const { value, done } = await consoleReader.read();
+                if (done) break;
+                if (value) appendConsole(value);
+              }
+            } catch (readErr) {
+              if (isConsoleConnected) {
+                appendConsole(`\n[System Error] Stream read error: ${readErr}\n`);
+              }
+            }
+          })();
+
+        } catch (err) {
+          console.error("Serial port open error:", err);
+          appendConsole(`\n[System Error] Could not open port: ${err.message || err}\n`);
+          isConsoleConnected = false;
+          consoleStatusDot.classList.remove("connected");
+          consoleStatusText.textContent = "Disconnected";
+        }
+      } else {
+        // Disconnect
+        try {
+          isConsoleConnected = false;
+          if (consoleReader) {
+            await consoleReader.cancel();
+            consoleReader.releaseLock();
+          }
+          if (consoleWriter) {
+            await consoleWriter.close();
+            consoleWriter.releaseLock();
+          }
+          if (consolePort) {
+            await consolePort.close();
+            consolePort = null;
+          }
+        } catch (err) {
+          console.warn("Disconnect cleanup error:", err);
+        }
+
+        consoleStatusDot.classList.remove("connected");
+        consoleStatusText.textContent = "Disconnected";
+        btnConsoleToggle.textContent = "Connect Console";
+        btnConsoleToggle.classList.replace("btn-secondary", "btn-primary");
+        btnConsoleReset.disabled = true;
+        consoleInput.disabled = true;
+        btnConsoleSend.disabled = true;
+        appendConsole("\n[System] Serial port disconnected.\n");
+      }
+    });
+
+    // Console Send Command
+    consoleInputForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const text = consoleInput.value.trim();
+      if (!text || !consoleWriter) return;
+
+      try {
+        await consoleWriter.write(text + "\r\n");
+        appendConsole(`> ${text}\n`);
+        consoleInput.value = "";
+      } catch (err) {
+        appendConsole(`\n[System Error] Failed to send command: ${err}\n`);
+      }
+    });
+
+    // Reset ESP via DTR/RTS signals
+    btnConsoleReset.addEventListener("click", async () => {
+      if (!consolePort) return;
+      try {
+        appendConsole("\n[System] Asserting reset line (DTR/RTS toggle)...\n");
+        await consolePort.setSignals({ dataTerminalReady: false, requestToSend: true });
+        await new Promise(r => setTimeout(r, 150));
+        await consolePort.setSignals({ dataTerminalReady: false, requestToSend: false });
+        appendConsole("[System] Reset pulse sent.\n");
+      } catch (err) {
+        appendConsole(`\n[System Error] Reset failed: ${err.message}\n`);
+      }
+    });
+
+    // 4. Custom Flasher Logic (esptool-js)
+    let customEspLoader = null;
+    let customTransport = null;
+
+    const btnCustomConnect = document.getElementById("btnCustomConnect");
+    const btnCustomProgram = document.getElementById("btnCustomProgram");
+    const btnCustomErase = document.getElementById("btnCustomErase");
+    const btnClearCustomLog = document.getElementById("btnClearCustomLog");
+    const customLogBody = document.getElementById("customLogBody");
+    const customProgressWrapper = document.getElementById("customProgressWrapper");
+    const customProgressBar = document.getElementById("customProgressBar");
+    const customProgressLabel = document.getElementById("customProgressLabel");
+    const customProgressPct = document.getElementById("customProgressPct");
+    const customBaud = document.getElementById("customBaud");
+
+    function customLog(msg) {
+      customLogBody.textContent += `\n${msg}`;
+      customLogBody.scrollTop = customLogBody.scrollHeight;
+    }
+
+    btnClearCustomLog.addEventListener("click", () => {
+      customLogBody.textContent = "Log cleared.";
+    });
+
+    const esptoolTerminal = {
+      clean() { customLogBody.textContent = ""; },
+      writeLine(data) { customLog(data); },
+      write(data) { customLog(data); }
+    };
+
+    btnCustomConnect.addEventListener("click", async () => {
+      if (!("serial" in navigator)) {
+        alert("Web Serial not supported in this browser.");
+        return;
+      }
+
+      if (customEspLoader) {
+        // Disconnect
+        try {
+          await customEspLoader.disconnect();
+          if (customTransport) await customTransport.disconnect();
+        } catch (e) {
+          console.warn(e);
+        }
+        customEspLoader = null;
+        customTransport = null;
+        btnCustomConnect.textContent = "Connect Port";
+        btnCustomProgram.disabled = true;
+        btnCustomErase.disabled = true;
+        customLog("[System] Disconnected custom flasher.");
+        return;
+      }
+
+      try {
+        const port = await navigator.serial.requestPort();
+        const baud = parseInt(customBaud.value, 10) || 921600;
+
+        customTransport = new Transport(port);
+        customEspLoader = new ESPLoader({
+          transport: customTransport,
+          baudrate: baud,
+          terminal: esptoolTerminal
+        });
+
+        customLog("[System] Connecting to chip in bootloader mode...");
+        const chip = await customEspLoader.main();
+        customLog(`[System] Connected successfully to: ${chip}`);
+
+        const mac = await customEspLoader.chip.readMac(customEspLoader);
+        customLog(`[System] MAC Address: ${mac}`);
+
+        btnCustomConnect.textContent = "Disconnect Port";
+        btnCustomProgram.disabled = false;
+        btnCustomErase.disabled = false;
+      } catch (err) {
+        customLog(`[System Error] Connection failed: ${err.message || err}`);
+        if (customEspLoader) {
+          try { await customEspLoader.disconnect(); } catch (_) {}
+          customEspLoader = null;
+        }
+      }
+    });
+
+    // Erase chip
+    btnCustomErase.addEventListener("click", async () => {
+      if (!customEspLoader) return;
+      if (!confirm("Are you sure you want to completely erase the flash memory of this ESP32?")) return;
+
+      try {
+        btnCustomErase.disabled = true;
+        btnCustomProgram.disabled = true;
+        customLog("[System] Erasing entire flash... (may take 10-20 seconds)");
+        await customEspLoader.eraseFlash();
+        customLog("[System] Flash erase completed successfully!");
+      } catch (err) {
+        customLog(`[System Error] Erase failed: ${err.message || err}`);
+      } finally {
+        btnCustomErase.disabled = false;
+        btnCustomProgram.disabled = false;
+      }
+    });
+
+    // Program flash
+    btnCustomProgram.addEventListener("click", async () => {
+      if (!customEspLoader) return;
+
+      const fileBoot = document.getElementById("fileBootloader").files[0];
+      const filePart = document.getElementById("filePartitions").files[0];
+      const fileApp = document.getElementById("fileApp").files[0];
+
+      if (!fileBoot && !filePart && !fileApp) {
+        alert("Please select at least one .bin file to program!");
+        return;
+      }
+
+      const fileArray = [];
+
+      async function readFileAsBinary(file, offset) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve({ data: e.target.result, address: offset });
+          reader.onerror = reject;
+          reader.readAsBinaryString(file);
+        });
+      }
+
+      try {
+        if (fileBoot) fileArray.push(await readFileAsBinary(fileBoot, 0x0000));
+        if (filePart) fileArray.push(await readFileAsBinary(filePart, 0x8000));
+        if (fileApp) fileArray.push(await readFileAsBinary(fileApp, 0x10000));
+
+        btnCustomProgram.disabled = true;
+        btnCustomErase.disabled = true;
+        customProgressWrapper.style.display = "block";
+        customProgressBar.style.width = "0%";
+        customProgressPct.textContent = "0%";
+        customProgressLabel.textContent = "Flashing...";
+
+        customLog(`[System] Starting flash of ${fileArray.length} partition(s)...`);
+
+        await customEspLoader.writeFlash({
+          fileArray: fileArray,
+          flashSize: "keep",
+          flashMode: "dio",
+          flashFreq: "40m",
+          eraseAll: false,
+          compress: true,
+          reportProgress: (fileIndex, written, total) => {
+            const pct = Math.floor((written / total) * 100);
+            customProgressBar.style.width = `${pct}%`;
+            customProgressPct.textContent = `${pct}%`;
+            customProgressLabel.textContent = `Part ${fileIndex + 1}/${fileArray.length}: ${pct}%`;
+          }
+        });
+
+        customLog("[System] Flashing finished successfully! Resetting device...");
+        await customEspLoader.hardReset();
+        customLog("[System] Device reset into runtime application.");
+        customProgressLabel.textContent = "Done!";
+      } catch (err) {
+        customLog(`[System Error] Write flash failed: ${err.message || err}`);
+      } finally {
+        btnCustomProgram.disabled = false;
+        btnCustomErase.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

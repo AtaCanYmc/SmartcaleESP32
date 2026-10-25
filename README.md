@@ -166,12 +166,29 @@ For complete packet formats, CCCD subscription requirements, and sequence diagra
 
 ## Quick Start
 
-### Prerequisites
+### Option A: Web Flasher (Zero-Install Browser Flash)
+
+Flash and install the latest firmware directly from your web browser via Web Serial (no toolchain or drivers needed):
+
+1. Open **[Smartcale Web Flasher](https://atacan.github.io/SmartcaleESP32/)** in Chrome, Edge, or Opera.
+2. Connect your ESP32-C3 via a USB data cable.
+3. Click **Connect & Install Firmware** and follow the on-screen prompt.
+
+To test or serve the web flasher locally:
+```bash
+make flasher-dev      # builds firmware and serves flasher at http://localhost:8080
+```
+
+---
+
+### Option B: Local CLI Build & Flash
+
+#### Prerequisites
 
 - [PlatformIO Core CLI](https://docs.platformio.org/en/latest/core/installation/index.html) or PlatformIO IDE extension for VS Code / CLion.
 - USB-C cable connected to the ESP32-C3 Super Mini.
 
-### 1. Build Firmware
+#### 1. Build Firmware
 
 Compile the firmware binary using `make` or `pio`:
 
