@@ -479,10 +479,55 @@ a:focus-visible {
 }
 
 /* Settings Modal */
+.settings-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  padding-right: 4px;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 .settings-section {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.settings-device-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  gap: 12px;
+}
+
+.settings-device-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.settings-device-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.settings-device-status {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .settings-section-header {
@@ -964,7 +1009,7 @@ a:focus-visible {
   max-width: 480px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   background: var(--bg-secondary);
   border-top: 1px solid var(--border-color);
   padding-top: 6px;

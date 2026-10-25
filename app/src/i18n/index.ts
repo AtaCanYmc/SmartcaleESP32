@@ -91,6 +91,9 @@ export interface Translations {
   navCal: string;
   navWifi: string;
   navSettings: string;
+  bluetoothSection: string;
+  wifiSection: string;
+  wifiDesc: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -171,6 +174,9 @@ export const translations: Record<Language, Translations> = {
     navCal: 'Kalibrasyon',
     navWifi: 'Wi-Fi',
     navSettings: 'Ayarlar',
+    bluetoothSection: 'Bluetooth Bağlantısı',
+    wifiSection: 'Wi-Fi Kurulum Portalı',
+    wifiDesc: 'Tartı ağı ve cihaz ayarları için 192.168.4.1 adresini açın',
   },
   en: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -249,6 +255,9 @@ export const translations: Record<Language, Translations> = {
     navCal: 'Calibration',
     navWifi: 'Wi-Fi',
     navSettings: 'Settings',
+    bluetoothSection: 'Bluetooth Connection',
+    wifiSection: 'Wi-Fi Setup Portal',
+    wifiDesc: 'Open 192.168.4.1 to configure scale Wi-Fi and device settings',
   },
   de: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -327,6 +336,9 @@ export const translations: Record<Language, Translations> = {
     navCal: 'Kalibrierung',
     navWifi: 'WLAN',
     navSettings: 'Optionen',
+    bluetoothSection: 'Bluetooth-Verbindung',
+    wifiSection: 'WLAN-Einrichtungsportal',
+    wifiDesc: 'Öffnen Sie 192.168.4.1 für WLAN- und Geräteeinstellungen',
   },
   fr: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -405,6 +417,9 @@ export const translations: Record<Language, Translations> = {
     navCal: 'Étalonnage',
     navWifi: 'Wi-Fi',
     navSettings: 'Réglages',
+    bluetoothSection: 'Connexion Bluetooth',
+    wifiSection: 'Portail de configuration Wi-Fi',
+    wifiDesc: 'Ouvrez 192.168.4.1 pour configurer le Wi-Fi et les paramètres',
   },
   es: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -483,6 +498,9 @@ export const translations: Record<Language, Translations> = {
     navCal: 'Calibración',
     navWifi: 'Wi-Fi',
     navSettings: 'Ajustes',
+    bluetoothSection: 'Conexión Bluetooth',
+    wifiSection: 'Portal de configuración Wi-Fi',
+    wifiDesc: 'Abra 192.168.4.1 para configurar Wi-Fi y ajustes de la báscula',
   },
 };
 

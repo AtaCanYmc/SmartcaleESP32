@@ -20,7 +20,8 @@ import {
   Search,
   Utensils,
   CameraOff,
-  Trash2
+  Trash2,
+  ExternalLink
 } from 'lucide-react';
 import { scaleBle } from './services/bleService';
 import { foodService, calculateNutrition } from './services/foodService';
@@ -52,7 +53,6 @@ export const App: React.FC = () => {
   const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false);
 
   // Modals
-  const [showCalModal, setShowCalModal] = useState<boolean>(false);
   const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false);
   const [showFoodModal, setShowFoodModal] = useState<boolean>(false);
   const [refWeightGrams, setRefWeightGrams] = useState<string>('500');
@@ -202,10 +202,9 @@ export const App: React.FC = () => {
 
   // Close modals with Escape key
   useEffect(() => {
-    if (!showCalModal && !showSettingsModal && !showFoodModal) return;
+    if (!showSettingsModal && !showFoodModal) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        setShowCalModal(false);
         setShowSettingsModal(false);
         setShowFoodModal(false);
         stopScanner();
@@ -213,7 +212,7 @@ export const App: React.FC = () => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showCalModal, showSettingsModal, showFoodModal]);
+  }, [showSettingsModal, showFoodModal]);
 
   // Clean up scanner on unmount
   useEffect(() => {
@@ -482,84 +481,6 @@ export const App: React.FC = () => {
         </div>
       </section>
 
-      {showCalModal && (
-        <div
-          className="modal-overlay"
-          onClick={() => setShowCalModal(false)}
-        >
-          <div
-            className="modal-content"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="cal-modal-title"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 id="cal-modal-title" className="modal-title">{t.calTitle}</h2>
-              <button
-                className="icon-btn"
-                onClick={() => setShowCalModal(false)}
-                aria-label={t.calClose}
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <p className="modal-desc">
-              {t.calDesc}
-            </p>
-
-            <div>
-              <label htmlFor="cal-ref-weight" className="input-label">
-                {t.calRefWeightLabel}
-              </label>
-              <input
-                id="cal-ref-weight"
-                type="number"
-                className="input-field"
-                value={refWeightGrams}
-                onChange={(e) => setRefWeightGrams(e.target.value)}
-                placeholder="500"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="cal-raw-adc" className="input-label">
-                {t.calRawAdcLabel}
-              </label>
-              <input
-                id="cal-raw-adc"
-                type="number"
-                className="input-field"
-                value={rawAdcInput}
-                onChange={(e) => setRawAdcInput(e.target.value)}
-                placeholder="210000"
-              />
-            </div>
-
-            <div className="cal-result-box">
-              <div className="cal-result-label">
-                {t.calFactorTitle}
-              </div>
-              <div className="cal-result-value">
-                {computedCalFactor()}
-              </div>
-            </div>
-
-            <p className="modal-footer-note">
-              {t.calNote}
-            </p>
-
-            <button
-              className="btn btn-primary"
-              onClick={() => setShowCalModal(false)}
-            >
-              {t.calDone}
-            </button>
-          </div>
-        </div>
-      )}
-
       {showSettingsModal && (
         <div
           className="modal-overlay"
@@ -583,83 +504,216 @@ export const App: React.FC = () => {
               </button>
             </div>
 
-            <div className="settings-section">
-              <div className="settings-section-header">
-                <span className="settings-section-title">
-                  <Sun size={15} aria-hidden="true" />
-                  {t.themeSection}
-                </span>
-                <span className="settings-section-desc">{t.themeSectionDesc}</span>
-              </div>
+            <div className="settings-body">
+              {/* Bluetooth Connection Section */}
+              <div className="settings-section">
+                <div className="settings-section-header">
+                  <span className="settings-section-title">
+                    {connectionStatus === 'connected' ? (
+                      <BluetoothConnected size={16} aria-hidden="true" style={{ color: 'var(--accent-green)' }} />
+                    ) : (
+                      <Bluetooth size={16} aria-hidden="true" />
+                    )}
+                    {t.bluetoothSection}
+                  </span>
+                  <span className="settings-section-desc">
+                    {connectionStatus === 'connected'
+                      ? (deviceName ? `${deviceName} (${t.connected})` : t.connected)
+                      : connectionStatus === 'connecting'
+                      ? t.searching
+                      : t.standby}
+                  </span>
+                </div>
 
-              <div className="theme-segmented" role="radiogroup" aria-label={t.themeSection}>
-                <button
-                  type="button"
-                  className={`theme-option ${theme === 'light' ? 'active' : ''}`}
-                  onClick={() => setTheme('light')}
-                  role="radio"
-                  aria-checked={theme === 'light'}
-                >
-                  <Sun size={18} aria-hidden="true" />
-                  <span>{t.themeLightLabel}</span>
-                </button>
+                <div className="settings-device-row">
+                  <div className="settings-device-info">
+                    <span className="settings-device-name">
+                      {connectionStatus === 'connected' ? (deviceName || 'Smartcale ESP32') : 'Smartcale ESP32'}
+                    </span>
+                    <span className="settings-device-status">
+                      <span className={`nav-dot ${connectionStatus}`} style={{ position: 'static', display: 'inline-block' }} />
+                      {connectionStatus === 'connected' ? t.connected : connectionStatus === 'connecting' ? t.searching : t.standby}
+                    </span>
+                  </div>
 
-                <button
-                  type="button"
-                  className={`theme-option ${theme === 'dark' ? 'active' : ''}`}
-                  onClick={() => setTheme('dark')}
-                  role="radio"
-                  aria-checked={theme === 'dark'}
-                >
-                  <Moon size={18} aria-hidden="true" />
-                  <span>{t.themeDarkLabel}</span>
-                </button>
-
-                <button
-                  type="button"
-                  className={`theme-option ${theme === 'system' ? 'active' : ''}`}
-                  onClick={() => setTheme('system')}
-                  role="radio"
-                  aria-checked={theme === 'system'}
-                >
-                  <Monitor size={18} aria-hidden="true" />
-                  <span>{t.themeSystemLabel}</span>
-                </button>
-              </div>
-            </div>
-
-            <div className="settings-section">
-              <div className="settings-section-header">
-                <span className="settings-section-title">
-                  <LanguagesIcon size={15} aria-hidden="true" />
-                  {t.langSection}
-                </span>
-                <span className="settings-section-desc">{t.langSectionDesc}</span>
-              </div>
-
-              <div className="lang-grid" role="radiogroup" aria-label={t.langSection}>
-                {LANGUAGES.map((opt) => (
                   <button
-                    key={opt.code}
                     type="button"
-                    className={`lang-card ${lang === opt.code ? 'active' : ''}`}
-                    onClick={() => setLang(opt.code)}
-                    role="radio"
-                    aria-checked={lang === opt.code}
+                    className={`btn ${connectionStatus === 'connected' ? 'btn-secondary' : 'btn-primary'}`}
+                    onClick={connectionStatus === 'connected' ? handleDisconnect : handleConnect}
+                    disabled={connectionStatus === 'connecting'}
+                    style={{ minHeight: '38px', padding: '6px 14px', fontSize: '13px' }}
                   >
-                    <div className="lang-card-left">
-                      <span className="lang-badge">{opt.shortLabel}</span>
-                      <span>{opt.label}</span>
-                    </div>
-                    {lang === opt.code && <Check size={16} aria-hidden="true" />}
+                    {connectionStatus === 'connected'
+                      ? t.disconnect
+                      : connectionStatus === 'connecting'
+                      ? t.searching
+                      : t.connect}
                   </button>
-                ))}
+                </div>
               </div>
-            </div>
 
-            <div className="settings-about">
-              <span>Smartcale ESP32</span>
-              <span>{t.versionLabel} 1.1.0</span>
+              {/* Wi-Fi Portal Section */}
+              <div className="settings-section">
+                <div className="settings-section-header">
+                  <span className="settings-section-title">
+                    <Wifi size={16} aria-hidden="true" />
+                    {t.wifiSection}
+                  </span>
+                  <span className="settings-section-desc">{t.wifiDesc}</span>
+                </div>
+
+                <a
+                  href="http://192.168.4.1"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn btn-secondary"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    textDecoration: 'none',
+                    minHeight: '42px',
+                    fontSize: '13px',
+                  }}
+                >
+                  <Wifi size={16} aria-hidden="true" />
+                  <span>{t.wifiPortalBtn}</span>
+                  <ExternalLink size={14} aria-hidden="true" />
+                </a>
+              </div>
+
+              {/* Calibration Section */}
+              <div className="settings-section">
+                <div className="settings-section-header">
+                  <span className="settings-section-title">
+                    <SlidersHorizontal size={16} aria-hidden="true" />
+                    {t.calTitle}
+                  </span>
+                  <span className="settings-section-desc">{t.calDesc}</span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <div>
+                    <label htmlFor="cal-ref-weight" className="input-label">
+                      {t.calRefWeightLabel}
+                    </label>
+                    <input
+                      id="cal-ref-weight"
+                      type="number"
+                      className="input-field"
+                      value={refWeightGrams}
+                      onChange={(e) => setRefWeightGrams(e.target.value)}
+                      placeholder="500"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="cal-raw-adc" className="input-label">
+                      {t.calRawAdcLabel}
+                    </label>
+                    <input
+                      id="cal-raw-adc"
+                      type="number"
+                      className="input-field"
+                      value={rawAdcInput}
+                      onChange={(e) => setRawAdcInput(e.target.value)}
+                      placeholder="210000"
+                    />
+                  </div>
+                </div>
+
+                <div className="cal-result-box">
+                  <div className="cal-result-label">{t.calFactorTitle}</div>
+                  <div className="cal-result-value">{computedCalFactor()}</div>
+                </div>
+
+                <p className="modal-footer-note" style={{ textAlign: 'left', fontSize: '11px', margin: 0 }}>
+                  {t.calNote}
+                </p>
+              </div>
+
+              {/* Theme Section */}
+              <div className="settings-section">
+                <div className="settings-section-header">
+                  <span className="settings-section-title">
+                    <Sun size={15} aria-hidden="true" />
+                    {t.themeSection}
+                  </span>
+                  <span className="settings-section-desc">{t.themeSectionDesc}</span>
+                </div>
+
+                <div className="theme-segmented" role="radiogroup" aria-label={t.themeSection}>
+                  <button
+                    type="button"
+                    className={`theme-option ${theme === 'light' ? 'active' : ''}`}
+                    onClick={() => setTheme('light')}
+                    role="radio"
+                    aria-checked={theme === 'light'}
+                  >
+                    <Sun size={18} aria-hidden="true" />
+                    <span>{t.themeLightLabel}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className={`theme-option ${theme === 'dark' ? 'active' : ''}`}
+                    onClick={() => setTheme('dark')}
+                    role="radio"
+                    aria-checked={theme === 'dark'}
+                  >
+                    <Moon size={18} aria-hidden="true" />
+                    <span>{t.themeDarkLabel}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className={`theme-option ${theme === 'system' ? 'active' : ''}`}
+                    onClick={() => setTheme('system')}
+                    role="radio"
+                    aria-checked={theme === 'system'}
+                  >
+                    <Monitor size={18} aria-hidden="true" />
+                    <span>{t.themeSystemLabel}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Language Section */}
+              <div className="settings-section">
+                <div className="settings-section-header">
+                  <span className="settings-section-title">
+                    <LanguagesIcon size={15} aria-hidden="true" />
+                    {t.langSection}
+                  </span>
+                  <span className="settings-section-desc">{t.langSectionDesc}</span>
+                </div>
+
+                <div className="lang-grid" role="radiogroup" aria-label={t.langSection}>
+                  {LANGUAGES.map((opt) => (
+                    <button
+                      key={opt.code}
+                      type="button"
+                      className={`lang-card ${lang === opt.code ? 'active' : ''}`}
+                      onClick={() => setLang(opt.code)}
+                      role="radio"
+                      aria-checked={lang === opt.code}
+                    >
+                      <div className="lang-card-left">
+                        <span className="lang-badge">{opt.shortLabel}</span>
+                        <span>{opt.label}</span>
+                      </div>
+                      {lang === opt.code && <Check size={16} aria-hidden="true" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* About Section */}
+              <div className="settings-about">
+                <span>Smartcale ESP32</span>
+                <span>{t.versionLabel} 1.1.0</span>
+              </div>
             </div>
 
             <button
@@ -802,29 +856,6 @@ export const App: React.FC = () => {
       <nav className="bottom-nav" aria-label="Bottom Navigation">
         <button
           type="button"
-          className={`bottom-nav-item ${connectionStatus === 'connected' ? 'connected' : ''}`}
-          onClick={connectionStatus === 'connected' ? handleDisconnect : handleConnect}
-          aria-label={connectionStatus === 'connected' ? t.disconnect : t.connectToScale}
-        >
-          <div className="nav-icon-wrapper">
-            {connectionStatus === 'connected' ? (
-              <BluetoothConnected size={20} aria-hidden="true" />
-            ) : (
-              <Bluetooth size={20} aria-hidden="true" />
-            )}
-            <span className={`nav-dot ${connectionStatus}`} />
-          </div>
-          <span>
-            {connectionStatus === 'connected'
-              ? (deviceName || t.connected)
-              : connectionStatus === 'connecting'
-              ? t.searching
-              : t.connect}
-          </span>
-        </button>
-
-        <button
-          type="button"
           className={`bottom-nav-item ${showFoodModal ? 'active' : ''}`}
           onClick={() => setShowFoodModal(true)}
           aria-label={t.foodSearchOrScan}
@@ -835,32 +866,14 @@ export const App: React.FC = () => {
 
         <button
           type="button"
-          className={`bottom-nav-item ${showCalModal ? 'active' : ''}`}
-          onClick={() => setShowCalModal(true)}
-          aria-label={t.calibrationAria}
-        >
-          <SlidersHorizontal size={20} aria-hidden="true" />
-          <span>{t.navCal}</span>
-        </button>
-
-        <a
-          className="bottom-nav-item"
-          href="http://192.168.4.1"
-          target="_blank"
-          rel="noreferrer"
-          aria-label={t.wifiPortalAria}
-        >
-          <Wifi size={20} aria-hidden="true" />
-          <span>{t.navWifi}</span>
-        </a>
-
-        <button
-          type="button"
           className={`bottom-nav-item ${showSettingsModal ? 'active' : ''}`}
           onClick={() => setShowSettingsModal(true)}
           aria-label={t.settingsBtnAria}
         >
-          <Settings size={20} aria-hidden="true" />
+          <div className="nav-icon-wrapper">
+            <Settings size={20} aria-hidden="true" />
+            <span className={`nav-dot ${connectionStatus}`} />
+          </div>
           <span>{t.navSettings}</span>
         </button>
       </nav>
