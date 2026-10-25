@@ -48,7 +48,7 @@ import type { FoodProduct } from './types/food';
 import type { MealType } from './types/meal';
 import { translations, getInitialLanguage, LANGUAGES, type Language } from './i18n';
 import { WEEKDAY_NAMES_BY_LANG, getCalendarGrid } from './utils/calendar';
-import { formatWeight, computeCalFactor, calculateSparklinePoints } from './utils/scaleMath';
+import { formatWeight, computeCalFactor, adjustCalFactor, calculateSparklinePoints } from './utils/scaleMath';
 
 type ThemeMode = 'dark' | 'light' | 'system';
 
@@ -104,6 +104,15 @@ export const App: React.FC = () => {
   const [rawAdcInput, setRawAdcInput] = useState<string>('210000');
   const [isCalOpen, setIsCalOpen] = useState<boolean>(false);
 
+  // Calibration Wizard State
+  const [showCalWizard, setShowCalWizard] = useState<boolean>(false);
+  const [calWizardStep, setCalWizardStep] = useState<number>(1);
+  const [calRefPreset, setCalRefPreset] = useState<number>(500);
+  const [calCustomWeight, setCalCustomWeight] = useState<string>('500');
+  const [calCurrentFactor, setCalCurrentFactor] = useState<string>('420.0');
+  const [isCalApplying, setIsCalApplying] = useState<boolean>(false);
+  const [calSuccessMsg, setCalSuccessMsg] = useState<string | null>(null);
+
   const handleGoHome = () => {
     setActiveTab('scale');
     setShowSettingsModal(false);
@@ -111,6 +120,7 @@ export const App: React.FC = () => {
     setShowManualAddModal(false);
     setShowExportModal(false);
     setShowCalendarModal(false);
+    setShowCalWizard(false);
     stopScanner();
   };
 
@@ -584,6 +594,35 @@ export const App: React.FC = () => {
 
   const computedFactor = computeCalFactor(rawAdcInput, refWeightGrams);
   const svgPoints = calculateSparklinePoints(history);
+
+  const effectiveRefWeight = calRefPreset > 0 ? calRefPreset : (parseFloat(calCustomWeight) || 500);
+  const wizardComputedFactor = connectionStatus === 'connected' && weightGrams > 0
+    ? adjustCalFactor(calCurrentFactor, weightGrams, effectiveRefWeight)
+    : computeCalFactor(rawAdcInput, String(effectiveRefWeight));
+
+  const handleApplyCalibration = async () => {
+    try {
+      setIsCalApplying(true);
+      await scaleBle.sendCalibration(wizardComputedFactor);
+      setCalCurrentFactor(wizardComputedFactor);
+      setCalSuccessMsg(t.calAppliedSuccess);
+      setLogSuccessToast(t.calAppliedSuccess);
+      window.setTimeout(() => setLogSuccessToast(null), 3000);
+    } catch (err) {
+      console.error('Calibration send failed:', err);
+      setErrorMessage(err instanceof Error ? err.message : String(err));
+    } finally {
+      setIsCalApplying(false);
+    }
+  };
+
+  const handleCopyFactor = async () => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      await navigator.clipboard.writeText(wizardComputedFactor);
+      setLogSuccessToast(t.calCopiedToast);
+      window.setTimeout(() => setLogSuccessToast(null), 3000);
+    }
+  };
 
   const liveNutrition = activeProduct
     ? calculateNutrition(activeProduct.nutriments, weightGrams)
@@ -1578,6 +1617,31 @@ export const App: React.FC = () => {
                   </a>
                 </div>
 
+                {/* Calibration Wizard Launch Card */}
+                <div className="settings-card">
+                  <div className="settings-card-left">
+                    <div className="settings-card-icon">
+                      <SlidersHorizontal size={18} />
+                    </div>
+                    <div className="settings-card-info">
+                      <span className="settings-card-title">{t.calWizardTitle}</span>
+                      <span className="settings-card-sub">{t.calWizardSub}</span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => {
+                      setCalWizardStep(1);
+                      setCalSuccessMsg(null);
+                      setShowCalWizard(true);
+                    }}
+                    style={{ minHeight: '36px', padding: '6px 14px', fontSize: '12px', whiteSpace: 'nowrap' }}
+                  >
+                    <span>{t.calWizardStart}</span>
+                  </button>
+                </div>
+
                 {/* Advanced Calibration Accordion */}
                 <div className="settings-accordion">
                   <button
@@ -2219,6 +2283,272 @@ export const App: React.FC = () => {
               >
                 {t.cancelBtn}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Calibration Wizard Modal */}
+      {showCalWizard && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowCalWizard(false)}
+        >
+          <div
+            className="modal-content cal-wizard-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="cal-wizard-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <SlidersHorizontal size={18} style={{ color: 'var(--accent-blue)' }} />
+                <h2 id="cal-wizard-title" className="modal-title">
+                  {t.calWizardTitle}
+                </h2>
+              </div>
+              <button
+                type="button"
+                className="icon-btn"
+                onClick={() => setShowCalWizard(false)}
+                aria-label={t.calClose}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Stepper Progress Indicator */}
+            <div className="cal-stepper-row" role="tablist" aria-label={t.calWizardTitle}>
+              {[1, 2, 3].map((stepNum) => (
+                <div
+                  key={stepNum}
+                  className={`cal-stepper-item ${calWizardStep === stepNum ? 'active' : ''} ${calWizardStep > stepNum ? 'completed' : ''}`}
+                >
+                  <div className="cal-stepper-dot">
+                    {calWizardStep > stepNum ? <Check size={12} /> : stepNum}
+                  </div>
+                  <span className="cal-stepper-label">
+                    {stepNum === 1 ? (t.calStep1Title.includes(':') ? t.calStep1Title.split(':')[1].trim() : t.calStep1Title) :
+                     stepNum === 2 ? (t.calStep2Title.includes(':') ? t.calStep2Title.split(':')[1].trim() : t.calStep2Title) :
+                     (t.calStep3Title.includes(':') ? t.calStep3Title.split(':')[1].trim() : t.calStep3Title)}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Step 1: Zero / Tare */}
+            {calWizardStep === 1 && (
+              <div className="cal-step-body">
+                <div className="cal-step-icon-badge">
+                  <RotateCcw size={26} />
+                </div>
+                <h3 className="cal-step-heading">{t.calStep1Title}</h3>
+                <p className="cal-step-text">{t.calStep1Desc}</p>
+
+                <div className="cal-live-card">
+                  <div className="cal-live-label">{t.calCurrentReading}</div>
+                  <div className="cal-live-value">
+                    {formatWeight(weightGrams, 'g')} <span className="cal-live-unit">g</span>
+                  </div>
+                  <div className="cal-live-status">
+                    <span className={`nav-dot ${connectionStatus}`} style={{ position: 'static', display: 'inline-block' }} />
+                    {connectionStatus === 'connected' ? t.connected : t.standby}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={handleTare}
+                  style={{ width: '100%', minHeight: '44px', gap: '8px' }}
+                >
+                  <RotateCcw size={16} />
+                  <span>{t.tareBtn}</span>
+                </button>
+              </div>
+            )}
+
+            {/* Step 2: Reference Weight */}
+            {calWizardStep === 2 && (
+              <div className="cal-step-body">
+                <div className="cal-step-icon-badge">
+                  <SlidersHorizontal size={26} />
+                </div>
+                <h3 className="cal-step-heading">{t.calStep2Title}</h3>
+                <p className="cal-step-text">{t.calStep2Desc}</p>
+
+                {/* Preset Chips */}
+                <div className="cal-preset-grid">
+                  {[100, 200, 500, 1000].map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      className={`cal-preset-btn ${calRefPreset === preset ? 'active' : ''}`}
+                      onClick={() => setCalRefPreset(preset)}
+                    >
+                      {preset}g
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    className={`cal-preset-btn ${calRefPreset === 0 ? 'active' : ''}`}
+                    onClick={() => setCalRefPreset(0)}
+                  >
+                    {t.calCustomRef}
+                  </button>
+                </div>
+
+                {calRefPreset === 0 && (
+                  <div style={{ marginTop: '8px', width: '100%' }}>
+                    <label htmlFor="cal-custom-weight-input" className="input-label" style={{ textAlign: 'left' }}>
+                      {t.calTargetWeight} (g)
+                    </label>
+                    <input
+                      id="cal-custom-weight-input"
+                      type="number"
+                      className="input-field"
+                      value={calCustomWeight}
+                      onChange={(e) => setCalCustomWeight(e.target.value)}
+                      placeholder="500"
+                    />
+                  </div>
+                )}
+
+                <div className="cal-live-card" style={{ marginTop: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div className="cal-live-label">{t.calCurrentReading}</div>
+                      <div className="cal-live-value" style={{ fontSize: '24px' }}>
+                        {formatWeight(weightGrams, 'g')} <span className="cal-live-unit">g</span>
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div className="cal-live-label">{t.calTargetWeight}</div>
+                      <div className="cal-live-value" style={{ fontSize: '24px', color: 'var(--accent-blue)' }}>
+                        {effectiveRefWeight} <span className="cal-live-unit">g</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 3: Result & Apply */}
+            {calWizardStep === 3 && (
+              <div className="cal-step-body">
+                <div className="cal-step-icon-badge" style={{ background: 'rgba(34, 197, 94, 0.15)', color: 'var(--accent-green)' }}>
+                  <CheckCircle2 size={26} />
+                </div>
+                <h3 className="cal-step-heading">{t.calStep3Title}</h3>
+                <p className="cal-step-text">{t.calStep3Desc}</p>
+
+                <div className="cal-result-box" style={{ padding: '14px', margin: '10px 0', width: '100%' }}>
+                  <div className="cal-result-label">{t.calFactorTitle}</div>
+                  <div className="cal-result-value" style={{ fontSize: '28px' }}>
+                    {wizardComputedFactor}
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                    {t.calTargetWeight}: {effectiveRefWeight}g | {t.calCurrentReading}: {formatWeight(weightGrams > 0 ? weightGrams : (parseFloat(rawAdcInput) ? parseFloat(rawAdcInput) / 420 : effectiveRefWeight), 'g')}g
+                  </div>
+                </div>
+
+                {calSuccessMsg && (
+                  <div className="cal-success-banner" role="status">
+                    <CheckCircle2 size={16} />
+                    <span>{calSuccessMsg}</span>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+                  {connectionStatus === 'connected' && (
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={handleApplyCalibration}
+                      disabled={isCalApplying}
+                      style={{ minHeight: '44px' }}
+                    >
+                      <CheckCircle2 size={16} />
+                      <span>{isCalApplying ? '...' : t.calApplyBle}</span>
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={handleCopyFactor}
+                    style={{ minHeight: '40px' }}
+                  >
+                    <Download size={15} />
+                    <span>{t.calCopyFactor}</span>
+                  </button>
+
+                  <a
+                    href="http://192.168.4.1"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-secondary"
+                    style={{
+                      textDecoration: 'none',
+                      minHeight: '40px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <span>{t.openWifiPortal} (192.168.4.1)</span>
+                    <ExternalLink size={13} />
+                  </a>
+                </div>
+              </div>
+            )}
+
+            {/* Wizard Modal Navigation Footer */}
+            <div className="cal-wizard-footer">
+              {calWizardStep > 1 ? (
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setCalWizardStep((prev) => prev - 1)}
+                  style={{ minWidth: '90px' }}
+                >
+                  <ChevronLeft size={16} />
+                  <span>{t.prevBtn}</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowCalWizard(false)}
+                  style={{ minWidth: '90px' }}
+                >
+                  {t.cancelBtn}
+                </button>
+              )}
+
+              {calWizardStep < 3 ? (
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => setCalWizardStep((prev) => prev + 1)}
+                  style={{ minWidth: '100px', marginLeft: 'auto' }}
+                >
+                  <span>{t.nextBtn}</span>
+                  <ChevronRight size={16} />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => setShowCalWizard(false)}
+                  style={{ minWidth: '100px', marginLeft: 'auto' }}
+                >
+                  <span>{t.finishBtn}</span>
+                </button>
+              )}
             </div>
           </div>
         </div>

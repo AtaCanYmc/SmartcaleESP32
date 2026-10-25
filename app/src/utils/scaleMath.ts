@@ -31,6 +31,21 @@ export function computeCalFactor(rawAdcInput: string, refWeightGrams: string): s
   return '420.0';
 }
 
+export function adjustCalFactor(
+  currentFactor: number | string,
+  measuredWeight: number | string,
+  referenceWeight: number | string
+): string {
+  const cur = typeof currentFactor === 'string' ? parseFloat(currentFactor) : currentFactor;
+  const meas = typeof measuredWeight === 'string' ? parseFloat(measuredWeight) : measuredWeight;
+  const ref = typeof referenceWeight === 'string' ? parseFloat(referenceWeight) : referenceWeight;
+
+  if (!isNaN(cur) && cur > 0 && !isNaN(meas) && meas > 0 && !isNaN(ref) && ref > 0) {
+    return (cur * (meas / ref)).toFixed(1);
+  }
+  return typeof currentFactor === 'number' ? currentFactor.toFixed(1) : (currentFactor || '420.0');
+}
+
 export function calculateSparklinePoints(history: number[], width: number = 100, height: number = 40): string {
   if (!history || history.length === 0) return '';
   const minW = Math.min(0, ...history);

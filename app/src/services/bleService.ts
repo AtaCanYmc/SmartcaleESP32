@@ -157,6 +157,25 @@ export class ScaleBleService {
     );
   }
 
+  async sendCalibration(factor: number | string): Promise<void> {
+    if (!this.deviceId) {
+      throw new Error('Cihaz bağlı değil');
+    }
+
+    const num = typeof factor === 'number' ? factor : parseFloat(factor);
+    if (isNaN(num) || num <= 0) {
+      throw new Error('Geçersiz kalibrasyon faktörü');
+    }
+
+    const payload = textToDataView(`CAL:${num.toFixed(1)}`);
+    await BleClient.write(
+      this.deviceId,
+      SCALE_SERVICE_UUID,
+      CHAR_CMD_UUID,
+      payload
+    );
+  }
+
   async disconnect(): Promise<void> {
     this.isManualDisconnect = true;
     this.cancelReconnect();

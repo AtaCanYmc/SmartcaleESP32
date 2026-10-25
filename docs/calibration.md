@@ -23,9 +23,20 @@ Where:
 
 ## Step-by-Step Calibration Procedure
 
-Calibration requires a reference weight of certified mass (e.g. 100g, 200g, or 500g).
+Calibration requires a reference weight of certified mass (e.g. 100g, 200g, 500g, or 1000g).
 
-### Method A: Web Portal (Runtime, No Reflashing Required)
+### Method A: Calibration Wizard (Companion App / BLE - Recommended)
+
+The Smartcale Companion App includes an interactive, 3-step **Calibration Wizard**:
+
+1. **Step 1 (Zero / Tare)**: Place the scale on a flat, solid surface. Ensure the platform is empty and tap **Tare Platform**.
+2. **Step 2 (Place Reference Weight)**: Place a known reference weight (e.g. $500.0\,\text{g}$) in the center of the platform. Select the preset ($100\,\text{g}$, $200\,\text{g}$, $500\,\text{g}$, $1000\,\text{g}$) or enter a custom mass.
+3. **Step 3 (Calculate & Apply)**: The app computes the exact calibration factor:
+   $$\text{Factor}_{\text{target}} = \text{Factor}_{\text{current}} \times \frac{W_{\text{measured}}}{W_{\text{reference}}}$$
+   - **Direct BLE Sync**: Tap **"Save to Scale (BLE)"**. The app sends packet `CAL:<factor>` over characteristic `1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e`. The ESP32 immediately updates the HX711 scale factor in RAM and commits it to non-volatile flash (NVS `cal` key).
+   - **Manual Copy**: Tap **"Copy Factor"** if you prefer to save it manually in the web portal or firmware.
+
+### Method B: Web Portal (Runtime Wi-Fi AP, No Reflashing Required)
 
 1. Power on the scale while holding the Tare button for 2 seconds to enter the setup portal.
 2. Connect to Wi-Fi network `Smartcale-Setup` on a phone or laptop.
@@ -40,7 +51,7 @@ Calibration requires a reference weight of certified mass (e.g. 100g, 200g, or 5
    $$\text{Factor} = \frac{210000.0}{500.0} = 420.0$$
 9. Hold the Tare button to re-enter the web portal, enter the calculated factor (`420.0`), and save.
 
-### Method B: Firmware Compile-Time Default
+### Method C: Firmware Compile-Time Default
 
 1. Open `include/config.h`.
 2. Locate the calibration definition:

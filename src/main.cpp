@@ -40,6 +40,13 @@ void triggerTareFromBle() {
     g_tareRequested = true;
 }
 
+void onCalFactorFromBle(float factor) {
+    LOG_I("BLE", "Remote calibration factor update: %.1f", factor);
+    g_appConfig.calibrationFactor = factor;
+    ConfigStorage::save(g_appConfig);
+    scale.set_scale(factor);
+}
+
 void setup() {
     Serial.begin(115200);
     while (!Serial && millis() < 1500);
@@ -77,7 +84,7 @@ void setup() {
 
     LOG_I("BOOT", "Entering normal scale weighing mode");
     attachInterrupt(digitalPinToInterrupt(PIN_TARE_BTN), onTareButtonISR, FALLING);
-    initBle(g_appConfig.bleName.c_str(), triggerTareFromBle);
+    initBle(g_appConfig.bleName.c_str(), triggerTareFromBle, onCalFactorFromBle);
 
     if (g_appConfig.wifiSsid.length() > 0) {
         LOG_I("WIFI", "Connecting to Wi-Fi SSID '%s'...", g_appConfig.wifiSsid.c_str());

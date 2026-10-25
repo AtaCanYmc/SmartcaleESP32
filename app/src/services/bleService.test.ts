@@ -42,10 +42,13 @@ assert.equal(parseWeightNotification('   '), null);
 assert.equal(parseWeightNotification('ERR_OVERLOAD'), null, 'Non-numeric string returns null');
 assert.equal(parseWeightNotification('NaN'), null);
 
-// 3. Tare command payload verification
+// 3. Tare and Calibration command payload verification
 const tareChar = 'T';
 const tareByte = tareChar.charCodeAt(0);
 assert.equal(tareByte, 84, 'Tare command ASCII character must be 84 ("T")');
+
+const calPayload = `CAL:${(420.0).toFixed(1)}`;
+assert.equal(calPayload, 'CAL:420.0', 'Calibration packet format must be CAL:<factor>');
 
 // 4. Initial connection state & lifecycle methods
 assert.equal(scaleBle.isConnected(), false, 'Initially not connected');
@@ -57,13 +60,21 @@ assert.equal(scaleBle.getLastDeviceId(), null, 'Initially no lastDeviceId');
 scaleBle.cancelReconnect();
 assert.equal(scaleBle.isReconnecting(), false, 'isReconnecting remains false after cancelReconnect');
 
-// 6. Tare and Reconnect error handling when disconnected
+// 6. Tare, Calibration, and Reconnect error handling when disconnected
 await assert.rejects(
   async () => {
     await scaleBle.sendTare();
   },
   { message: 'Cihaz bağlı değil' },
   'sendTare must reject when not connected'
+);
+
+await assert.rejects(
+  async () => {
+    await scaleBle.sendCalibration(420.0);
+  },
+  { message: 'Cihaz bağlı değil' },
+  'sendCalibration must reject when not connected'
 );
 
 await assert.rejects(

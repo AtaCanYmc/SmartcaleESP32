@@ -12,6 +12,7 @@ static BLECharacteristic* pWeightCharacteristic = nullptr;
 static BLECharacteristic* pCmdCharacteristic = nullptr;
 static bool g_bleConnected = false;
 static void (*g_onTareCallback)() = nullptr;
+static void (*g_onCalFactorCallback)(float factor) = nullptr;
 
 class BleServerCallbacks : public BLEServerCallbacks {
     void onConnect(BLEServer* pServer) override {
@@ -31,13 +32,22 @@ class BleCommandCallbacks : public BLECharacteristicCallbacks {
             char cmd = value[0];
             if ((cmd == 'T' || cmd == 't') && g_onTareCallback != nullptr) {
                 g_onTareCallback();
+            } else if ((value.startsWith("CAL:") || value.startsWith("cal:") || value.startsWith("C:")) && g_onCalFactorCallback != nullptr) {
+                int colonIdx = value.indexOf(':');
+                if (colonIdx != -1) {
+                    float factor = value.substring(colonIdx + 1).toFloat();
+                    if (factor > 0.0f) {
+                        g_onCalFactorCallback(factor);
+                    }
+                }
             }
         }
     }
 };
 
-inline void initBle(const char* deviceName, void (*onTareFunc)()) {
+inline void initBle(const char* deviceName, void (*onTareFunc)(), void (*onCalFactorFunc)(float) = nullptr) {
     g_onTareCallback = onTareFunc;
+    g_onCalFactorCallback = onCalFactorFunc;
 
     const char* name = (deviceName && strlen(deviceName) > 0) ? deviceName : DEFAULT_BLE_NAME;
     BLEDevice::init(name);

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { applyDeadband, formatWeight, computeCalFactor, calculateSparklinePoints, DEADBAND_GRAMS } from './scaleMath';
+import { applyDeadband, formatWeight, computeCalFactor, adjustCalFactor, calculateSparklinePoints, DEADBAND_GRAMS } from './scaleMath';
 
 // 1. Deadband tests
 assert.equal(applyDeadband(0.0), 0.0, '0g should stay 0');
@@ -34,7 +34,14 @@ assert.equal(computeCalFactor('invalid', '500'), '420.0', 'NaN raw fallback');
 assert.equal(computeCalFactor('210000', 'invalid'), '420.0', 'NaN ref fallback');
 assert.equal(computeCalFactor('210000', '-500'), '420.0', 'Negative ref fallback');
 
-// 4. calculateSparklinePoints tests
+// 4. adjustCalFactor tests
+assert.equal(adjustCalFactor(420.0, 480.0, 500.0), '403.2', 'Proportional factor adjustment');
+assert.equal(adjustCalFactor(420.0, 500.0, 500.0), '420.0', 'Exact match yields same factor');
+assert.equal(adjustCalFactor('420.0', '1050.0', '1000.0'), '441.0', 'Over-reading adjustment');
+assert.equal(adjustCalFactor(420.0, 0, 500.0), '420.0', 'Zero measured fallback');
+assert.equal(adjustCalFactor(420.0, 500.0, 0), '420.0', 'Zero reference fallback');
+
+// 5. calculateSparklinePoints tests
 const emptyPoints = calculateSparklinePoints([]);
 assert.equal(emptyPoints, '', 'Empty history returns empty string');
 
