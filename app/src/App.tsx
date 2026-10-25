@@ -11,12 +11,28 @@ import {
   ExternalLink,
   X,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Sun,
+  Moon,
+  Languages as LanguagesIcon
 } from 'lucide-react';
 import { scaleBle } from './services/bleService';
 import type { WeightUnit, ConnectionStatus } from './types/scale';
+import { translations, getInitialLanguage, LANGUAGES, type Language } from './i18n';
+
+type ThemeMode = 'dark' | 'light';
+
+const getInitialTheme = (): ThemeMode => {
+  const saved = localStorage.getItem('smartscale-theme');
+  if (saved === 'dark' || saved === 'light') return saved;
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+};
 
 export const App: React.FC = () => {
+  const [lang, setLang] = useState<Language>(getInitialLanguage);
+  const t = translations[lang];
+
+  const [theme, setTheme] = useState<ThemeMode>(getInitialTheme);
   const [weightGrams, setWeightGrams] = useState<number>(0.0);
   const [unit, setUnit] = useState<WeightUnit>('g');
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected');
@@ -36,6 +52,20 @@ export const App: React.FC = () => {
   const tareFeedbackTimeout = useRef<number | null>(null);
   const [isTared, setIsTared] = useState<boolean>(false);
 
+  useEffect(() => {
+    document.documentElement.lang = lang;
+    localStorage.setItem('smartscale-lang', lang);
+  }, [lang]);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('smartscale-theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
   // Close calibration modal with Escape key
   useEffect(() => {
     if (!showCalModal) return;
@@ -47,6 +77,7 @@ export const App: React.FC = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showCalModal]);
+
   useEffect(() => {
     let interval: number | undefined;
     if (isTimerRunning) {
@@ -80,7 +111,7 @@ export const App: React.FC = () => {
       console.error('BLE connection error:', err);
       setConnectionStatus('error');
       const msg = err instanceof Error ? err.message : String(err);
-      setErrorMessage(msg.includes('cancelled') ? 'Bağlantı iptal edildi' : 'Tartıya bağlanılamadı. Bluetooth açık mı?');
+      setErrorMessage(msg.includes('cancelled') ? t.connCancelled : t.connFailed);
     }
   };
 
@@ -155,47 +186,61 @@ export const App: React.FC = () => {
           </div>
           <div>
             <h1 className="brand-title">SmartScale</h1>
-            <p className="brand-subtitle">ESP32-C3 GATT v1.0</p>
+            <p className="brand-subtitle">{t.brandSubtitle}</p>
           </div>
         </div>
 
-        <button
-          className={`status-pill ${connectionStatus}`}
-          onClick={connectionStatus === 'connected' ? handleDisconnect : handleConnect}
-          aria-label={connectionStatus === 'connected' ? 'Bağlantıyı Kes' : 'Tartıya Bağlan'}
-        >
-          <span className={`status-dot ${connectionStatus === 'connecting' ? 'pulse' : ''}`} aria-hidden="true" />
-          {connectionStatus === 'connected' ? (
-            <>
-              <BluetoothConnected size={14} aria-hidden="true" />
-              <span>{deviceName || 'Bağlı'}</span>
-            </>
-          ) : connectionStatus === 'connecting' ? (
-            <span>Aranıyor...</span>
-          ) : (
-            <>
-              <Bluetooth size={14} aria-hidden="true" />
-              <span>Bağlan</span>
-            </>
-          )}
-        </button>
+        <div className="header-actions">
+          <div className="lang-picker">
+            <LanguagesIcon size={15} className="lang-icon" aria-hidden="true" />
+            <select
+              className="lang-select"
+              value={lang}
+              onChange={(e) => setLang(e.target.value as Language)}
+              aria-label={t.selectLanguage}
+            >
+              {LANGUAGES.map((opt) => (
+                <option key={opt.code} value={opt.code}>
+                  {opt.shortLabel} - {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <button
+            className="icon-btn"
+            onClick={toggleTheme}
+            aria-label={theme === 'dark' ? t.switchToLight : t.switchToDark}
+            title={theme === 'dark' ? t.themeLight : t.themeDark}
+          >
+            {theme === 'dark' ? <Sun size={18} aria-hidden="true" /> : <Moon size={18} aria-hidden="true" />}
+          </button>
+
+          <button
+            className={`status-pill ${connectionStatus}`}
+            onClick={connectionStatus === 'connected' ? handleDisconnect : handleConnect}
+            aria-label={connectionStatus === 'connected' ? t.disconnect : t.connectToScale}
+          >
+            <span className={`status-dot ${connectionStatus === 'connecting' ? 'pulse' : ''}`} aria-hidden="true" />
+            {connectionStatus === 'connected' ? (
+              <>
+                <BluetoothConnected size={14} aria-hidden="true" />
+                <span>{deviceName || t.connected}</span>
+              </>
+            ) : connectionStatus === 'connecting' ? (
+              <span>{t.searching}</span>
+            ) : (
+              <>
+                <Bluetooth size={14} aria-hidden="true" />
+                <span>{t.connect}</span>
+              </>
+            )}
+          </button>
+        </div>
       </header>
 
       {errorMessage && (
-        <div
-          role="alert"
-          style={{
-            background: 'rgba(239, 68, 68, 0.15)',
-            border: '1px solid rgba(239, 68, 68, 0.4)',
-            borderRadius: '12px',
-            padding: '10px 14px',
-            fontSize: '13px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            color: '#fca5a5'
-          }}
-        >
+        <div role="alert" className="error-alert">
           <AlertCircle size={16} aria-hidden="true" />
           <span>{errorMessage}</span>
           <button
@@ -207,10 +252,10 @@ export const App: React.FC = () => {
               minHeight: '44px',
               background: 'transparent',
               border: 'none',
-              color: '#fca5a5',
+              color: 'inherit',
               cursor: 'pointer'
             }}
-            aria-label="Hatayı kapat"
+            aria-label={t.dismissError}
           >
             <X size={16} />
           </button>
@@ -218,14 +263,14 @@ export const App: React.FC = () => {
       )}
 
       <main className="scale-card">
-        <div className="unit-selector" role="group" aria-label="Ağırlık birimi seçimi">
+        <div className="unit-selector" role="group" aria-label={t.unitSelection}>
           {(['g', 'oz', 'ml'] as WeightUnit[]).map((u) => (
             <button
               key={u}
               className={`unit-btn ${unit === u ? 'active' : ''}`}
               onClick={() => setUnit(u)}
               aria-pressed={unit === u}
-              aria-label={`${u.toUpperCase()} birimi`}
+              aria-label={t.unitAria(u)}
             >
               {u.toUpperCase()}
             </button>
@@ -241,7 +286,7 @@ export const App: React.FC = () => {
           <svg viewBox="0 0 100 40" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
             <polyline
               fill="none"
-              stroke="#38bdf8"
+              stroke="var(--accent-blue)"
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -252,12 +297,12 @@ export const App: React.FC = () => {
 
         <div className="weight-meta">
           {isTared && (
-            <span style={{ color: '#22c55e', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <CheckCircle2 size={13} aria-hidden="true" /> Dara Alındı
+            <span style={{ color: 'var(--accent-green)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <CheckCircle2 size={13} aria-hidden="true" /> {t.tared}
             </span>
           )}
           {!isTared && (
-            <span>{connectionStatus === 'connected' ? 'Canlı Akış (100ms)' : 'Demo / Beklemede'}</span>
+            <span>{connectionStatus === 'connected' ? t.liveStream : t.standby}</span>
           )}
         </div>
       </main>
@@ -266,19 +311,19 @@ export const App: React.FC = () => {
         <button
           className="btn btn-primary btn-tare-huge"
           onClick={handleTare}
-          aria-label="Tartının darasını al"
+          aria-label={t.tareAria}
         >
           <RotateCcw size={22} aria-hidden="true" />
-          <span>DARA AL (TARE)</span>
+          <span>{t.tareBtn}</span>
         </button>
 
         <button
           className="btn btn-secondary"
           onClick={() => setShowCalModal(true)}
-          aria-label="Kalibrasyon asistanını aç"
+          aria-label={t.calibrationAria}
         >
           <SlidersHorizontal size={18} aria-hidden="true" />
-          <span>Kalibrasyon</span>
+          <span>{t.calibrationBtn}</span>
         </button>
 
         <a
@@ -287,18 +332,18 @@ export const App: React.FC = () => {
           target="_blank"
           rel="noreferrer"
           style={{ textDecoration: 'none' }}
-          aria-label="Wi-Fi Kurulum Paneli (yeni sekmede açılır)"
+          aria-label={t.wifiPortalAria}
         >
           <Wifi size={18} aria-hidden="true" />
-          <span>Wi-Fi Paneli</span>
+          <span>{t.wifiPortalBtn}</span>
           <ExternalLink size={13} style={{ opacity: 0.6 }} aria-hidden="true" />
         </a>
       </div>
 
-      <section className="feature-card" aria-label="Demleme Kronometresi">
+      <section className="feature-card" aria-label={t.timerAria}>
         <div className="card-header">
-          <span>KRONOMETRE & DEMLEME</span>
-          <span>{isTimerRunning ? 'ÇALIŞIYOR' : 'DURDU'}</span>
+          <span>{t.timerTitle}</span>
+          <span>{isTimerRunning ? t.timerRunning : t.timerStopped}</span>
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -308,7 +353,7 @@ export const App: React.FC = () => {
             <button
               className="icon-btn"
               onClick={() => setIsTimerRunning(!isTimerRunning)}
-              aria-label={isTimerRunning ? 'Zamanlayıcıyı durdur' : 'Zamanlayıcıyı başlat'}
+              aria-label={isTimerRunning ? t.timerStop : t.timerStart}
             >
               {isTimerRunning ? <Pause size={18} /> : <Play size={18} />}
             </button>
@@ -318,7 +363,7 @@ export const App: React.FC = () => {
                 setIsTimerRunning(false);
                 setTimerSeconds(0);
               }}
-              aria-label="Zamanlayıcıyı sıfırla"
+              aria-label={t.timerReset}
             >
               <RotateCcw size={18} />
             </button>
@@ -339,26 +384,23 @@ export const App: React.FC = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 id="cal-modal-title" className="modal-title">Kalibrasyon Asistanı</h2>
+              <h2 id="cal-modal-title" className="modal-title">{t.calTitle}</h2>
               <button
                 className="icon-btn"
                 onClick={() => setShowCalModal(false)}
-                aria-label="Kapat"
+                aria-label={t.calClose}
               >
                 <X size={18} />
               </button>
             </div>
 
-            <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: 1.4 }}>
-              Tartınızın kalibrasyon katsayısını hesaplamak için bilinen bir ağırlık (örneğin 500g) kullanın:
+            <p className="modal-desc">
+              {t.calDesc}
             </p>
 
             <div>
-              <label
-                htmlFor="cal-ref-weight"
-                style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '6px' }}
-              >
-                Referans Ağırlık (Gram)
+              <label htmlFor="cal-ref-weight" className="input-label">
+                {t.calRefWeightLabel}
               </label>
               <input
                 id="cal-ref-weight"
@@ -371,11 +413,8 @@ export const App: React.FC = () => {
             </div>
 
             <div>
-              <label
-                htmlFor="cal-raw-adc"
-                style={{ display: 'block', fontSize: '12px', color: '#cbd5e1', marginBottom: '6px' }}
-              >
-                Okunan Ham Değer (Katsayı 1.0 iken)
+              <label htmlFor="cal-raw-adc" className="input-label">
+                {t.calRawAdcLabel}
               </label>
               <input
                 id="cal-raw-adc"
@@ -387,30 +426,24 @@ export const App: React.FC = () => {
               />
             </div>
 
-            <div style={{
-              background: '#0f172a',
-              borderRadius: '12px',
-              padding: '12px',
-              border: '1px solid #334155',
-              textAlign: 'center'
-            }}>
-              <div style={{ fontSize: '11px', color: '#cbd5e1', textTransform: 'uppercase' }}>
-                Hesaplanan Katsayı
+            <div className="cal-result-box">
+              <div className="cal-result-label">
+                {t.calFactorTitle}
               </div>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#38bdf8', marginTop: '2px' }}>
+              <div className="cal-result-value">
                 {computedCalFactor()}
               </div>
             </div>
 
-            <p style={{ fontSize: '12px', color: '#cbd5e1', textAlign: 'center' }}>
-              Bu değeri 192.168.4.1 web arayüzüne girerek tartınıza kaydedebilirsiniz.
+            <p className="modal-footer-note">
+              {t.calNote}
             </p>
 
             <button
               className="btn btn-primary"
               onClick={() => setShowCalModal(false)}
             >
-              Tamam
+              {t.calDone}
             </button>
           </div>
         </div>
