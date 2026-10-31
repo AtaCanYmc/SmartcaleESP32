@@ -28,6 +28,7 @@ Mock Mode parameters are centrally configured in [`include/config.h`](../include
 
 // Mock Mode Parameters (time duration per step & weight values)
 static constexpr unsigned long MOCK_STEP_INTERVAL_MS = 4000; // Duration (ms) per weight step
+static constexpr bool MOCK_ENABLE_JITTER              = false; // Set true for +/-0.1g random sensor noise
 static constexpr float MOCK_WEIGHT_STEPS[] = {
     0.0f,     // Empty scale
     45.5f,    // Small ingredient (e.g. espresso shot, spices)

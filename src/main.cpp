@@ -180,8 +180,7 @@ void loop() {
     float net = s_mockGross - s_mockTareOffset;
     if (net < 0.0f) net = 0.0f;
 
-    // Subtle natural jitter (+/-0.1g) when weight > 0
-    float jitter = (net > 0.5f) ? (((rand() % 3) - 1) * 0.1f) : 0.0f;
+    float jitter = (MOCK_ENABLE_JITTER && net > 0.5f) ? (((rand() % 3) - 1) * 0.1f) : 0.0f;
     g_displayWeight = net + jitter;
 #else
     if (g_tareRequested) {

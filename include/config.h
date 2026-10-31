@@ -20,6 +20,7 @@ static constexpr float DEADBAND_GRAMS             = 0.40f;  // [-0.4g, +0.4g] cl
 
 // Mock Mode Parameters (time duration per step & weight values)
 static constexpr unsigned long MOCK_STEP_INTERVAL_MS = 4000; // Duration (ms) per weight step
+static constexpr bool MOCK_ENABLE_JITTER              = false; // Set true for +/-0.1g random sensor noise
 static constexpr float MOCK_WEIGHT_STEPS[] = {
     0.0f,     // Empty scale
     45.5f,    // Small ingredient (e.g. espresso shot, spices)
