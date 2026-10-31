@@ -18,6 +18,18 @@ static constexpr float DEADBAND_GRAMS             = 0.40f;  // [-0.4g, +0.4g] cl
 #define ENABLE_MOCK_SCALE true
 #endif
 
+// Mock Mode Parameters (time duration per step & weight values)
+static constexpr unsigned long MOCK_STEP_INTERVAL_MS = 4000; // Duration (ms) per weight step
+static constexpr float MOCK_WEIGHT_STEPS[] = {
+    0.0f,     // Empty scale
+    45.5f,    // Small ingredient (e.g. espresso shot, spices)
+    128.2f,   // Medium item (e.g. apple, cup of flour)
+    250.0f,   // Standard container / liquid
+    375.4f,   // Heavier meal portion
+    0.0f      // Tare / removed item
+};
+static constexpr size_t MOCK_WEIGHT_STEPS_COUNT = sizeof(MOCK_WEIGHT_STEPS) / sizeof(MOCK_WEIGHT_STEPS[0]);
+
 // Loop Timing (ms)
 static constexpr unsigned long INTERVAL_BLE_NOTIFY_MS = 100;
 static constexpr unsigned long INTERVAL_DISPLAY_MS    = 200;

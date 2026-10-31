@@ -94,7 +94,8 @@ void setup() {
 
 #if ENABLE_MOCK_SCALE
     LOG_I("SCALE", "=== MOCK SCALE MODE ACTIVE ===");
-    LOG_I("SCALE", "No hardware modules required. Type a weight (e.g. 150) in Serial Monitor to set weight manually, or -1 for auto-cycle.");
+    LOG_I("SCALE", "Config: %u weight steps, interval %lums", (unsigned int)MOCK_WEIGHT_STEPS_COUNT, MOCK_STEP_INTERVAL_MS);
+    LOG_I("SCALE", "Serial commands: type weight (e.g. 150), 'i2000' to change interval ms, '-1' to resume auto-cycle.");
 #else
     scale.begin(PIN_HX711_DT, PIN_HX711_SCK);
     scale.set_scale(g_appConfig.calibrationFactor);
@@ -135,27 +136,39 @@ void loop() {
     static unsigned long s_lastStepMs = 0;
     static size_t s_stepIdx = 0;
     static bool s_manualWeightMode = false;
+    static unsigned long s_mockIntervalMs = MOCK_STEP_INTERVAL_MS;
 
-    // Check if user inputs weight via Serial Monitor
+    // Check if user inputs weight or interval via Serial Monitor
     if (Serial.available()) {
-        float inputVal = Serial.parseFloat();
-        if (inputVal >= 0.0f) {
-            s_mockGross = inputVal;
-            s_manualWeightMode = true;
-            LOG_I("MOCK", "Manual weight set from Serial: %.1fg", s_mockGross);
-        } else if (inputVal < 0.0f) {
-            s_manualWeightMode = false;
-            LOG_I("MOCK", "Resumed auto demo weight cycle");
+        int peekChar = Serial.peek();
+        if (peekChar == 'i' || peekChar == 'I') {
+            Serial.read(); // consume 'i'
+            long newInterval = Serial.parseInt();
+            if (newInterval >= 100) {
+                s_mockIntervalMs = (unsigned long)newInterval;
+                LOG_I("MOCK", "Step interval updated to %lums", s_mockIntervalMs);
+            }
+        } else {
+            float inputVal = Serial.parseFloat();
+            if (inputVal >= 0.0f) {
+                s_mockGross = inputVal;
+                s_manualWeightMode = true;
+                LOG_I("MOCK", "Manual weight set from Serial: %.1fg", s_mockGross);
+            } else if (inputVal < 0.0f) {
+                s_manualWeightMode = false;
+                LOG_I("MOCK", "Resumed auto demo weight cycle");
+            }
         }
     }
 
-    // Auto-cycle demo weights every 4 seconds if not in manual mode
-    if (!s_manualWeightMode && (now - s_lastStepMs >= 4000)) {
+    // Auto-cycle demo weights using configured interval and step array
+    if (!s_manualWeightMode && (now - s_lastStepMs >= s_mockIntervalMs)) {
         s_lastStepMs = now;
-        static const float kDemoWeights[] = { 0.0f, 45.5f, 128.2f, 250.0f, 375.4f, 0.0f };
-        s_mockGross = kDemoWeights[s_stepIdx];
-        s_stepIdx = (s_stepIdx + 1) % (sizeof(kDemoWeights) / sizeof(kDemoWeights[0]));
-        LOG_I("MOCK", "Auto simulated weight: %.1fg", s_mockGross);
+        s_mockGross = MOCK_WEIGHT_STEPS[s_stepIdx];
+        s_stepIdx = (s_stepIdx + 1) % MOCK_WEIGHT_STEPS_COUNT;
+        LOG_I("MOCK", "Auto simulated weight: %.1fg (step %u/%u, interval: %lums)",
+              s_mockGross, (unsigned int)(s_stepIdx == 0 ? MOCK_WEIGHT_STEPS_COUNT : s_stepIdx),
+              (unsigned int)MOCK_WEIGHT_STEPS_COUNT, s_mockIntervalMs);
     }
 
     if (g_tareRequested) {

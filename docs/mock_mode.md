@@ -18,19 +18,30 @@ The SmartcaleESP32 firmware includes a built-in **Mock / Simulation Mode** desig
 
 ## Configuration
 
-Mock Mode is controlled by the `ENABLE_MOCK_SCALE` macro in [`include/config.h`](../include/config.h):
+Mock Mode parameters are centrally configured in [`include/config.h`](../include/config.h):
 
 ```cpp
 // Simulation / Mock Mode (test without HX711/load cell connected)
 #ifndef ENABLE_MOCK_SCALE
 #define ENABLE_MOCK_SCALE true   // Set to true for mock testing, false for physical hardware
 #endif
+
+// Mock Mode Parameters (time duration per step & weight values)
+static constexpr unsigned long MOCK_STEP_INTERVAL_MS = 4000; // Duration (ms) per weight step
+static constexpr float MOCK_WEIGHT_STEPS[] = {
+    0.0f,     // Empty scale
+    45.5f,    // Small ingredient (e.g. espresso shot, spices)
+    128.2f,   // Medium item (e.g. apple, cup of flour)
+    250.0f,   // Standard container / liquid
+    375.4f,   // Heavier meal portion
+    0.0f      // Tare / removed item
+};
+static constexpr size_t MOCK_WEIGHT_STEPS_COUNT = sizeof(MOCK_WEIGHT_STEPS) / sizeof(MOCK_WEIGHT_STEPS[0]);
 ```
 
-| Value | Behavior |
-| :--- | :--- |
-| `true` | **Active**: Generates synthetic weight telemetry; bypasses HX711 initialization and setup portal block. |
-| `false` | **Production / Hardware Mode**: Requires physical HX711 and load cell. |
+### Dynamic Customization:
+* **Change Transition Time**: Modify `MOCK_STEP_INTERVAL_MS` (e.g., change `4000` to `2000` for 2-second fast transitions).
+* **Change Weight Targets**: Add, remove, or modify values inside `MOCK_WEIGHT_STEPS[]`. The step count `MOCK_WEIGHT_STEPS_COUNT` automatically adapts.
 
 ---
 
@@ -38,19 +49,18 @@ Mock Mode is controlled by the `ENABLE_MOCK_SCALE` macro in [`include/config.h`]
 
 When `ENABLE_MOCK_SCALE` is `true`, the firmware provides multiple interactive test mechanisms:
 
-### 1. Automated Weight Cycle (Default)
-If no manual Serial input is supplied, the scale automatically cycles through a demo progression every 4 seconds:
-$$\text{Weight Sequence: } 0.0\,\text{g} \longrightarrow 45.5\,\text{g} \longrightarrow 128.2\,\text{g} \longrightarrow 250.0\,\text{g} \longrightarrow 375.4\,\text{g} \longrightarrow 0.0\,\text{g}$$
+### 1. Automated Weight Cycle (Config-Driven)
+The scale steps through each weight in `MOCK_WEIGHT_STEPS` at the interval specified by `MOCK_STEP_INTERVAL_MS`. A subtle random jitter ($\pm 0.1\,\text{g}$) is dynamically injected during non-zero states to emulate natural load cell characteristics.
 
-A subtle random jitter ($\pm 0.1\,\text{g}$) is dynamically injected during non-zero states to emulate natural load cell characteristics.
-
-### 2. Interactive Serial Monitor Injection
-You can override the weight at any moment by sending a number through the Serial Monitor (115200 baud):
-* **Set Custom Weight**: Type any non-negative number and press Enter (e.g. `150` or `75.5`). The scale immediately locks to this gross weight.
-* **Resume Auto-Cycle**: Send `-1` to return to the automatic 4-second cycling sequence.
+### 2. Interactive Serial Monitor Controls
+You can interact with the mock runner in real time over Serial (115200 baud):
+* **Set Custom Weight**: Type any positive number (e.g., `150` or `75.5`) and press Enter to fix the weight to that value.
+* **Dynamically Adjust Cycle Speed**: Type `i<ms>` (e.g., `i2000` for 2 seconds, `i500` for 500ms) to change step duration on the fly without re-flashing!
+* **Resume Auto-Cycle**: Send `-1` to return to automatic step progression.
 
 ```text
 [MOCK] Manual weight set from Serial: 150.0g
+[MOCK] Step interval updated to 2000ms
 [MOCK] Resumed auto demo weight cycle
 ```
 
