@@ -36,6 +36,7 @@ When `ENABLE_MOCK_SCALE` is active, the scale can be exercised over USB Serial w
 ## Documentation & Repository Links
 
 - [Repository Root](https://github.com/AtaCanYmc/SmartcaleESP32)
+- [Web Companion App](https://atacanymc.github.io/SmartcaleESP32/app/)
 - [Firmware Documentation](https://github.com/AtaCanYmc/SmartcaleESP32/tree/main/docs)
 - [BLE Protocol Specification](https://github.com/AtaCanYmc/SmartcaleESP32/blob/main/docs/ble_protocol.md)
 - [Hardware Schematics](https://github.com/AtaCanYmc/SmartcaleESP32/blob/main/docs/hardware.md)

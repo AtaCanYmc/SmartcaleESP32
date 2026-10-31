@@ -1,0 +1,27 @@
+# Smartcale Companion Application
+
+> Smart kitchen scale companion app for real-time weighing, calorie & macro tracking, interactive recipes, and Bluetooth LE hardware integration.
+
+The Smartcale Companion App connects to the Smartcale ESP32 hardware scale via Bluetooth Low Energy (BLE GATT). It provides live weight telemetry, remote Tare, interactive recipe mixing with auto-tare steps, Open Food Facts barcode scanning, and daily nutrition logging.
+
+## Core Capabilities
+
+- **Real-Time Bluetooth LE Telemetry:** Connects to `SmartKitchenScale` GATT service (`4fafc201-1fb5-459e-8fcc-c5c9c331914b`) and receives live weight notifications (characteristic `beb5483e-36e1-4688-b7f5-ea07361b26a8`).
+- **Remote Tare & Calibration:** Transmits tare commands (`'T'`) and calibration factor adjustments to command characteristic `1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e`.
+- **Interactive Recipe Mode:** Multi-ingredient mixing workflow with automatic tare between steps, proportional nutritional breakdowns, and AI prompt exports.
+- **Nutritional Database & Barcode Scanning:** Integrated with Open Food Facts and camera barcode scanning via `@zxing/library`.
+- **Cross-Platform Delivery:** Runs natively on Android (Capacitor), iOS, and desktop browsers supporting Web Bluetooth.
+
+## Application Architecture
+
+- **UI Framework:** React 19, TypeScript
+- **Styling:** CSS variables, responsive mobile-first layout, dark/light theme toggle
+- **Internationalization:** English (`en`) and Turkish (`tr`)
+- **Native Bridge:** Capacitor 8 with `@capacitor-community/bluetooth-le`
+
+## Key Documentation Links
+
+- [Repository Root](https://github.com/AtaCanYmc/SmartcaleESP32)
+- [BLE Protocol Specification](https://github.com/AtaCanYmc/SmartcaleESP32/blob/main/docs/ble_protocol.md)
+- [Firmware Architecture](https://github.com/AtaCanYmc/SmartcaleESP32/blob/main/docs/architecture.md)
+- [Hardware Setup & Pinout](https://github.com/AtaCanYmc/SmartcaleESP32/blob/main/docs/hardware.md)

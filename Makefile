@@ -76,13 +76,15 @@ clean-firmware:
 	@echo "$(BOLD)$(YELLOW)==> Cleaning PlatformIO build artifacts...$(RESET)"
 	pio run --target clean
 
-flasher-build: build-firmware
-	@echo "$(BOLD)$(GREEN)==> Updating web-flasher firmware binaries...$(RESET)"
+flasher-build: build-firmware app-build
+	@echo "$(BOLD)$(GREEN)==> Updating web-flasher firmware binaries and companion web bundle...$(RESET)"
 	mkdir -p web-flasher/firmware
 	cp .pio/build/esp32-c3-devkitm-1/bootloader.bin web-flasher/firmware/
 	cp .pio/build/esp32-c3-devkitm-1/partitions.bin web-flasher/firmware/
 	cp .pio/build/esp32-c3-devkitm-1/firmware.bin web-flasher/firmware/
-	@echo "$(BOLD)$(GREEN)✔ web-flasher binaries updated successfully.$(RESET)"
+	mkdir -p web-flasher/app
+	cp -r app/dist/* web-flasher/app/
+	@echo "$(BOLD)$(GREEN)✔ web-flasher bundle updated successfully.$(RESET)"
 
 flasher-dev: flasher-build
 	@echo "$(BOLD)$(CYAN)==> Serving web flasher at http://localhost:8080 (Press Ctrl+C to stop)...$(RESET)"

@@ -10,6 +10,7 @@ on:
       - 'include/**'
       - 'platformio.ini'
       - 'web-flasher/**'
+      - 'app/**'
       - '.github/workflows/deploy-pages.yml'
   workflow_dispatch:
 
@@ -62,6 +63,23 @@ jobs:
           cp .pio/build/esp32-c3-devkitm-1/partitions.bin web-flasher/firmware/
           cp .pio/build/esp32-c3-devkitm-1/firmware.bin web-flasher/firmware/
           ls -lh web-flasher/firmware/
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'app/package-lock.json'
+
+      - name: Build Companion Web Bundle
+        run: |
+          cd app
+          npm ci
+          npm run build
+          cd ..
+          mkdir -p web-flasher/app
+          cp -r app/dist/* web-flasher/app/
+          ls -la web-flasher/app/
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

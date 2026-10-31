@@ -216,7 +216,9 @@ make monitor          # or: pio device monitor --baud 115200
 
 ### 4. Run Companion Web / Mobile App
 
-Start the Capacitor companion app development server:
+- **Web App (Zero Install):** Use the browser app directly at **[Smartcale Web Companion](https://atacanymc.github.io/SmartcaleESP32/app/)** in Google Chrome, Microsoft Edge, Brave, or Opera with Web Bluetooth.
+- **Android:** Download the pre-built `.apk` from [Latest Releases](https://github.com/AtaCanYmc/SmartcaleESP32/releases/latest).
+- **Local Dev Server:** Start the Vite companion app development server:
 
 ```bash
 make app-dev          # starts Vite dev server with Web Bluetooth

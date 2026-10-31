@@ -938,8 +938,9 @@
         <span class="brand-version">v1.2.0</span>
       </a>
 
-      <nav class="header-nav" aria-label="External repository links">
-        <a href="#companion-app" class="btn-header-app">Get Mobile App</a>
+      <nav class="header-nav" aria-label="Quick links">
+        <a href="./app/" class="btn-header-app" style="background: var(--accent); color: #ffffff; border-color: var(--accent);">Launch Web App</a>
+        <a href="#companion-app" class="btn-header-app">Get Android APK</a>
         <a href="https://github.com/AtaCanYmc/SmartcaleESP32" target="_blank" rel="noopener noreferrer">Source Code</a>
         <a href="./firmware/firmware.bin" download>firmware.bin</a>
       </nav>
@@ -1054,9 +1055,9 @@
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: var(--accent);">
                   <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>
                 </svg>
-                Next Step: Smartcale Companion App
+                Next Step: Smartcale Companion App (Web & Mobile)
               </h2>
-              <p>Connect your phone to the scale over Bluetooth Low Energy (BLE) to view live weight, control Tare, log nutritional macros, and mix recipes.</p>
+              <p>Connect your browser or phone to the scale over Bluetooth Low Energy (BLE) to view live weight, trigger remote Tare, track calories & macros, or test Mock Scale Mode.</p>
             </div>
 
             <ul class="app-features">
@@ -1079,7 +1080,14 @@
             </ul>
 
             <div style="display: flex; gap: 0.65rem; align-items: center; flex-wrap: wrap;">
-              <a href="https://github.com/AtaCanYmc/SmartcaleESP32/releases/latest/download/smartcale-companion-android.apk" class="btn btn-primary" download>
+              <a href="./app/" class="btn btn-primary" style="background: var(--accent); color: #ffffff;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                </svg>
+                Launch Web App (Zero Install)
+              </a>
+
+              <a href="https://github.com/AtaCanYmc/SmartcaleESP32/releases/latest/download/smartcale-companion-android.apk" class="btn btn-secondary" download>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
                 </svg>
@@ -1092,7 +1100,7 @@
             </div>
 
             <div style="margin-top: 0.75rem; font-size: 0.775rem; color: var(--text-faint);">
-              Platforms: <strong>Android 8+ (APK)</strong> &bull; <strong>iOS (Xcode / Capacitor in <code>app/ios</code>)</strong> &bull; <strong>Web (Chrome Web Bluetooth)</strong>
+              Platforms: <strong>Web (Chrome, Edge & Brave with Web Bluetooth)</strong> &bull; <strong>Android 8+ (APK)</strong> &bull; <strong>iOS (Xcode / Capacitor in <code>app/ios</code>)</strong>
             </div>
           </div>
 
