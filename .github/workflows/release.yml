@@ -23,19 +23,28 @@ jobs:
           config-file: .release-please-config.json
           manifest-file: .release-please-manifest.json
 
+      - name: Evaluate Release Status
+        id: release_info
+        run: |
+          IS_RELEASED="${{ steps.release.outputs.release_created || steps.release.outputs['.--release_created'] || steps.release.outputs.releases_created || steps.release.outputs['smartcale-esp32--release_created'] || steps.release.outputs['smartscale-esp32--release_created'] || 'false' }}"
+          TAG="${{ steps.release.outputs.tag_name || steps.release.outputs['.--tag_name'] || steps.release.outputs['smartcale-esp32--tag_name'] || steps.release.outputs['smartscale-esp32--tag_name'] }}"
+          echo "is_released=$IS_RELEASED" >> $GITHUB_OUTPUT
+          echo "tag_name=$TAG" >> $GITHUB_OUTPUT
+          echo "Release status: is_released=$IS_RELEASED, tag_name=$TAG"
+
       # Build and attach packages when a release is cut
       - name: Checkout repository for release build
-        if: ${{ steps.release.outputs.release_created }}
+        if: ${{ steps.release_info.outputs.is_released == 'true' }}
         uses: actions/checkout@v7
 
       - name: Set up Python
-        if: ${{ steps.release.outputs.release_created }}
+        if: ${{ steps.release_info.outputs.is_released == 'true' }}
         uses: actions/setup-python@v7
         with:
           python-version: '3.11'
 
       - name: Cache PlatformIO packages and pip
-        if: ${{ steps.release.outputs.release_created }}
+        if: ${{ steps.release_info.outputs.is_released == 'true' }}
         uses: actions/cache@v6
         with:
           path: |
@@ -47,15 +56,15 @@ jobs:
             ${{ runner.os }}-pio-
 
       - name: Install PlatformIO Core
-        if: ${{ steps.release.outputs.release_created }}
+        if: ${{ steps.release_info.outputs.is_released == 'true' }}
         run: pip install --upgrade platformio
 
       - name: Compile Release Firmware
-        if: ${{ steps.release.outputs.release_created }}
+        if: ${{ steps.release_info.outputs.is_released == 'true' }}
         run: pio run
 
       - name: Assemble Firmware Package Bundle
-        if: ${{ steps.release.outputs.release_created }}
+        if: ${{ steps.release_info.outputs.is_released == 'true' }}
         run: |
           mkdir -p release_packages/firmware
           cp .pio/build/esp32-c3-devkitm-1/firmware.bin release_packages/
@@ -75,7 +84,7 @@ jobs:
 
       # Build Companion App (Web & Android APK)
       - name: Set up Node.js
-        if: ${{ steps.release.outputs.release_created }}
+        if: ${{ steps.release_info.outputs.is_released == 'true' }}
         uses: actions/setup-node@v7
         with:
           node-version: 22
@@ -83,14 +92,14 @@ jobs:
           cache-dependency-path: app/package-lock.json
 
       - name: Set up JDK 21
-        if: ${{ steps.release.outputs.release_created }}
+        if: ${{ steps.release_info.outputs.is_released == 'true' }}
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '21'
 
       - name: Build Web & Android Companion Packages
-        if: ${{ steps.release.outputs.release_created }}
+        if: ${{ steps.release_info.outputs.is_released == 'true' }}
         run: |
           cd app
           npm ci
@@ -105,10 +114,16 @@ jobs:
           cd ../..
 
       - name: Upload All Release Packages to GitHub Release
-        if: ${{ steps.release.outputs.release_created }}
+        if: ${{ steps.release_info.outputs.is_released == 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload "${{ steps.release.outputs.tag_name }}" \
+          TAG="${{ steps.release_info.outputs.tag_name }}"
+          if [ -z "$TAG" ]; then
+            git fetch --tags
+            TAG=$(git describe --tags --abbrev=0)
+          fi
+          echo "Uploading all release packages to GitHub Release ($TAG)..."
+          gh release upload "$TAG" \
             release_packages/* \
             --clobber
