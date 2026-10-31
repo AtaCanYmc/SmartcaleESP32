@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.3.0](https://github.com/AtaCanYmc/SmartcaleESP32/compare/smartscale-esp32-v1.2.0...smartscale-esp32-v1.3.0) (2026-10-31)
+
+
+### Features
+
+* add interactive Calibration Wizard with live BLE calibration sync and 8-language support ([5595fb8](https://github.com/AtaCanYmc/SmartcaleESP32/commit/5595fb855f4ce2881db007647b7cb692ae5c7048))
+* enhance BLE connection handling with automatic reconnect and improved callbacks ([a193213](https://github.com/AtaCanYmc/SmartcaleESP32/commit/a193213076f2b1c8703c89b3a8ffbbd00a7140e1))
+* **flasher:** refactor flasher ([b097ce2](https://github.com/AtaCanYmc/SmartcaleESP32/commit/b097ce25e98550ead1d72ce1b493622b6d4b2d8a))
+* **mock:** add configurable jitter option for Mock Mode to simulate sensor noise ([3c9b1a6](https://github.com/AtaCanYmc/SmartcaleESP32/commit/3c9b1a69519fc3782a61cb3b8026ee16d61400aa))
+* **mock:** add Mock Mode for hardware-free testing with synthetic weight injection and serial control ([0d08a87](https://github.com/AtaCanYmc/SmartcaleESP32/commit/0d08a87a5d1c9471956a46485c7a214d19af5825))
+* **mock:** enhance Mock Mode with configurable weight steps and dynamic interval adjustment ([d449e1f](https://github.com/AtaCanYmc/SmartcaleESP32/commit/d449e1f0b625c95b700a6ccd06836070b4922343))
+* **recipe:** add interactive Recipe & Mixing Mode with auto-tare workflow, portion nutrition, and AI prompt sharing ([d8c2d2c](https://github.com/AtaCanYmc/SmartcaleESP32/commit/d8c2d2cec78f96555cc5d5157882c965ad51131d))
+* **scanner:** integrate @zxing/library for universal cross-platform barcode scanning with torch and code-splitting ([be80193](https://github.com/AtaCanYmc/SmartcaleESP32/commit/be80193aa549ca3304947e69f3849a6c5a7031ba))
+* **ui:** add BLE auto-reconnect banners, retry action, and lifecycle tests ([7f1bc8d](https://github.com/AtaCanYmc/SmartcaleESP32/commit/7f1bc8dd831068096207f81a274125d08eacd022))
+* **web-flasher:** add web flasher deployment workflow and initial HTML setup for firmware installation ([d53b602](https://github.com/AtaCanYmc/SmartcaleESP32/commit/d53b6022d7070b45dac03911e245d0df556a456a))
+
+
+### Bug Fixes
+
+* **deploy:** enhance caching for PlatformIO packages and pip in deployment workflow ([e89b02b](https://github.com/AtaCanYmc/SmartcaleESP32/commit/e89b02b5ab1e9ab85a374a94132a78c70a42921f))
+* **ui:** define .modal-header with flexbox alignment and flex-shrink: 0 to prevent close buttons from wrapping ([cfa3983](https://github.com/AtaCanYmc/SmartcaleESP32/commit/cfa39839f3ee1b92a68304b4b877ac8d68e6da21))
+* **ui:** eliminate modal shifting in calibration wizard with stable height, grid alignment, and stepper connector ([e50aac2](https://github.com/AtaCanYmc/SmartcaleESP32/commit/e50aac28b826ad345be02cb3152159c3941473bc))
+
 ## [1.2.0](https://github.com/AtaCanYmc/SmartcaleESP32/compare/smartscale-esp32-v1.1.0...smartscale-esp32-v1.2.0) (2026-10-25)
 
 
