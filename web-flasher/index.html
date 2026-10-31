@@ -808,8 +808,105 @@
       color: var(--text-main);
     }
 
+    .btn-header-app {
+      background: var(--surface-2);
+      border: 1px solid var(--border-strong);
+      color: var(--text-main);
+      padding: 0.3rem 0.65rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background-color 0.15s, border-color 0.15s;
+    }
+
+    .btn-header-app:hover {
+      background: var(--surface-3);
+      border-color: var(--accent);
+      color: #ffffff;
+    }
+
+    /* Companion App Card */
+    .app-card {
+      background: var(--surface-1);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      scroll-margin-top: 5rem;
+    }
+
+    .app-card-grid {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 1.5rem;
+      align-items: center;
+    }
+
+    .app-features {
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 0.5rem;
+      margin: 1rem 0 1.25rem;
+    }
+
+    .app-feature-item {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.825rem;
+      color: var(--text-muted);
+    }
+
+    .app-feature-item svg {
+      color: var(--success);
+      flex-shrink: 0;
+    }
+
+    .qr-box {
+      background: #ffffff;
+      padding: 0.85rem;
+      border-radius: var(--radius-md);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      width: 175px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+      flex-shrink: 0;
+    }
+
+    .qr-box img {
+      width: 135px;
+      height: 135px;
+      display: block;
+    }
+
+    .qr-caption {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 0.4rem;
+      line-height: 1.2;
+    }
+
+    .qr-subtext {
+      font-size: 0.65rem;
+      color: #64748b;
+      margin-top: 0.15rem;
+    }
+
     /* Responsive */
     @media (max-width: 680px) {
+      .app-card-grid {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        text-align: center;
+      }
+      .app-features {
+        text-align: left;
+      }
       .field-row {
         grid-template-columns: 1fr;
       }
@@ -842,6 +939,7 @@
       </a>
 
       <nav class="header-nav" aria-label="External repository links">
+        <a href="#companion-app" class="btn-header-app">Get Mobile App</a>
         <a href="https://github.com/AtaCanYmc/SmartcaleESP32" target="_blank" rel="noopener noreferrer">Source Code</a>
         <a href="./firmware/firmware.bin" download>firmware.bin</a>
       </nav>
@@ -945,6 +1043,66 @@
             <div class="step-desc">Select "Erase device" for clean initialization. The flashing process will complete in approximately 30 seconds.</div>
           </li>
         </ol>
+      </div>
+
+      <!-- Next Step: Companion App -->
+      <div class="app-card" id="companion-app">
+        <div class="app-card-grid">
+          <div>
+            <div class="card-header" style="margin-bottom: 0.5rem;">
+              <h2>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: var(--accent);">
+                  <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>
+                </svg>
+                Next Step: Smartcale Companion App
+              </h2>
+              <p>Connect your phone to the scale over Bluetooth Low Energy (BLE) to view live weight, control Tare, log nutritional macros, and mix recipes.</p>
+            </div>
+
+            <ul class="app-features">
+              <li class="app-feature-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Real-Time 10Hz BLE Telemetry
+              </li>
+              <li class="app-feature-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Remote Tare & Calibration
+              </li>
+              <li class="app-feature-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Barcode Food & Nutrition Scanner
+              </li>
+              <li class="app-feature-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Interactive Recipe Mode with Auto-Tare
+              </li>
+            </ul>
+
+            <div style="display: flex; gap: 0.65rem; align-items: center; flex-wrap: wrap;">
+              <a href="https://github.com/AtaCanYmc/SmartcaleESP32/releases/latest/download/smartcale-companion-android.apk" class="btn btn-primary" download>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Download Android APK (.apk)
+              </a>
+
+              <a href="https://github.com/AtaCanYmc/SmartcaleESP32/releases/latest" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
+                All Releases & Assets
+              </a>
+            </div>
+
+            <div style="margin-top: 0.75rem; font-size: 0.775rem; color: var(--text-faint);">
+              Platforms: <strong>Android 8+ (APK)</strong> &bull; <strong>iOS (Xcode / Capacitor in <code>app/ios</code>)</strong> &bull; <strong>Web (Chrome Web Bluetooth)</strong>
+            </div>
+          </div>
+
+          <!-- QR Code Box for Instant Mobile Download -->
+          <div class="qr-box">
+            <img src="./qr-apk.svg" alt="Scan to download Android APK" />
+            <div class="qr-caption">Scan with Phone</div>
+            <div class="qr-subtext">Direct Android APK download</div>
+          </div>
+        </div>
       </div>
 
       <!-- Hardware Specs -->
