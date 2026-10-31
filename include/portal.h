@@ -12,6 +12,7 @@ public:
     static void begin(const AppConfig& currentConfig) {
         s_config = currentConfig;
         s_restartPending = false;
+        s_csrfToken = String(random(100000, 999999)) + String(millis());
 
         WiFi.disconnect(true);
         delay(20);
@@ -35,9 +36,10 @@ public:
             s_networkListHtml = "<option value=\"\">No networks found</option>";
         } else {
             for (int i = 0; i < n; ++i) {
-                String ssid = WiFi.SSID(i);
+                String rawSsid = WiFi.SSID(i);
+                String safeSsid = escapeHtml(rawSsid);
                 int rssi = WiFi.RSSI(i);
-                s_networkListHtml += "<option value=\"" + ssid + "\">" + ssid + " (" + String(rssi) + " dBm)</option>";
+                s_networkListHtml += "<option value=\"" + safeSsid + "\">" + safeSsid + " (" + String(rssi) + " dBm)</option>";
             }
         }
 
@@ -75,8 +77,26 @@ private:
     static inline WebServer s_webServer{80};
     static inline AppConfig s_config;
     static inline String s_networkListHtml;
+    static inline String s_csrfToken;
     static inline bool s_restartPending = false;
     static inline unsigned long s_restartTime = 0;
+
+    static String escapeHtml(const String& input) {
+        String output;
+        output.reserve(input.length() + 16);
+        for (size_t i = 0; i < input.length(); ++i) {
+            char c = input[i];
+            switch (c) {
+                case '&':  output += "&amp;"; break;
+                case '<':  output += "&lt;"; break;
+                case '>':  output += "&gt;"; break;
+                case '"':  output += "&quot;"; break;
+                case '\'': output += "&#39;"; break;
+                default:   output += c; break;
+            }
+        }
+        return output;
+    }
 
     static void handleRedirect() {
         s_webServer.sendHeader("Location", "http://" + WiFi.softAPIP().toString() + "/", true);
@@ -118,6 +138,9 @@ function selectSsid(val) {
     <h1>Smartcale ESP32</h1>
     <p class="desc">Device Configuration & Network Settings</p>
     <form action="/save" method="POST">
+        <input type="hidden" name="token" value=")rawliteral";
+        html += s_csrfToken;
+        html += R"rawliteral(">
         <label for="network_select">Available Wi-Fi Networks</label>
         <select id="network_select" onchange="selectSsid(this.value)">
             <option value="">-- Select Network (or enter manually) --</option>
@@ -129,18 +152,18 @@ function selectSsid(val) {
         </select>
         <label for="ssid_input">Wi-Fi Network (SSID)</label>
         <input type="text" id="ssid_input" name="ssid" value=")rawliteral";
-        html += s_config.wifiSsid;
-        html += R"rawliteral(" required placeholder="Network Name">
+        html += escapeHtml(s_config.wifiSsid);
+        html += R"rawliteral(" maxlength="32" required placeholder="Network Name">
 
         <label for="pass_input">Wi-Fi Password</label>
-        <input type="password" id="pass_input" name="pass" value=")rawliteral";
-        html += s_config.wifiPass;
-        html += R"rawliteral(" placeholder="Network Password">
+        <input type="password" id="pass_input" name="pass" value="" maxlength="64" placeholder=")rawliteral";
+        html += (s_config.wifiPass.length() > 0 ? "•••••••• (Leave blank to keep current)" : "Network Password");
+        html += R"rawliteral(">
 
         <label for="blename_input">BLE Device Name</label>
         <input type="text" id="blename_input" name="blename" value=")rawliteral";
-        html += s_config.bleName;
-        html += R"rawliteral(" required placeholder="SmartKitchenScale">
+        html += escapeHtml(s_config.bleName);
+        html += R"rawliteral(" maxlength="32" required placeholder="SmartKitchenScale">
         <div class="hint">Bluetooth device name visible on mobile</div>
 
         <label for="cal_input">Calibration Factor</label>
@@ -152,6 +175,9 @@ function selectSsid(val) {
         <button type="submit" class="btn btn-primary">Save and Restart</button>
     </form>
     <form action="/reset" method="POST" onsubmit="return confirm('All settings will be reset to factory defaults. Are you sure?');">
+        <input type="hidden" name="token" value=")rawliteral";
+        html += s_csrfToken;
+        html += R"rawliteral(">
         <button type="submit" class="btn btn-danger">Reset to Factory Defaults</button>
     </form>
 </div>
@@ -162,21 +188,35 @@ function selectSsid(val) {
     }
 
     static void handleSave() {
+        if (!s_webServer.hasArg("token") || s_webServer.arg("token") != s_csrfToken) {
+            s_webServer.send(403, "text/plain", "Forbidden: Invalid CSRF token");
+            return;
+        }
+
         if (s_webServer.hasArg("ssid")) {
-            s_config.wifiSsid = s_webServer.arg("ssid");
-            s_config.wifiSsid.trim();
+            String ssid = s_webServer.arg("ssid");
+            ssid.trim();
+            if (ssid.length() > 0 && ssid.length() <= 32) {
+                s_config.wifiSsid = ssid;
+            }
         }
         if (s_webServer.hasArg("pass")) {
-            s_config.wifiPass = s_webServer.arg("pass");
-            s_config.wifiPass.trim();
+            String pass = s_webServer.arg("pass");
+            pass.trim();
+            if (pass.length() > 0 && pass.length() <= 64) {
+                s_config.wifiPass = pass;
+            }
         }
         if (s_webServer.hasArg("blename")) {
-            s_config.bleName = s_webServer.arg("blename");
-            s_config.bleName.trim();
+            String ble = s_webServer.arg("blename");
+            ble.trim();
+            if (ble.length() > 0 && ble.length() <= 32) {
+                s_config.bleName = ble;
+            }
         }
         if (s_webServer.hasArg("cal")) {
             float val = s_webServer.arg("cal").toFloat();
-            if (val > 0.0f) {
+            if (val > 0.0f && val <= 50000.0f) {
                 s_config.calibrationFactor = val;
             }
         }
@@ -210,6 +250,11 @@ p { color: #94a3b8; font-size: 14px; }
     }
 
     static void handleReset() {
+        if (!s_webServer.hasArg("token") || s_webServer.arg("token") != s_csrfToken) {
+            s_webServer.send(403, "text/plain", "Forbidden: Invalid CSRF token");
+            return;
+        }
+
         ConfigStorage::reset();
         String responseHtml = R"rawliteral(<!DOCTYPE html>
 <html lang="en">

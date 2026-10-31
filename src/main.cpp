@@ -42,8 +42,18 @@ void triggerTareFromBle() {
 
 void onCalFactorFromBle(float factor) {
     LOG_I("BLE", "Remote calibration factor update: %.1f", factor);
-    g_appConfig.calibrationFactor = factor;
-    ConfigStorage::save(g_appConfig);
+    static unsigned long s_lastSaveMs = 0;
+    unsigned long now = millis();
+
+    // Prevent flash memory wear-out: only persist to NVS if factor changed and >=3s elapsed
+    if (fabs(g_appConfig.calibrationFactor - factor) >= 0.05f && (now - s_lastSaveMs >= 3000 || s_lastSaveMs == 0)) {
+        s_lastSaveMs = now;
+        g_appConfig.calibrationFactor = factor;
+        ConfigStorage::save(g_appConfig);
+        LOG_I("BLE", "Calibration factor persisted to NVS");
+    } else {
+        g_appConfig.calibrationFactor = factor;
+    }
     scale.set_scale(factor);
 }
 

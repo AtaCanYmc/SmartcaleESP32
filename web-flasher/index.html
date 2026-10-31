@@ -9,6 +9,7 @@
   <meta name="author" content="Ata Can" />
   <meta name="robots" content="index, follow" />
   <meta name="theme-color" content="#090d14" id="metaThemeColor" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://unpkg.com; font-src 'self';" />
 
   <script src="./i18n.js"></script>
   <script>
@@ -45,7 +46,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png" />
 
   <!-- ESP Web Tools web component -->
-  <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+  <script type="module" crossorigin="anonymous" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
 
   <style>
     :root, [data-theme="dark"] {
