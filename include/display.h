@@ -5,9 +5,27 @@
 #include "config.h"
 
 static U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset= */ U8X8_PIN_NONE);
+static bool g_displayFound = false;
 
 inline void initDisplay() {
     Wire.begin(PIN_I2C_SDA, PIN_I2C_SCL);
+    Wire.setTimeOut(20);
+
+    // Check if display is responding on I2C (0x3C or 0x3D)
+    Wire.beginTransmission(0x3C);
+    if (Wire.endTransmission() == 0) {
+        g_displayFound = true;
+    } else {
+        Wire.beginTransmission(0x3D);
+        if (Wire.endTransmission() == 0) {
+            g_displayFound = true;
+        }
+    }
+
+    if (!g_displayFound) {
+        return;
+    }
+
     u8g2.begin();
 
     // Boot splash screen
@@ -19,6 +37,7 @@ inline void initDisplay() {
 }
 
 inline void renderDisplay(float weightGrams, bool bleConnected) {
+    if (!g_displayFound) return;
     u8g2.clearBuffer();
 
     u8g2.setFont(u8g2_font_6x10_tf);
@@ -48,6 +67,7 @@ inline void renderDisplay(float weightGrams, bool bleConnected) {
 }
 
 inline void renderConfigPortal(const char* ssid, const char* ip) {
+    if (!g_displayFound) return;
     u8g2.clearBuffer();
 
     u8g2.setFont(u8g2_font_6x10_tf);

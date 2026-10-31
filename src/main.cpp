@@ -74,7 +74,7 @@ void setup() {
     LOG_I("BOOT", "NVS Config: configured=%d, SSID='%s', BLE='%s', CAL=%.1f",
           isConfigured, g_appConfig.wifiSsid.c_str(), g_appConfig.bleName.c_str(), g_appConfig.calibrationFactor);
 
-    if (forceSetupMode || !isConfigured) {
+    if (forceSetupMode || (!isConfigured && !ENABLE_MOCK_SCALE)) {
         g_setupMode = true;
         LOG_W("BOOT", "Launching Setup AP Mode (SSID: %s)", SETUP_AP_SSID);
         ConfigPortal::begin(g_appConfig);
@@ -92,6 +92,10 @@ void setup() {
         WiFi.begin(g_appConfig.wifiSsid.c_str(), g_appConfig.wifiPass.c_str());
     }
 
+#if ENABLE_MOCK_SCALE
+    LOG_I("SCALE", "=== MOCK SCALE MODE ACTIVE ===");
+    LOG_I("SCALE", "No hardware modules required. Type a weight (e.g. 150) in Serial Monitor to set weight manually, or -1 for auto-cycle.");
+#else
     scale.begin(PIN_HX711_DT, PIN_HX711_SCK);
     scale.set_scale(g_appConfig.calibrationFactor);
 
@@ -106,6 +110,7 @@ void setup() {
     } else {
         LOG_W("SCALE", "Sensor not detected or busy on power-up");
     }
+#endif
 
     LOG_I("BOOT", "Initialization complete. Ready.");
 }
@@ -124,6 +129,48 @@ void loop() {
 
     unsigned long now = millis();
 
+#if ENABLE_MOCK_SCALE
+    static float s_mockGross = 0.0f;
+    static float s_mockTareOffset = 0.0f;
+    static unsigned long s_lastStepMs = 0;
+    static size_t s_stepIdx = 0;
+    static bool s_manualWeightMode = false;
+
+    // Check if user inputs weight via Serial Monitor
+    if (Serial.available()) {
+        float inputVal = Serial.parseFloat();
+        if (inputVal >= 0.0f) {
+            s_mockGross = inputVal;
+            s_manualWeightMode = true;
+            LOG_I("MOCK", "Manual weight set from Serial: %.1fg", s_mockGross);
+        } else if (inputVal < 0.0f) {
+            s_manualWeightMode = false;
+            LOG_I("MOCK", "Resumed auto demo weight cycle");
+        }
+    }
+
+    // Auto-cycle demo weights every 4 seconds if not in manual mode
+    if (!s_manualWeightMode && (now - s_lastStepMs >= 4000)) {
+        s_lastStepMs = now;
+        static const float kDemoWeights[] = { 0.0f, 45.5f, 128.2f, 250.0f, 375.4f, 0.0f };
+        s_mockGross = kDemoWeights[s_stepIdx];
+        s_stepIdx = (s_stepIdx + 1) % (sizeof(kDemoWeights) / sizeof(kDemoWeights[0]));
+        LOG_I("MOCK", "Auto simulated weight: %.1fg", s_mockGross);
+    }
+
+    if (g_tareRequested) {
+        g_tareRequested = false;
+        s_mockTareOffset = s_mockGross;
+        LOG_I("MOCK", "Tare requested -> Offset set to %.1fg (Display = 0.0g)", s_mockTareOffset);
+    }
+
+    float net = s_mockGross - s_mockTareOffset;
+    if (net < 0.0f) net = 0.0f;
+
+    // Subtle natural jitter (+/-0.1g) when weight > 0
+    float jitter = (net > 0.5f) ? (((rand() % 3) - 1) * 0.1f) : 0.0f;
+    g_displayWeight = net + jitter;
+#else
     if (g_tareRequested) {
         g_tareRequested = false;
         if (scale.is_ready()) {
@@ -140,6 +187,7 @@ void loop() {
         g_filteredWeight = (FILTER_ALPHA * raw) + ((1.0f - FILTER_ALPHA) * g_filteredWeight);
         g_displayWeight = (fabs(g_filteredWeight) <= DEADBAND_GRAMS) ? 0.0f : g_filteredWeight;
     }
+#endif
 
     if (now - g_lastBleMs >= INTERVAL_BLE_NOTIFY_MS) {
         g_lastBleMs = now;

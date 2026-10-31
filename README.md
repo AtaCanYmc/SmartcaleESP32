@@ -44,6 +44,7 @@ This repository contains the production firmware for a digital kitchen scale bui
 - **Non-blocking Dispatch Loop**: Driven entirely by `millis()` interval registers, maintaining responsive 100ms BLE updates and 200ms display frame rates.
 - **Hardware Interrupt Tare**: Falling-edge interrupt on GPIO 2 with 200ms hardware-debounced flag assertion.
 - **Noise Filtration & Deadband**: Exponential Moving Average (EMA, alpha = 0.25) combined with a +/- 0.4g zero-point deadband to suppress idle mechanical jitter.
+- **Hardware-Free Mock Mode**: Built-in test simulation generating realistic weight cycles with Serial Monitor injection for testing the companion app prior to wiring sensors.
 
 ---
 
@@ -58,6 +59,7 @@ Detailed engineering guides and architectural specifications are organized in th
 | [BLE GATT Specification](docs/ble_protocol.md) | Service UUIDs, characteristic descriptors, notification payloads, and command sequences |
 | [Wi-Fi Provisioning & Portal](docs/provisioning.md) | Captive portal DNS hijacking, HTTP endpoints, and NVS storage layout |
 | [Calibration & Troubleshooting](docs/calibration.md) | Mathematical formulas, physical calibration procedure, and troubleshooting matrix |
+| [Mock / Simulation Mode](docs/mock_mode.md) | Hardware-free testing guide, synthetic weight injection, serial monitor control, and tare testing |
 
 ---
 

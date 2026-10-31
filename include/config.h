@@ -13,6 +13,11 @@ static constexpr float DEFAULT_CALIBRATION_FACTOR = 420.0f; // Raw counts per gr
 static constexpr float FILTER_ALPHA               = 0.25f;  // Exponential moving average weight
 static constexpr float DEADBAND_GRAMS             = 0.40f;  // [-0.4g, +0.4g] clamped to 0.0g
 
+// Simulation / Mock Mode (test without HX711/load cell connected)
+#ifndef ENABLE_MOCK_SCALE
+#define ENABLE_MOCK_SCALE true
+#endif
+
 // Loop Timing (ms)
 static constexpr unsigned long INTERVAL_BLE_NOTIFY_MS = 100;
 static constexpr unsigned long INTERVAL_DISPLAY_MS    = 200;

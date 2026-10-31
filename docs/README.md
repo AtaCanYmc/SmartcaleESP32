@@ -15,6 +15,7 @@ This directory provides in-depth technical documentation for the SmartcaleESP32 
 | [BLE GATT Protocol](ble_protocol.md) | Wireless Interface | Service and characteristic UUIDs, notification payloads, tare commands |
 | [Provisioning & Web Portal](provisioning.md) | Initial Configuration | SoftAP captive portal, DNS redirection, NVS parameter persistence |
 | [Calibration & Troubleshooting](calibration.md) | Sensor Adjustment | Load cell calibration formula, reference mass verification, issue diagnosis |
+| [Mock / Simulation Mode](mock_mode.md) | Hardware-Free Testing | Module-less testing, synthetic weight injection, serial control, tare validation |
 
 ---
 
