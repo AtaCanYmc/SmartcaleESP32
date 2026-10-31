@@ -1370,7 +1370,7 @@
 
         <div class="field-row">
           <div class="field-group">
-            <label class="field-label" for="customBaud">Programming Baud Rate</label>
+            <label class="field-label" for="customBaud" data-i18n="labelProgBaud">Programming Baud Rate</label>
             <select id="customBaud" class="select-control">
               <option value="921600" selected>921600 (High Speed)</option>
               <option value="460800">460800 (Fast)</option>
@@ -1378,13 +1378,13 @@
             </select>
           </div>
           <div class="field-group">
-            <label class="field-label">Target Architecture</label>
+            <label class="field-label" data-i18n="labelTargetArch">Target Architecture</label>
             <input type="text" class="input-control" value="ESP32-C3 (Auto-detects ROM)" disabled />
           </div>
         </div>
 
         <div class="field-group">
-          <label class="field-label">Binary Partitions & Memory Offsets</label>
+          <label class="field-label" data-i18n="labelPartitionsOffsets">Binary Partitions & Memory Offsets</label>
 
           <!-- Bootloader -->
           <div class="file-row">
@@ -1406,7 +1406,7 @@
         </div>
 
         <div style="display: flex; gap: 0.65rem; flex-wrap: wrap; margin-top: 1rem;">
-          <button id="btnCustomConnect" class="btn btn-primary">Connect Port</button>
+          <button id="btnCustomConnect" class="btn btn-primary" data-i18n="btnConnectPort">Connect Port</button>
           <button id="btnCustomProgram" class="btn btn-secondary" disabled data-i18n="btnProgramCustom">Program Custom Partitions</button>
           <button id="btnCustomErase" class="btn btn-danger" disabled data-i18n="btnEraseFlash">Erase Entire Flash</button>
         </div>
@@ -1426,8 +1426,8 @@
         <div style="margin-top: 1.25rem;">
           <div class="terminal-wrapper" style="height: 200px;">
             <div class="terminal-bar">
-              <span style="font-family: var(--font-mono); font-size: 0.775rem; color: var(--text-muted);">esptool-js Engine Output</span>
-              <button id="btnClearCustomLog" class="btn-chip">Clear</button>
+              <span style="font-family: var(--font-mono); font-size: 0.775rem; color: var(--text-muted);" data-i18n="esptoolOutputTitle">esptool-js Engine Output</span>
+              <button id="btnClearCustomLog" class="btn-chip" data-i18n="clearTerminal">Clear</button>
             </div>
             <div id="customLogBody" class="terminal-stream" style="font-size: 0.775rem;">Ready. Select binary files and connect port to begin.</div>
           </div>
@@ -1438,20 +1438,20 @@
     <!-- Diagnostics & Hardware Checklist -->
     <section class="card">
       <div class="card-header">
-        <h2>Diagnostics & Hardware Troubleshooting</h2>
-        <p>Common issues encountered during USB flashing and serial verification.</p>
+        <h2 data-i18n="diagTitle">Diagnostics & Hardware Troubleshooting</h2>
+        <p data-i18n="diagDesc">Common issues encountered during USB flashing and serial verification.</p>
       </div>
 
       <details>
-        <summary>No serial port appears in the browser popup</summary>
-        <p>1. <strong>Data Cable Check:</strong> Many USB cables packaged with power banks only deliver 5V power without D+/D- data pins. Ensure your cable supports data transfer.<br/>
+        <summary data-i18n="trouble1Title">No serial port appears in the browser popup</summary>
+        <p data-i18n-html="trouble1Desc">1. <strong>Data Cable Check:</strong> Many USB cables packaged with power banks only deliver 5V power without D+/D- data pins. Ensure your cable supports data transfer.<br/>
         2. <strong>USB Drivers:</strong> ESP32-C3 Super Mini boards feature native USB CDC and work without external drivers on macOS and Windows 11. Legacy DevKits with CP2102 or CH340 bridge chips require their respective USB UART VCP drivers.<br/>
         3. <strong>Linux Permissions:</strong> Grant non-root user access to serial nodes via <code>sudo usermod -a -G dialout $USER</code> and log back in.</p>
       </details>
 
       <details>
-        <summary>Error: "Failed to connect to ESP32" or "Timed out waiting for packet header"</summary>
-        <p>The chip did not enter ROM Bootloader mode automatically. Perform manual bootloader strapping:<br/>
+        <summary data-i18n="trouble2Title">Error: "Failed to connect to ESP32" or "Timed out waiting for packet header"</summary>
+        <p data-i18n-html="trouble2Desc">The chip did not enter ROM Bootloader mode automatically. Perform manual bootloader strapping:<br/>
         1. Hold the <strong>BOOT (IO9)</strong> button on the ESP32 board.<br/>
         2. Briefly press and release the <strong>RST (Reset)</strong> button once.<br/>
         3. Release the <strong>BOOT</strong> button.<br/>
@@ -1459,8 +1459,8 @@
       </details>
 
       <details>
-        <summary>Firmware flashes successfully but weight output reads 0 or does not change</summary>
-        <p>Verify load cell and display pinout connections:<br/>
+        <summary data-i18n="trouble3Title">Firmware flashes successfully but weight output reads 0 or does not change</summary>
+        <p data-i18n-html="trouble3Desc">Verify load cell and display pinout connections:<br/>
         &bull; HX711 Data (DT) &rarr; GPIO 0, Clock (SCK) &rarr; GPIO 1.<br/>
         &bull; OLED Display: SDA &rarr; GPIO 8, SCL &rarr; GPIO 9.<br/>
         &bull; If testing prior to wiring modules, verify that <code>ENABLE_MOCK_SCALE true</code> is set in <code>include/config.h</code> to simulate weight telemetry.</p>
