@@ -1,0 +1,19 @@
+/* TEAM */
+Creator & Developer: Ata Can
+Project: Smartcale ESP32 - Smart Kitchen Scale Web Flasher
+Repository: https://github.com/AtaCanYmc/SmartcaleESP32
+Language: English & Turkish
+
+/* THANKS */
+Open Source Tools:
+- Espressif Systems (ESP32-C3 RISC-V SoC)
+- ESP Web Tools (https://esphome.github.io/esp-web-tools/)
+- esptool-js (https://github.com/espressif/esptool-js)
+- PlatformIO Ecosystem
+
+/* TECHNOLOGY & ARCHITECTURE */
+Interface: HTML5, Modern CSS, Web Serial API
+Target Hardware: ESP32-C3 Super Mini / DevKitM-1
+Baud Rates: 115200 (Console), 921600 (High-Speed Flashing)
+License: Apache-2.0
+Standards: Semantic HTML, WCAG AA Accessibility, Anti-Slop UI

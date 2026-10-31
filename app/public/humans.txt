@@ -1,0 +1,21 @@
+/* TEAM */
+Creator & Developer: Ata Can
+Project: Smartcale Companion App (Mobile & Web)
+Repository: https://github.com/AtaCanYmc/SmartcaleESP32
+Application: Smart Digital Kitchen Scale Companion & Nutrition Tracker
+Location: Turkey
+
+/* THANKS */
+Open Source Ecosystem:
+- React Team & TypeScript
+- Ionic & Capacitor Team (@capacitor-community/bluetooth-le)
+- Vite build tooling & Lucide Icons
+- Open Food Facts API (Open Data)
+
+/* TECHNOLOGY & ARCHITECTURE */
+Framework: React 19, TypeScript
+Build: Vite 6
+Cross-Platform: Capacitor 8 (Android, iOS & Web Bluetooth)
+State & Persistence: LocalStorage, Web Bluetooth GATT Client
+Design: Mobile-first, Dark/Light Themes, Multi-language (EN/TR)
+License: Apache-2.0

@@ -1,0 +1,42 @@
+# Smartcale ESP32 - Web Flasher & Hardware Telemetry
+
+> In-browser firmware flasher and live serial diagnostics console for the Smartcale ESP32-C3 smart kitchen scale.
+
+The Web Flasher enables users and developers to flash production firmware bundles, program custom binaries via Web Serial, and interact with the live serial console to inspect sensor readings or control Mock Mode testing.
+
+## System Architecture
+
+- **Target MCU:** ESP32-C3 (32-bit RISC-V @ 160MHz)
+- **Flash Offsets:**
+  - `0x0000`: Bootloader (`bootloader.bin`)
+  - `0x8000`: Partition Table (`partitions.bin`) - `huge_app.csv` (3.14MB App Partition)
+  - `0x10000`: Firmware Application (`firmware.bin`)
+- **Default Baud Rates:**
+  - Programming: 921600 baud
+  - Serial Diagnostics: 115200 baud (8-N-1)
+
+## Hardware Pinout
+
+- **HX711 24-bit ADC:**
+  - DT (Data): GPIO 0
+  - SCK (Clock): GPIO 1
+- **Tare Tactile Button:** GPIO 2 (Active Low, internal `INPUT_PULLUP` to GND)
+- **OLED Display (SH1106 I2C):**
+  - SDA: GPIO 8
+  - SCL: GPIO 9
+
+## Mock Mode & Serial Commands
+
+When `ENABLE_MOCK_SCALE` is active, the scale can be exercised over USB Serial without physical sensors:
+- `<number>` (e.g. `150`): Set simulated gross weight in grams
+- `-1`: Resume automatic multi-step weight cycling
+- `i<ms>` (e.g. `i2000`): Change automated cycle interval in milliseconds
+- `'T'` or `'t'`: Trigger Tare (zero current reading)
+
+## Documentation & Repository Links
+
+- [Repository Root](https://github.com/AtaCanYmc/SmartcaleESP32)
+- [Firmware Documentation](https://github.com/AtaCanYmc/SmartcaleESP32/tree/main/docs)
+- [BLE Protocol Specification](https://github.com/AtaCanYmc/SmartcaleESP32/blob/main/docs/ble_protocol.md)
+- [Hardware Schematics](https://github.com/AtaCanYmc/SmartcaleESP32/blob/main/docs/hardware.md)
+- [Mock Mode Guide](https://github.com/AtaCanYmc/SmartcaleESP32/blob/main/docs/mock_mode.md)

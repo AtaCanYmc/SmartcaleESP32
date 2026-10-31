@@ -172,7 +172,7 @@ For complete packet formats, CCCD subscription requirements, and sequence diagra
 
 Flash and install the latest firmware directly from your web browser via Web Serial (no toolchain or drivers needed):
 
-1. Open **[Smartcale Web Flasher](https://atacan.github.io/SmartcaleESP32/)** in Chrome, Edge, or Opera.
+1. Open **[Smartcale Web Flasher](https://atacanymc.github.io/SmartcaleESP32/)** in Chrome, Edge, or Opera.
 2. Connect your ESP32-C3 via a USB data cable.
 3. Click **Connect & Install Firmware** and follow the on-screen prompt.
 
