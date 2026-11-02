@@ -1,13 +1,20 @@
 #pragma once
 #include <Arduino.h>
+#include "config.h"
+
+#if ENABLE_OLED
 #include <Wire.h>
 #include <U8g2lib.h>
-#include "config.h"
 
 static U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset= */ U8X8_PIN_NONE);
 static bool g_displayFound = false;
 
-inline void initDisplay() {
+inline void initDisplay(bool enabled = true) {
+    if (!enabled) {
+        g_displayFound = false;
+        return;
+    }
+
     Wire.begin(PIN_I2C_SDA, PIN_I2C_SCL);
     Wire.setTimeOut(20);
 
@@ -87,3 +94,28 @@ inline void renderConfigPortal(const char* ssid, const char* ip) {
     u8g2.sendBuffer();
 }
 
+inline bool isDisplayFound() {
+    return g_displayFound;
+}
+
+#else
+
+inline void initDisplay(bool enabled = true) {
+    (void)enabled;
+}
+
+inline void renderDisplay(float weightGrams, bool bleConnected) {
+    (void)weightGrams;
+    (void)bleConnected;
+}
+
+inline void renderConfigPortal(const char* ssid, const char* ip) {
+    (void)ssid;
+    (void)ip;
+}
+
+inline bool isDisplayFound() {
+    return false;
+}
+
+#endif

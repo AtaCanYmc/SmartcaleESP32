@@ -83,13 +83,14 @@ Renders the complete mobile-responsive HTML configuration page.
   - Wi-Fi WPA2 passphrase input.
   - Custom BLE device name input.
   - Load cell calibration factor floating point input.
+  - Enable OLED Display checkbox (toggle I2C display updates on/off for headless use).
   - Save Settings submit button.
   - Factory Reset submit button.
 
 ### 2. `POST /save`
 Processes submitted configuration parameters:
 
-- Validates and sanitizes incoming fields: `ssid`, `password`, `ble_name`, `cal_factor`.
+- Validates and sanitizes incoming fields: `ssid`, `pass`, `blename`, `cal`, `oled`.
 - Commits values to non-volatile flash storage using ESP32 Preferences API.
 - Renders a confirmation page indicating impending restart.
 - Arm an asynchronous 1500ms software timer before triggering `ESP.restart()`.
@@ -109,7 +110,8 @@ Parameters persist across power cycles using the ESP32 Preferences flash storage
 
 | Preference Key | Data Type | Maximum Length | Default Value | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| `wifi_ssid` | String | 32 characters | `""` | Target Wi-Fi network SSID |
-| `wifi_pass` | String | 64 characters | `""` | WPA/WPA2/WPA3 network password |
-| `ble_name` | String | 32 characters | `"SmartKitchenScale"` | Advertised BLE device name |
-| `cal_factor` | Float | 4 bytes (IEEE 754) | `420.0f` | Load cell ADC to gram scaling divisor |
+| `ssid` | String | 32 characters | `""` | Target Wi-Fi network SSID |
+| `pass` | String | 64 characters | `""` | WPA/WPA2/WPA3 network password |
+| `blename` | String | 32 characters | `"SmartKitchenScale"` | Advertised BLE device name |
+| `cal` | Float | 4 bytes (IEEE 754) | `420.0f` | Load cell ADC to gram scaling divisor |
+| `oled` | Boolean | 1 byte | `true` (`ENABLE_OLED`) | Controls whether OLED display updates are enabled |

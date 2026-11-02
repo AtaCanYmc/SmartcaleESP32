@@ -230,6 +230,12 @@ make app-dev          # starts Vite dev server with Web Bluetooth
 
 All operational constants and calibration parameters reside in [include/config.h](include/config.h).
 
+### Optional OLED Display
+The I2C OLED display (SH1106 / SSD1306) is optional:
+- **Compile-time**: Set `#define ENABLE_OLED false` in `include/config.h` (or `-D ENABLE_OLED=false` in PlatformIO) to compile out U8g2 and display code, saving ~48KB flash and ~1.7KB RAM.
+- **Runtime**: Configure via the built-in SoftAP Web Setup Portal (`http://192.168.4.1`) to toggle the display on or off dynamically without recompiling.
+- **Auto-detection**: If enabled in configuration but not physically plugged in, the firmware detects its absence during I2C probe and safely runs headless without stalling.
+
 ### Calibration Procedure
 
 1. Set `CALIBRATION_FACTOR` in `include/config.h` to `1.0f`.

@@ -8,6 +8,7 @@ struct AppConfig {
     String wifiPass;
     String bleName;
     float calibrationFactor;
+    bool enableOled;
 };
 
 class ConfigStorage {
@@ -20,6 +21,7 @@ public:
             config.wifiPass = "";
             config.bleName = DEFAULT_BLE_NAME;
             config.calibrationFactor = DEFAULT_CALIBRATION_FACTOR;
+            config.enableOled = ENABLE_OLED;
             return false;
         }
 
@@ -27,6 +29,7 @@ public:
         config.wifiPass = prefs.getString("pass", "");
         config.bleName = prefs.getString("blename", DEFAULT_BLE_NAME);
         config.calibrationFactor = prefs.getFloat("cal", DEFAULT_CALIBRATION_FACTOR);
+        config.enableOled = prefs.getBool("oled", ENABLE_OLED);
 
         if (config.bleName.length() == 0) {
             config.bleName = DEFAULT_BLE_NAME;
@@ -49,6 +52,7 @@ public:
         prefs.putString("pass", config.wifiPass);
         prefs.putString("blename", config.bleName);
         prefs.putFloat("cal", config.calibrationFactor);
+        prefs.putBool("oled", config.enableOled);
 
         prefs.end();
         return true;

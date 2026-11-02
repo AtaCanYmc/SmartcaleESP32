@@ -172,6 +172,18 @@ function selectSsid(val) {
         html += R"rawliteral(" required>
         <div class="hint">Default: 420.0 (Raw ADC / Reference Weight)</div>
 
+        <div style="margin-bottom: 16px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; text-transform: none; font-size: 14px; font-weight: normal; color: #f8fafc; margin-bottom: 4px;">
+                <input type="checkbox" id="oled_input" name="oled" value="1" )rawliteral";
+        if (s_config.enableOled) {
+            html += "checked ";
+        }
+        html += R"rawliteral(style="width: 18px; min-height: 18px; margin-bottom: 0; accent-color: #0284c7;">
+                <span>Enable OLED Display</span>
+            </label>
+            <div class="hint" style="margin-top: 2px; margin-bottom: 0;">Uncheck if operating headless without an I2C display</div>
+        </div>
+
         <button type="submit" class="btn btn-primary">Save and Restart</button>
     </form>
     <form action="/reset" method="POST" onsubmit="return confirm('All settings will be reset to factory defaults. Are you sure?');">
@@ -220,6 +232,7 @@ function selectSsid(val) {
                 s_config.calibrationFactor = val;
             }
         }
+        s_config.enableOled = s_webServer.hasArg("oled");
 
         ConfigStorage::save(s_config);
 

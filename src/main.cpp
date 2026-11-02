@@ -78,17 +78,19 @@ void setup() {
         }
     }
 
-    initDisplay();
-
     bool isConfigured = ConfigStorage::load(g_appConfig);
-    LOG_I("BOOT", "NVS Config: configured=%d, SSID='%s', BLE='%s', CAL=%.1f",
-          isConfigured, g_appConfig.wifiSsid.c_str(), g_appConfig.bleName.c_str(), g_appConfig.calibrationFactor);
+    LOG_I("BOOT", "NVS Config: configured=%d, SSID='%s', BLE='%s', CAL=%.1f, OLED=%d",
+          isConfigured, g_appConfig.wifiSsid.c_str(), g_appConfig.bleName.c_str(), g_appConfig.calibrationFactor, g_appConfig.enableOled);
+
+    initDisplay(g_appConfig.enableOled);
 
     if (forceSetupMode || (!isConfigured && !ENABLE_MOCK_SCALE)) {
         g_setupMode = true;
         LOG_W("BOOT", "Launching Setup AP Mode (SSID: %s)", SETUP_AP_SSID);
         ConfigPortal::begin(g_appConfig);
-        renderConfigPortal(SETUP_AP_SSID, ConfigPortal::getApIp().toString().c_str());
+        if (g_appConfig.enableOled) {
+            renderConfigPortal(SETUP_AP_SSID, ConfigPortal::getApIp().toString().c_str());
+        }
         return;
     }
 
@@ -131,7 +133,7 @@ void loop() {
         ConfigPortal::handle();
 
         unsigned long now = millis();
-        if (now - g_lastDisplayMs >= INTERVAL_DISPLAY_MS) {
+        if (g_appConfig.enableOled && (now - g_lastDisplayMs >= INTERVAL_DISPLAY_MS)) {
             g_lastDisplayMs = now;
             renderConfigPortal(SETUP_AP_SSID, ConfigPortal::getApIp().toString().c_str());
         }
@@ -216,7 +218,7 @@ void loop() {
         notifyBleWeight(g_displayWeight);
     }
 
-    if (now - g_lastDisplayMs >= INTERVAL_DISPLAY_MS) {
+    if (g_appConfig.enableOled && (now - g_lastDisplayMs >= INTERVAL_DISPLAY_MS)) {
         g_lastDisplayMs = now;
         renderDisplay(g_displayWeight, isBleConnected());
     }

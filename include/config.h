@@ -18,6 +18,11 @@ static constexpr float DEADBAND_GRAMS             = 0.40f;  // [-0.4g, +0.4g] cl
 #define ENABLE_MOCK_SCALE true
 #endif
 
+// OLED Display Support (set false to disable I2C display and save RAM/flash)
+#ifndef ENABLE_OLED
+#define ENABLE_OLED true
+#endif
+
 // Mock Mode Parameters (time duration per step & weight values)
 static constexpr unsigned long MOCK_STEP_INTERVAL_MS = 4000; // Duration (ms) per weight step
 static constexpr bool MOCK_ENABLE_JITTER              = false; // Set true for +/-0.1g random sensor noise

@@ -67,10 +67,11 @@ The HX711 is a precision 24-bit analog-to-digital converter designed for weigh s
 - **Logic Level**: Operates from 3.3V or 5.0V. The ESP32-C3 inputs are not 5V-tolerant. When supplying 5V to the HX711 board, confirm that DT line output does not exceed 3.6V, or power the HX711 directly from the 3.3V rail.
 - **Sample Rate**: The module defaults to 10Hz or 80Hz depending on the HX711 `RATE` pin state. Grounding `RATE` sets 10Hz sampling. Tying `RATE` to VCC enables 80Hz high-speed acquisition.
 
-### 2. SH1106 128x64 Monochrome OLED
+### 2. SH1106 128x64 Monochrome OLED (Optional)
 
 Display rendering uses the U8g2 library with the full-buffer constructor `U8G2_SH1106_128X64_NONAME_F_HW_I2C`.
 
+- **Optional Usage**: The display is fully optional. It can be disabled at compile-time via `#define ENABLE_OLED false` in `include/config.h` (saving ~48KB flash and ~1.7KB RAM), or at runtime via the web captive portal (`oled` setting stored in NVS). If enabled in configuration but physically disconnected, the firmware automatically detects its absence on I2C to avoid bus hangs.
 - **Bus Configuration**: Hardware I2C on GPIO 8 (SDA) and GPIO 9 (SCL).
 - **Clock Frequency**: Initialized at 400kHz for low screen latency.
 - **Pull-Up Resistors**: The OLED breakout board typically includes onboard 4.7k Ohm pull-up resistors to 3.3V. If using a bare panel without onboard pull-ups, install external 4.7k Ohm resistors between SDA/SCL and 3.3V.
