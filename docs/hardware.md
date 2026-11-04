@@ -10,15 +10,18 @@ This document specifies the hardware architecture, pin assignments, electrical c
 
 The board is powered by an Espressif ESP32-C3FH4 single-core 32-bit RISC-V processor clocked at 160MHz with 400KB SRAM and 4MB integrated flash. It features on-chip 2.4GHz Wi-Fi (802.11 b/g/n) and Bluetooth 5 (LE).
 
-### Pin Allocation Map
+### Pin Allocation Map (Default)
 
-| ESP32-C3 Pin | Peripheral | Signal Name | I/O Mode | Electrical Characteristics |
+> [!NOTE]
+> All hardware pins are fully configurable both at compile-time via `include/config.h` (or `-D PIN_...` build flags) and at runtime via the SoftAP Web Setup Portal (`http://192.168.4.1`) stored in NVS.
+
+| ESP32-C3 Pin (Default) | Peripheral | Signal Name | I/O Mode | Electrical Characteristics |
 | :--- | :--- | :--- | :--- | :--- |
-| **GPIO 0** | HX711 ADC | DT (Data) | Input | High-impedance digital input |
-| **GPIO 1** | HX711 ADC | SCK (Clock) | Output | Push-pull digital output |
-| **GPIO 2** | Tactile Switch | Tare Button | Input | Internal pull-up enabled, active low to GND |
-| **GPIO 8** | SH1106 OLED | SDA | Open-Drain / I2C | Hardware I2C data bus |
-| **GPIO 9** | SH1106 OLED | SCL | Open-Drain / I2C | Hardware I2C clock bus (400kHz) |
+| **GPIO 0** (`PIN_HX711_DT`) | HX711 ADC | DT (Data) | Input | High-impedance digital input |
+| **GPIO 1** (`PIN_HX711_SCK`) | HX711 ADC | SCK (Clock) | Output | Push-pull digital output |
+| **GPIO 2** (`PIN_TARE_BTN`) | Tactile Switch | Tare Button | Input | Internal pull-up enabled, active low to GND |
+| **GPIO 8** (`PIN_I2C_SDA`) | SH1106 OLED | SDA | Open-Drain / I2C | Hardware I2C data bus |
+| **GPIO 9** (`PIN_I2C_SCL`) | SH1106 OLED | SCL | Open-Drain / I2C | Hardware I2C clock bus (400kHz) |
 
 ---
 

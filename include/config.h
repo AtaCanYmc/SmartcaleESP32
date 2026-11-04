@@ -1,12 +1,22 @@
 #pragma once
 #include <Arduino.h>
 
-// Hardware Pin Definitions
-static constexpr uint8_t PIN_HX711_DT     = 0;
-static constexpr uint8_t PIN_HX711_SCK    = 1;
-static constexpr uint8_t PIN_TARE_BTN     = 2;
-static constexpr uint8_t PIN_I2C_SDA      = 8;
-static constexpr uint8_t PIN_I2C_SCL      = 9;
+// Hardware Pin Definitions (Default GPIOs - configurable via build flags or Web Portal)
+#ifndef PIN_HX711_DT
+#define PIN_HX711_DT     0
+#endif
+#ifndef PIN_HX711_SCK
+#define PIN_HX711_SCK    1
+#endif
+#ifndef PIN_TARE_BTN
+#define PIN_TARE_BTN     2
+#endif
+#ifndef PIN_I2C_SDA
+#define PIN_I2C_SDA      8
+#endif
+#ifndef PIN_I2C_SCL
+#define PIN_I2C_SCL      9
+#endif
 
 // Calibration & Filter Defaults
 static constexpr float DEFAULT_CALIBRATION_FACTOR = 420.0f; // Raw counts per gram

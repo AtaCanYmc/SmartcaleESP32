@@ -184,6 +184,45 @@ function selectSsid(val) {
             <div class="hint" style="margin-top: 2px; margin-bottom: 0;">Uncheck if operating headless without an I2C display</div>
         </div>
 
+        <div style="border-top: 1px solid #334155; margin-top: 18px; padding-top: 14px; margin-bottom: 6px;">
+            <div style="font-size: 12px; font-weight: 700; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">GPIO Pin Assignments</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div>
+                    <label for="pin_dt_input">HX711 DT</label>
+                    <input type="number" min="0" max="21" id="pin_dt_input" name="pin_dt" value=")rawliteral";
+        html += String(s_config.pinHx711Dt);
+        html += R"rawliteral(" required>
+                </div>
+                <div>
+                    <label for="pin_sck_input">HX711 SCK</label>
+                    <input type="number" min="0" max="21" id="pin_sck_input" name="pin_sck" value=")rawliteral";
+        html += String(s_config.pinHx711Sck);
+        html += R"rawliteral(" required>
+                </div>
+            </div>
+            <div>
+                <label for="pin_btn_input">Tare Button GPIO</label>
+                <input type="number" min="0" max="21" id="pin_btn_input" name="pin_btn" value=")rawliteral";
+        html += String(s_config.pinTareBtn);
+        html += R"rawliteral(" required>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div>
+                    <label for="pin_sda_input">OLED SDA</label>
+                    <input type="number" min="0" max="21" id="pin_sda_input" name="pin_sda" value=")rawliteral";
+        html += String(s_config.pinI2cSda);
+        html += R"rawliteral(" required>
+                </div>
+                <div>
+                    <label for="pin_scl_input">OLED SCL</label>
+                    <input type="number" min="0" max="21" id="pin_scl_input" name="pin_scl" value=")rawliteral";
+        html += String(s_config.pinI2cScl);
+        html += R"rawliteral(" required>
+                </div>
+            </div>
+            <div class="hint" style="margin-top: -6px;">Valid ESP32-C3 GPIO: 0 to 21</div>
+        </div>
+
         <button type="submit" class="btn btn-primary">Save and Restart</button>
     </form>
     <form action="/reset" method="POST" onsubmit="return confirm('All settings will be reset to factory defaults. Are you sure?');">
@@ -233,6 +272,27 @@ function selectSsid(val) {
             }
         }
         s_config.enableOled = s_webServer.hasArg("oled");
+
+        if (s_webServer.hasArg("pin_dt")) {
+            int p = s_webServer.arg("pin_dt").toInt();
+            if (p >= 0 && p <= 21) s_config.pinHx711Dt = (int8_t)p;
+        }
+        if (s_webServer.hasArg("pin_sck")) {
+            int p = s_webServer.arg("pin_sck").toInt();
+            if (p >= 0 && p <= 21) s_config.pinHx711Sck = (int8_t)p;
+        }
+        if (s_webServer.hasArg("pin_btn")) {
+            int p = s_webServer.arg("pin_btn").toInt();
+            if (p >= 0 && p <= 21) s_config.pinTareBtn = (int8_t)p;
+        }
+        if (s_webServer.hasArg("pin_sda")) {
+            int p = s_webServer.arg("pin_sda").toInt();
+            if (p >= 0 && p <= 21) s_config.pinI2cSda = (int8_t)p;
+        }
+        if (s_webServer.hasArg("pin_scl")) {
+            int p = s_webServer.arg("pin_scl").toInt();
+            if (p >= 0 && p <= 21) s_config.pinI2cScl = (int8_t)p;
+        }
 
         ConfigStorage::save(s_config);
 

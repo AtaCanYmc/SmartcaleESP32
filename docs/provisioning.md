@@ -84,13 +84,14 @@ Renders the complete mobile-responsive HTML configuration page.
   - Custom BLE device name input.
   - Load cell calibration factor floating point input.
   - Enable OLED Display checkbox (toggle I2C display updates on/off for headless use).
+  - GPIO Pin Mapping: HX711 DT, HX711 SCK, Tare Button, OLED SDA, OLED SCL.
   - Save Settings submit button.
   - Factory Reset submit button.
 
 ### 2. `POST /save`
 Processes submitted configuration parameters:
 
-- Validates and sanitizes incoming fields: `ssid`, `pass`, `blename`, `cal`, `oled`.
+- Validates and sanitizes incoming fields: `ssid`, `pass`, `blename`, `cal`, `oled`, `pin_dt`, `pin_sck`, `pin_btn`, `pin_sda`, `pin_scl`.
 - Commits values to non-volatile flash storage using ESP32 Preferences API.
 - Renders a confirmation page indicating impending restart.
 - Arm an asynchronous 1500ms software timer before triggering `ESP.restart()`.
@@ -115,3 +116,8 @@ Parameters persist across power cycles using the ESP32 Preferences flash storage
 | `blename` | String | 32 characters | `"SmartKitchenScale"` | Advertised BLE device name |
 | `cal` | Float | 4 bytes (IEEE 754) | `420.0f` | Load cell ADC to gram scaling divisor |
 | `oled` | Boolean | 1 byte | `true` (`ENABLE_OLED`) | Controls whether OLED display updates are enabled |
+| `pin_dt` | Integer | 4 bytes | `0` (`PIN_HX711_DT`) | HX711 ADC Data (DT) GPIO pin |
+| `pin_sck` | Integer | 4 bytes | `1` (`PIN_HX711_SCK`) | HX711 ADC Clock (SCK) GPIO pin |
+| `pin_btn` | Integer | 4 bytes | `2` (`PIN_TARE_BTN`) | Tare Button GPIO pin (active LOW) |
+| `pin_sda` | Integer | 4 bytes | `8` (`PIN_I2C_SDA`) | OLED I2C SDA GPIO pin |
+| `pin_scl` | Integer | 4 bytes | `9` (`PIN_I2C_SCL`) | OLED I2C SCL GPIO pin |

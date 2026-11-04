@@ -228,7 +228,12 @@ make app-dev          # starts Vite dev server with Web Bluetooth
 
 ## Configuration & Calibration
 
-All operational constants and calibration parameters reside in [include/config.h](include/config.h).
+All operational constants, default pin mappings, and calibration parameters reside in [include/config.h](include/config.h).
+
+### Configurable Hardware Pins
+All peripheral GPIO pins (HX711 DT, HX711 SCK, Tare Button, OLED SDA, OLED SCL) are fully configurable:
+- **Compile-time**: Override default pin macros in `include/config.h` (e.g. `PIN_HX711_DT`, `PIN_HX711_SCK`, etc.) or via PlatformIO build flags (`-D PIN_HX711_DT=...`).
+- **Runtime**: Change pin assignments dynamically via the SoftAP Web Setup Portal (`http://192.168.4.1`) without rebuilding. Assignments are persisted in NVS flash storage and validated for valid ESP32-C3 GPIO ranges (0–21).
 
 ### Optional OLED Display
 The I2C OLED display (SH1106 / SSD1306) is optional:

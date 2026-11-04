@@ -9,13 +9,13 @@
 static U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset= */ U8X8_PIN_NONE);
 static bool g_displayFound = false;
 
-inline void initDisplay(bool enabled = true) {
+inline void initDisplay(bool enabled = true, int sda = PIN_I2C_SDA, int scl = PIN_I2C_SCL) {
     if (!enabled) {
         g_displayFound = false;
         return;
     }
 
-    Wire.begin(PIN_I2C_SDA, PIN_I2C_SCL);
+    Wire.begin(sda, scl);
     Wire.setTimeOut(20);
 
     // Check if display is responding on I2C (0x3C or 0x3D)
@@ -100,8 +100,10 @@ inline bool isDisplayFound() {
 
 #else
 
-inline void initDisplay(bool enabled = true) {
+inline void initDisplay(bool enabled = true, int sda = PIN_I2C_SDA, int scl = PIN_I2C_SCL) {
     (void)enabled;
+    (void)sda;
+    (void)scl;
 }
 
 inline void renderDisplay(float weightGrams, bool bleConnected) {

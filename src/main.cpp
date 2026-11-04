@@ -63,12 +63,17 @@ void setup() {
 
     LOG_I("BOOT", "=== Smartcale ESP32 Starting ===");
 
-    pinMode(PIN_TARE_BTN, INPUT_PULLUP);
+    bool isConfigured = ConfigStorage::load(g_appConfig);
+    LOG_I("BOOT", "NVS Config: configured=%d, SSID='%s', BLE='%s', CAL=%.1f, OLED=%d, PINS[DT=%d,SCK=%d,BTN=%d,SDA=%d,SCL=%d]",
+          isConfigured, g_appConfig.wifiSsid.c_str(), g_appConfig.bleName.c_str(), g_appConfig.calibrationFactor, g_appConfig.enableOled,
+          g_appConfig.pinHx711Dt, g_appConfig.pinHx711Sck, g_appConfig.pinTareBtn, g_appConfig.pinI2cSda, g_appConfig.pinI2cScl);
+
+    pinMode(g_appConfig.pinTareBtn, INPUT_PULLUP);
     bool forceSetupMode = false;
-    if (digitalRead(PIN_TARE_BTN) == LOW) {
+    if (digitalRead(g_appConfig.pinTareBtn) == LOW) {
         LOG_I("BOOT", "Tare button pressed on power-up, checking hold duration...");
         unsigned long holdStart = millis();
-        while (digitalRead(PIN_TARE_BTN) == LOW) {
+        while (digitalRead(g_appConfig.pinTareBtn) == LOW) {
             if (millis() - holdStart >= HOLD_TO_SETUP_MS) {
                 forceSetupMode = true;
                 LOG_W("BOOT", "Tare button held for >%lums -> Forcing Setup Mode!", HOLD_TO_SETUP_MS);
@@ -78,11 +83,7 @@ void setup() {
         }
     }
 
-    bool isConfigured = ConfigStorage::load(g_appConfig);
-    LOG_I("BOOT", "NVS Config: configured=%d, SSID='%s', BLE='%s', CAL=%.1f, OLED=%d",
-          isConfigured, g_appConfig.wifiSsid.c_str(), g_appConfig.bleName.c_str(), g_appConfig.calibrationFactor, g_appConfig.enableOled);
-
-    initDisplay(g_appConfig.enableOled);
+    initDisplay(g_appConfig.enableOled, g_appConfig.pinI2cSda, g_appConfig.pinI2cScl);
 
     if (forceSetupMode || (!isConfigured && !ENABLE_MOCK_SCALE)) {
         g_setupMode = true;
@@ -95,7 +96,7 @@ void setup() {
     }
 
     LOG_I("BOOT", "Entering normal scale weighing mode");
-    attachInterrupt(digitalPinToInterrupt(PIN_TARE_BTN), onTareButtonISR, FALLING);
+    attachInterrupt(digitalPinToInterrupt(g_appConfig.pinTareBtn), onTareButtonISR, FALLING);
     initBle(g_appConfig.bleName.c_str(), triggerTareFromBle, onCalFactorFromBle);
 
     if (g_appConfig.wifiSsid.length() > 0) {
@@ -109,7 +110,7 @@ void setup() {
     LOG_I("SCALE", "Config: %u weight steps, interval %lums", (unsigned int)MOCK_WEIGHT_STEPS_COUNT, MOCK_STEP_INTERVAL_MS);
     LOG_I("SCALE", "Serial commands: type weight (e.g. 150), 'i2000' to change interval ms, '-1' to resume auto-cycle.");
 #else
-    scale.begin(PIN_HX711_DT, PIN_HX711_SCK);
+    scale.begin(g_appConfig.pinHx711Dt, g_appConfig.pinHx711Sck);
     scale.set_scale(g_appConfig.calibrationFactor);
 
     // Initial boot tare (sensor ready timeout: 1.5s)
