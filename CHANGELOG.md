@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.4.0](https://github.com/AtaCanYmc/SmartcaleESP32/compare/v1.3.0...v1.4.0) (2026-11-04)
+
+
+### Features
+
+* **app:** add companion app section with features and download options ([bc8815e](https://github.com/AtaCanYmc/SmartcaleESP32/commit/bc8815e4325a3ed9703c08587b25803fe146f85e))
+* **config:** make hardware pin assignments configurable at compile-time and runtime ([eed3ad8](https://github.com/AtaCanYmc/SmartcaleESP32/commit/eed3ad80f78ad73e502bd5d0b71422c3aeab3dfb))
+* **display:** add optional OLED display support with compile-time and runtime configuration ([fead9c7](https://github.com/AtaCanYmc/SmartcaleESP32/commit/fead9c7176ee00615b1b344042597035e18e0265))
+* **flasher:** add dark and light theme toggle with system preference sync ([bf1c479](https://github.com/AtaCanYmc/SmartcaleESP32/commit/bf1c4792800cd30752747dd46298878de3bf96c5))
+* **flasher:** add multilingual i18n support matching companion app (8 languages) ([69c869f](https://github.com/AtaCanYmc/SmartcaleESP32/commit/69c869fdce42a22a3d61bf586eb7287a40bb77de))
+* **food-api:** integrate custom food database and hybrid search functionality ([8596ec2](https://github.com/AtaCanYmc/SmartcaleESP32/commit/8596ec261796a8c6cb0924ecb3b207f41b4189e0))
+* **security:** implement CSRF protection and improve data handling in forms ([146e988](https://github.com/AtaCanYmc/SmartcaleESP32/commit/146e988d1f07e37e78c6f794b4c2a8f1d3867758))
+* **web:** deploy companion app under web-flasher/app for instant browser use ([eae2d23](https://github.com/AtaCanYmc/SmartcaleESP32/commit/eae2d231476849fe69f0a65e903d045867cd6ce2))
+
+
+### Bug Fixes
+
+* **flasher:** add complete multilingual translations for diagnostics and troubleshooting ([c31f979](https://github.com/AtaCanYmc/SmartcaleESP32/commit/c31f979b289e5cf1f1c0ef46d9a4c88d28d21b2f))
+* **i18n:** refine multilingual button labels for clarity and consistency ([f886ba2](https://github.com/AtaCanYmc/SmartcaleESP32/commit/f886ba20620f39ccf05fe0c4df1a28055af15c9e))
+
 ## [1.3.0](https://github.com/AtaCanYmc/SmartcaleESP32/compare/v1.2.0...v1.3.0) (2026-10-31)
 
 
