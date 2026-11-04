@@ -16,6 +16,7 @@ This directory provides in-depth technical documentation for the SmartcaleESP32 
 | [Provisioning & Web Portal](provisioning.md) | Initial Configuration | SoftAP captive portal, DNS redirection, NVS parameter persistence |
 | [Calibration & Troubleshooting](calibration.md) | Sensor Adjustment | Load cell calibration formula, reference mass verification, issue diagnosis |
 | [Mock / Simulation Mode](mock_mode.md) | Hardware-Free Testing | Module-less testing, synthetic weight injection, serial control, tare validation |
+| [Food Database & Custom API](food_api.md) | Nutrition & Search | Hybrid search, custom database integration, REST schema, Open Food Facts fallback |
 
 ---
 

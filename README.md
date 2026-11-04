@@ -224,6 +224,8 @@ make monitor          # or: pio device monitor --baud 115200
 make app-dev          # starts Vite dev server with Web Bluetooth
 ```
 
+- **Food Database & Hybrid Search:** Search foods and log nutrition via Open Food Facts, or link your own custom food database/REST API directly from the app Settings modal. See [Food Database & Custom API Guide](docs/food_api.md) for details.
+
 ---
 
 ## Configuration & Calibration

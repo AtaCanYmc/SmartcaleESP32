@@ -171,4 +171,170 @@ globalThis.fetch = originalFetch;
 const editUrl = getOpenFoodFactsEditUrl('8690504018086');
 assert.equal(editUrl, 'https://world.openfoodfacts.org/cgi/product.pl?type=edit&code=8690504018086');
 
+// 5. Custom API Parser and HybridFoodService tests
+import {
+  parseCustomProductRaw,
+  getCustomApiConfig,
+  saveCustomApiConfig,
+  HybridFoodService,
+} from './foodService';
+
+// Test parseCustomProductRaw with flat custom schema
+const flatCustom = parseCustomProductRaw({
+  code: 'custom-001',
+  name: 'Homemade Protein Bar',
+  brand: 'Kitchen Lab',
+  calories: 220,
+  protein: 18.5,
+  carbs: 22,
+  fat: 6.2,
+});
+assert.ok(flatCustom);
+assert.equal(flatCustom.code, 'custom-001');
+assert.equal(flatCustom.name, 'Homemade Protein Bar');
+assert.equal(flatCustom.brands, 'Kitchen Lab');
+assert.equal(flatCustom.nutriments.calories100g, 220);
+assert.equal(flatCustom.nutriments.proteins100g, 18.5);
+assert.equal(flatCustom.nutriments.carbs100g, 22);
+assert.equal(flatCustom.nutriments.fat100g, 6.2);
+
+// Test parseCustomProductRaw with nested nutriments
+const nestedCustom = parseCustomProductRaw({
+  code: 'custom-002',
+  name: 'Quinoa Bowl',
+  nutriments: {
+    calories100g: 140,
+    proteins100g: 5,
+    carbs100g: 25,
+    fat100g: 2.5,
+  },
+});
+assert.ok(nestedCustom);
+assert.equal(nestedCustom.name, 'Quinoa Bowl');
+assert.equal(nestedCustom.nutriments.calories100g, 140);
+
+// Invalid input should return null
+assert.equal(parseCustomProductRaw(null), null);
+assert.equal(parseCustomProductRaw({}), null);
+assert.equal(parseCustomProductRaw({ calories: 100 }), null);
+
+// Test get/save CustomApiConfig in localStorage
+saveCustomApiConfig({
+  enabled: true,
+  apiUrl: 'https://my-api.example.com/foods',
+  apiKey: 'secret-token-123',
+});
+const loadedCfg = getCustomApiConfig();
+assert.equal(loadedCfg.enabled, true);
+assert.equal(loadedCfg.apiUrl, 'https://my-api.example.com/foods');
+assert.equal(loadedCfg.apiKey, 'secret-token-123');
+
+// Clean up config for clean test state
+saveCustomApiConfig({ enabled: false, apiUrl: '', apiKey: '' });
+
+// Test HybridFoodService search fallback and merge
+class MockOffService extends OpenFoodFactsService {
+  override async search(query: string): Promise<any[]> {
+    return [
+      {
+        code: 'off-1',
+        name: `OFF ${query}`,
+        nutriments: { calories100g: 100, proteins100g: 2, carbs100g: 20, fat100g: 1 },
+      },
+      {
+        code: 'shared-code',
+        name: 'OFF Version',
+        nutriments: { calories100g: 120, proteins100g: 3, carbs100g: 22, fat100g: 2 },
+      },
+    ];
+  }
+
+  override async getByBarcode(barcode: string): Promise<any> {
+    if (barcode === 'off-barcode') {
+      return {
+        code: 'off-barcode',
+        name: 'OFF Product',
+        nutriments: { calories100g: 80, proteins100g: 1, carbs100g: 15, fat100g: 0.5 },
+      };
+    }
+    return null;
+  }
+}
+
+const mockOff = new MockOffService();
+const hybridService = new HybridFoodService(mockOff);
+
+// Test search when custom API is disabled -> pure OFF results
+const disabledResults = await hybridService.search('Apple');
+assert.equal(disabledResults.length, 2);
+assert.equal(disabledResults[0].code, 'off-1');
+
+// Test search when custom API is enabled -> merges with priority to custom API
+saveCustomApiConfig({
+  enabled: true,
+  apiUrl: 'https://mock.api/foods',
+  apiKey: 'test-key',
+});
+
+// Mock fetch to simulate custom API response
+const testFetch = globalThis.fetch;
+globalThis.fetch = async (url: any) => {
+  const urlStr = String(url);
+  if (urlStr.includes('barcode-custom')) {
+    return {
+      ok: true,
+      json: async () => ({
+        code: 'barcode-custom',
+        name: 'Custom Barcode Item',
+        calories: 300,
+        protein: 15,
+        carbs: 40,
+        fat: 8,
+      }),
+    } as unknown as Response;
+  }
+  return {
+    ok: true,
+    json: async () => [
+      {
+        code: 'custom-p1',
+        name: 'Custom Protein Shake',
+        calories: 180,
+        protein: 25,
+        carbs: 5,
+        fat: 2,
+      },
+      {
+        code: 'shared-code', // same code as OFF version -> custom must take priority!
+        name: 'Custom Preferred Version',
+        calories: 120,
+        protein: 4,
+        carbs: 22,
+        fat: 2,
+      },
+    ],
+  } as unknown as Response;
+};
+
+const hybridResults = await hybridService.search('Shake');
+assert.equal(hybridResults.length, 3); // custom-p1, shared-code (custom), off-1 (off). shared-code deduplicated!
+assert.equal(hybridResults[0].code, 'custom-p1');
+assert.equal(hybridResults[1].code, 'shared-code');
+assert.equal(hybridResults[1].name, 'Custom Preferred Version'); // Custom takes precedence!
+assert.equal(hybridResults[2].code, 'off-1');
+
+// Test getByBarcode with custom API found
+const customFound = await hybridService.getByBarcode('barcode-custom');
+assert.ok(customFound);
+assert.equal(customFound.name, 'Custom Barcode Item');
+
+// Test getByBarcode falling back to Open Food Facts
+const fallbackFound = await hybridService.getByBarcode('off-barcode');
+assert.ok(fallbackFound);
+assert.equal(fallbackFound.name, 'OFF Product');
+
+// Restore original fetch and clean up
+globalThis.fetch = testFetch;
+saveCustomApiConfig({ enabled: false, apiUrl: '', apiKey: '' });
+
 console.log('✓ All foodService tests passed!');

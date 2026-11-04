@@ -188,6 +188,17 @@ export interface Translations {
   recipeAiShareBtn: string;
   clearRecipeBtn: string;
   activeIngredientLabel: string;
+  customApiSectionTitle: string;
+  customApiEnableHybrid: string;
+  customApiUrlLabel: string;
+  customApiUrlPlaceholder: string;
+  customApiKeyLabel: string;
+  customApiKeyPlaceholder: string;
+  customApiTestBtn: string;
+  customApiTesting: string;
+  customApiSuccess: string;
+  customApiFailed: string;
+  customApiHint: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -362,6 +373,17 @@ export const translations: Record<Language, Translations> = {
     recipeAiShareBtn: 'AI Şef İstemi Paylaş',
     clearRecipeBtn: 'Tarifi Temizle',
     activeIngredientLabel: 'Aktif Malzeme Adı',
+    customApiSectionTitle: 'Besin Veritabanı & Özel API',
+    customApiEnableHybrid: 'Özel API ile Hibrit Arama',
+    customApiUrlLabel: 'Özel API Adresi (Base URL)',
+    customApiUrlPlaceholder: 'https://api.ornek.com/foods',
+    customApiKeyLabel: 'API Anahtarı / Token (Opsiyonel)',
+    customApiKeyPlaceholder: 'Bearer token veya api-key...',
+    customApiTestBtn: 'Bağlantıyı Test Et',
+    customApiTesting: 'Test Ediliyor...',
+    customApiSuccess: 'Bağlantı başarılı! Özel API aktif.',
+    customApiFailed: 'Bağlantı kurulamadı. URL ve formatı kontrol edin.',
+    customApiHint: 'Aramalarda önce kendi API yanıtlarınız, ardından Open Food Facts listelenir.',
   },
   en: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -534,6 +556,17 @@ export const translations: Record<Language, Translations> = {
     recipeAiShareBtn: 'Share AI Chef Prompt',
     clearRecipeBtn: 'Clear Recipe',
     activeIngredientLabel: 'Active Ingredient Name',
+    customApiSectionTitle: 'Food Database & Custom API',
+    customApiEnableHybrid: 'Hybrid Search with Custom API',
+    customApiUrlLabel: 'Custom API Endpoint (Base URL)',
+    customApiUrlPlaceholder: 'https://api.example.com/foods',
+    customApiKeyLabel: 'API Key / Token (Optional)',
+    customApiKeyPlaceholder: 'Bearer token or api-key...',
+    customApiTestBtn: 'Test Connection',
+    customApiTesting: 'Testing...',
+    customApiSuccess: 'Connection successful! Custom API active.',
+    customApiFailed: 'Connection failed. Check URL and format.',
+    customApiHint: 'Searches query your custom API first, with Open Food Facts as fallback.',
   },
   de: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -706,6 +739,17 @@ export const translations: Record<Language, Translations> = {
     recipeAiShareBtn: 'KI-Chef-Prompt teilen',
     clearRecipeBtn: 'Rezept leeren',
     activeIngredientLabel: 'Aktiver Zutatenname',
+    customApiSectionTitle: 'Lebensmitteldatenbank & Eigene API',
+    customApiEnableHybrid: 'Hybride Suche mit eigener API',
+    customApiUrlLabel: 'Benutzerdefinierte API-URL (Basis-URL)',
+    customApiUrlPlaceholder: 'https://api.beispiel.de/foods',
+    customApiKeyLabel: 'API-Schlüssel / Token (Optional)',
+    customApiKeyPlaceholder: 'Bearer-Token oder API-Schlüssel...',
+    customApiTestBtn: 'Verbindung testen',
+    customApiTesting: 'Wird getestet...',
+    customApiSuccess: 'Verbindung erfolgreich! Eigene API aktiv.',
+    customApiFailed: 'Verbindung fehlgeschlagen. URL und Format prüfen.',
+    customApiHint: 'Suchen fragen zuerst Ihre eigene API ab, Open Food Facts dient als Fallback.',
   },
   fr: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -878,6 +922,17 @@ export const translations: Record<Language, Translations> = {
     recipeAiShareBtn: 'Partager prompt Chef IA',
     clearRecipeBtn: 'Effacer la recette',
     activeIngredientLabel: 'Nom de l\'ingrédient actif',
+    customApiSectionTitle: 'Base de données & API personnalisée',
+    customApiEnableHybrid: 'Recherche hybride avec API personnalisée',
+    customApiUrlLabel: 'URL de base de l’API personnalisée',
+    customApiUrlPlaceholder: 'https://api.exemple.com/foods',
+    customApiKeyLabel: 'Clé API / Jeton (Optionnel)',
+    customApiKeyPlaceholder: 'Jeton Bearer ou clé API...',
+    customApiTestBtn: 'Tester la connexion',
+    customApiTesting: 'Test en cours...',
+    customApiSuccess: 'Connexion réussie ! API personnalisée active.',
+    customApiFailed: 'Échec de connexion. Vérifiez l’URL et le format.',
+    customApiHint: 'La recherche interroge d’abord votre API, complétée par Open Food Facts.',
   },
   es: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -1050,6 +1105,17 @@ export const translations: Record<Language, Translations> = {
     recipeAiShareBtn: 'Compartir prompt Chef IA',
     clearRecipeBtn: 'Borrar receta',
     activeIngredientLabel: 'Nombre del ingrediente activo',
+    customApiSectionTitle: 'Base de datos y API personalizada',
+    customApiEnableHybrid: 'Búsqueda híbrida con API personalizada',
+    customApiUrlLabel: 'URL base de la API personalizada',
+    customApiUrlPlaceholder: 'https://api.ejemplo.com/foods',
+    customApiKeyLabel: 'Clave API / Token (Opcional)',
+    customApiKeyPlaceholder: 'Token Bearer o clave API...',
+    customApiTestBtn: 'Probar conexión',
+    customApiTesting: 'Probando...',
+    customApiSuccess: '¡Conexión exitosa! API personalizada activa.',
+    customApiFailed: 'Error de conexión. Verifique la URL y el formato.',
+    customApiHint: 'Las búsquedas consultan primero su API y usan Open Food Facts como respaldo.',
   },
   zh: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -1222,6 +1288,17 @@ export const translations: Record<Language, Translations> = {
     recipeAiShareBtn: '分享 AI 主厨分析指令',
     clearRecipeBtn: '清空食谱',
     activeIngredientLabel: '当前配料名称',
+    customApiSectionTitle: '食品数据库与自定义 API',
+    customApiEnableHybrid: '启用自定义 API 混合搜索',
+    customApiUrlLabel: '自定义 API 基础网址 (Base URL)',
+    customApiUrlPlaceholder: 'https://api.example.com/foods',
+    customApiKeyLabel: 'API 密钥 / 令牌 (可选)',
+    customApiKeyPlaceholder: 'Bearer 令牌或 API 密钥...',
+    customApiTestBtn: '测试连接',
+    customApiTesting: '正在测试...',
+    customApiSuccess: '连接成功！自定义 API 已激活。',
+    customApiFailed: '连接失败。请检查网址与格式。',
+    customApiHint: '搜索时优先返回您的自定义 API 数据，并整合 Open Food Facts。',
   },
   ja: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -1394,6 +1471,17 @@ export const translations: Record<Language, Translations> = {
     recipeAiShareBtn: 'AIシェフプロンプトを共有',
     clearRecipeBtn: 'レシピをクリア',
     activeIngredientLabel: '追加する材料名',
+    customApiSectionTitle: '食品データベース＆カスタム API',
+    customApiEnableHybrid: 'カスタム API ハイブリッド検索',
+    customApiUrlLabel: 'カスタム API ベース URL',
+    customApiUrlPlaceholder: 'https://api.example.com/foods',
+    customApiKeyLabel: 'API キー / トークン (任意)',
+    customApiKeyPlaceholder: 'Bearer トークンまたは API キー...',
+    customApiTestBtn: '接続テスト',
+    customApiTesting: 'テスト中...',
+    customApiSuccess: '接続成功！カスタム API が有効です。',
+    customApiFailed: '接続に失敗しました。URLと形式を確認してください。',
+    customApiHint: '検索時はカスタム API を優先し、Open Food Facts をフォールバックとして統合します。',
   },
   ru: {
     brandSubtitle: 'ESP32-C3 GATT v1.0',
@@ -1566,6 +1654,17 @@ export const translations: Record<Language, Translations> = {
     recipeAiShareBtn: 'Поделиться промптом Шеф-ИИ',
     clearRecipeBtn: 'Очистить рецепт',
     activeIngredientLabel: 'Название текущего ингредиента',
+    customApiSectionTitle: 'База продуктов и кастомный API',
+    customApiEnableHybrid: 'Гибридный поиск с кастомным API',
+    customApiUrlLabel: 'Базовый URL кастомного API',
+    customApiUrlPlaceholder: 'https://api.example.com/foods',
+    customApiKeyLabel: 'API Ключ / Токен (Опционально)',
+    customApiKeyPlaceholder: 'Bearer токен или API ключ...',
+    customApiTestBtn: 'Проверить подключение',
+    customApiTesting: 'Проверка...',
+    customApiSuccess: 'Подключение успешно! Кастомный API активен.',
+    customApiFailed: 'Ошибка подключения. Проверьте URL и формат.',
+    customApiHint: 'Поиск сначала обращается к вашему API, используя Open Food Facts в качестве резерва.',
   },
 };
 

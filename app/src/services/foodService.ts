@@ -46,7 +46,7 @@ export interface OpenFoodFactsProductRaw {
   nutriments?: OpenFoodFactsNutrimentsRaw;
 }
 
-function parseNum(val: number | string | undefined): number {
+function parseNum(val: unknown): number {
   if (typeof val === 'number') return isNaN(val) ? 0 : val;
   if (typeof val === 'string') {
     const parsed = parseFloat(val);
@@ -274,4 +274,274 @@ export function calculateNutrition(nutriments: FoodNutriments, weightGrams: numb
   };
 }
 
-export const foodService: IFoodService = new OpenFoodFactsService();
+export interface CustomFoodApiConfig {
+  enabled: boolean;
+  apiUrl: string;
+  apiKey?: string;
+}
+
+const CUSTOM_API_STORAGE_KEY = 'smartcale_custom_food_api';
+
+export function getCustomApiConfig(): CustomFoodApiConfig {
+  if (typeof localStorage === 'undefined') {
+    return { enabled: false, apiUrl: '', apiKey: '' };
+  }
+  try {
+    const raw = localStorage.getItem(CUSTOM_API_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return {
+        enabled: Boolean(parsed.enabled),
+        apiUrl: typeof parsed.apiUrl === 'string' ? parsed.apiUrl : '',
+        apiKey: typeof parsed.apiKey === 'string' ? parsed.apiKey : '',
+      };
+    }
+  } catch {}
+  return { enabled: false, apiUrl: '', apiKey: '' };
+}
+
+export function saveCustomApiConfig(cfg: CustomFoodApiConfig): void {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    localStorage.setItem(CUSTOM_API_STORAGE_KEY, JSON.stringify({
+      enabled: Boolean(cfg.enabled),
+      apiUrl: cfg.apiUrl.trim(),
+      apiKey: cfg.apiKey?.trim() || '',
+    }));
+  } catch {}
+}
+
+export function parseCustomProductRaw(raw: unknown): FoodProduct | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const obj = raw as Record<string, unknown>;
+
+  const code = String(obj.code ?? obj.id ?? obj.barcode ?? '').trim();
+  const name = String(obj.name ?? obj.product_name ?? obj.title ?? '').trim();
+  if (!code && !name) return null;
+
+  const brands = obj.brands ?? obj.brand;
+  let brandStr: string | undefined;
+  if (Array.isArray(brands)) {
+    brandStr = brands.filter(Boolean).join(', ').trim() || undefined;
+  } else if (typeof brands === 'string') {
+    brandStr = brands.trim() || undefined;
+  }
+
+  const imageUrl = typeof (obj.imageUrl ?? obj.image_url) === 'string'
+    ? String(obj.imageUrl ?? obj.image_url).trim()
+    : undefined;
+
+  const n = (typeof obj.nutriments === 'object' && obj.nutriments !== null ? obj.nutriments : {}) as Record<string, unknown>;
+
+  const calories = parseNum(
+    obj.calories100g ?? obj.calories ?? obj.kcal ?? n.calories100g ?? n['energy-kcal_100g'] ?? n['energy-kcal'] ?? n['energy-kcal_value']
+  );
+  const proteins = parseNum(
+    obj.proteins100g ?? obj.protein ?? obj.proteins ?? n.proteins100g ?? n.proteins
+  );
+  const carbs = parseNum(
+    obj.carbs100g ?? obj.carbohydrates ?? obj.carbs ?? n.carbs100g ?? n.carbohydrates_100g ?? n.carbohydrates
+  );
+  const fat = parseNum(
+    obj.fat100g ?? obj.fat ?? n.fat100g ?? n.fat
+  );
+  const sugars = obj.sugars100g ?? obj.sugars ?? n.sugars100g ?? n.sugars;
+  const salt = obj.salt100g ?? obj.salt ?? n.salt100g ?? n.salt;
+
+  return {
+    code: code || `custom_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    name,
+    brands: brandStr,
+    imageUrl: imageUrl || undefined,
+    nutriments: {
+      calories100g: Math.round(calories * 100) / 100,
+      proteins100g: Math.round(proteins * 100) / 100,
+      carbs100g: Math.round(carbs * 100) / 100,
+      fat100g: Math.round(fat * 100) / 100,
+      sugars100g: sugars !== undefined ? Math.round(parseNum(sugars) * 100) / 100 : undefined,
+      salt100g: salt !== undefined ? Math.round(parseNum(salt) * 100) / 100 : undefined,
+    },
+  };
+}
+
+async function fetchCustomJson(url: string, apiKey?: string): Promise<unknown> {
+  const headers: Record<string, string> = {
+    Accept: 'application/json',
+  };
+  if (apiKey?.trim()) {
+    headers['Authorization'] = apiKey.trim().startsWith('Bearer ')
+      ? apiKey.trim()
+      : `Bearer ${apiKey.trim()}`;
+    headers['X-API-Key'] = apiKey.trim();
+  }
+
+  if (Capacitor.isNativePlatform()) {
+    const res = await CapacitorHttp.get({
+      url,
+      headers,
+      connectTimeout: 4000,
+      readTimeout: 4000,
+    });
+    if (res.status >= 400) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+    return res.data;
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 4000);
+
+  try {
+    const res = await fetch(url, {
+      headers,
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+    return await res.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+export async function testCustomApi(cfg: CustomFoodApiConfig): Promise<{ success: boolean; message: string; sampleCount?: number }> {
+  const base = cfg.apiUrl.trim().replace(/\/+$/, '');
+  if (!base) {
+    return { success: false, message: 'URL cannot be empty' };
+  }
+  if (!base.startsWith('http://') && !base.startsWith('https://')) {
+    return { success: false, message: 'URL must start with http:// or https://' };
+  }
+
+  const sep = base.includes('?') ? '&' : '?';
+  const testUrl = `${base}${sep}q=test&limit=3`;
+
+  try {
+    const data = await fetchCustomJson(testUrl, cfg.apiKey);
+    const items = Array.isArray(data)
+      ? data
+      : Array.isArray((data as Record<string, unknown>)?.items)
+      ? (data as Record<string, unknown>).items as unknown[]
+      : Array.isArray((data as Record<string, unknown>)?.products)
+      ? (data as Record<string, unknown>).products as unknown[]
+      : Array.isArray((data as Record<string, unknown>)?.data)
+      ? (data as Record<string, unknown>).data as unknown[]
+      : Array.isArray((data as Record<string, unknown>)?.results)
+      ? (data as Record<string, unknown>).results as unknown[]
+      : [];
+
+    return {
+      success: true,
+      message: 'OK',
+      sampleCount: items.length,
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: err instanceof Error ? err.message : 'Connection failed',
+    };
+  }
+}
+
+export class HybridFoodService implements IFoodService {
+  private offService: OpenFoodFactsService;
+
+  constructor(offService = new OpenFoodFactsService()) {
+    this.offService = offService;
+  }
+
+  async search(query: string, limit = 10): Promise<FoodProduct[]> {
+    const trimmed = query.trim();
+    if (!trimmed) return [];
+
+    const cfg = getCustomApiConfig();
+    if (!cfg.enabled || !cfg.apiUrl.trim()) {
+      return this.offService.search(trimmed, limit);
+    }
+
+    // Hybrid search: query Custom API & Open Food Facts in parallel
+    const customPromise = this.searchCustom(cfg, trimmed, limit);
+    const offPromise = this.offService.search(trimmed, limit).catch(() => []);
+
+    const [customResults, offResults] = await Promise.all([customPromise, offPromise]);
+
+    // Merge results with Custom API prioritized, deduplicating by code
+    const seenCodes = new Set<string>();
+    const merged: FoodProduct[] = [];
+
+    for (const p of customResults) {
+      if (p.code && !seenCodes.has(p.code)) {
+        seenCodes.add(p.code);
+        merged.push(p);
+      }
+    }
+    for (const p of offResults) {
+      if (p.code && !seenCodes.has(p.code)) {
+        seenCodes.add(p.code);
+        merged.push(p);
+      }
+    }
+
+    return merged.slice(0, limit);
+  }
+
+  async getByBarcode(barcode: string): Promise<FoodProduct | null> {
+    const trimmed = barcode.trim();
+    if (!trimmed) return null;
+
+    const cfg = getCustomApiConfig();
+    if (cfg.enabled && cfg.apiUrl.trim()) {
+      try {
+        const customProduct = await this.getByBarcodeCustom(cfg, trimmed);
+        if (customProduct) return customProduct;
+      } catch (err) {
+        console.warn('Custom API barcode lookup failed, falling back to Open Food Facts:', err);
+      }
+    }
+
+    return this.offService.getByBarcode(trimmed);
+  }
+
+  async uploadProduct(data: OpenFoodFactsWriteData): Promise<{ success: boolean; statusVerbose: string }> {
+    return this.offService.uploadProduct(data);
+  }
+
+  private async searchCustom(cfg: CustomFoodApiConfig, query: string, limit: number): Promise<FoodProduct[]> {
+    try {
+      const base = cfg.apiUrl.trim().replace(/\/+$/, '');
+      const sep = base.includes('?') ? '&' : '?';
+      const url = `${base}${sep}q=${encodeURIComponent(query)}&limit=${limit}`;
+      const data = await fetchCustomJson(url, cfg.apiKey);
+      const items = Array.isArray(data)
+        ? data
+        : Array.isArray((data as Record<string, unknown>)?.items)
+        ? (data as Record<string, unknown>).items as unknown[]
+        : Array.isArray((data as Record<string, unknown>)?.products)
+        ? (data as Record<string, unknown>).products as unknown[]
+        : Array.isArray((data as Record<string, unknown>)?.data)
+        ? (data as Record<string, unknown>).data as unknown[]
+        : Array.isArray((data as Record<string, unknown>)?.results)
+        ? (data as Record<string, unknown>).results as unknown[]
+        : [];
+
+      return items
+        .map(parseCustomProductRaw)
+        .filter((p): p is FoodProduct => p !== null);
+    } catch (err) {
+      console.warn('Custom API search failed, falling back to Open Food Facts:', err);
+      return [];
+    }
+  }
+
+  private async getByBarcodeCustom(cfg: CustomFoodApiConfig, barcode: string): Promise<FoodProduct | null> {
+    const base = cfg.apiUrl.trim().replace(/\/+$/, '');
+    const url = `${base}/${encodeURIComponent(barcode)}`;
+    const data = await fetchCustomJson(url, cfg.apiKey);
+    if (!data) return null;
+    const raw = (data as Record<string, unknown>)?.product ?? (data as Record<string, unknown>)?.data ?? data;
+    return parseCustomProductRaw(raw);
+  }
+}
+
+export const foodService: IFoodService = new HybridFoodService();

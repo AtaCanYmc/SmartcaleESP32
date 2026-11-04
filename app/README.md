@@ -53,3 +53,12 @@ npx cap run ios
 - **GATT Scale Service**: `4fafc201-1fb5-459e-8fcc-c5c9c331914b`
 - **Weight Characteristic**: `beb5483e-36e1-4688-b7f5-ea07361b26a8` (Read, Notify, 100ms)
 - **Tare Command Characteristic**: `1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e` (Write `'T'`)
+
+---
+
+## Food Database & Hybrid Search
+
+The application supports nutrition tracking powered by **Open Food Facts** and an optional **Custom Food API**:
+- **Hybrid Search**: Searches query your custom backend and Open Food Facts in parallel, prioritizing your custom items.
+- **In-App Configuration**: Enter your API Base URL and optional Bearer Token directly from the Settings modal.
+- **Specification**: Complete REST API endpoints and schema documentation can be found in [docs/food_api.md](../docs/food_api.md).

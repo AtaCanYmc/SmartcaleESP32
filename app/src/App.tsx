@@ -39,13 +39,22 @@ import {
   Share2,
   RefreshCw,
   Zap,
-  ChefHat
+  ChefHat,
+  Database
 } from 'lucide-react';
 import logoUrl from './assets/logo.jpg';
 import { scaleBle } from './services/bleService';
 import { barcodeScanner } from './services/barcodeScanner';
 import { recipeService, type RecipeIngredient } from './services/recipeService';
-import { foodService, calculateNutrition, getOpenFoodFactsEditUrl } from './services/foodService';
+import {
+  foodService,
+  calculateNutrition,
+  getOpenFoodFactsEditUrl,
+  getCustomApiConfig,
+  saveCustomApiConfig,
+  testCustomApi,
+  type CustomFoodApiConfig,
+} from './services/foodService';
 import { mealService, getLocalDateString, downloadFile, generateAiPrompt } from './services/mealService';
 import type { WeightUnit, ConnectionStatus } from './types/scale';
 import type { FoodProduct } from './types/food';
@@ -124,6 +133,12 @@ export const App: React.FC = () => {
   const [recipeIngredients, setRecipeIngredients] = useState<RecipeIngredient[]>([]);
   const [recipeActiveName, setRecipeActiveName] = useState<string>('');
   const [recipeSuccessToast, setRecipeSuccessToast] = useState<string | null>(null);
+
+  // Custom Food API State
+  const [customApiConfig, setCustomApiConfig] = useState<CustomFoodApiConfig>(() => getCustomApiConfig());
+  const [customApiTesting, setCustomApiTesting] = useState<boolean>(false);
+  const [customApiTestStatus, setCustomApiTestStatus] = useState<{ ok: boolean; msg: string } | null>(null);
+  const [isCustomApiOpen, setIsCustomApiOpen] = useState<boolean>(false);
 
   const handleGoHome = () => {
     setActiveTab('scale');
@@ -1910,7 +1925,139 @@ export const App: React.FC = () => {
                 </div>
               </div>
 
-              {/* Category 3: About */}
+              {/* Category 3: Food Database & Custom API */}
+              <div className="settings-group">
+                <span className="settings-group-title">
+                  <Database size={14} aria-hidden="true" />
+                  {t.customApiSectionTitle}
+                </span>
+
+                <div className="settings-accordion">
+                  <button
+                    type="button"
+                    className="settings-accordion-header"
+                    onClick={() => setIsCustomApiOpen(!isCustomApiOpen)}
+                    aria-expanded={isCustomApiOpen}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Database size={15} />
+                      <span style={{ fontSize: '13px', fontWeight: 600 }}>{t.customApiEnableHybrid}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span className={`settings-tag ${customApiConfig.enabled ? 'active' : ''}`}>
+                        {customApiConfig.enabled ? 'ON' : 'OFF'}
+                      </span>
+                      {isCustomApiOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </div>
+                  </button>
+
+                  {isCustomApiOpen && (
+                    <div className="settings-accordion-content">
+                      <p className="modal-desc" style={{ marginBottom: '12px', fontSize: '12px' }}>
+                        {t.customApiHint}
+                      </p>
+
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginBottom: '12px' }}>
+                        <input
+                          type="checkbox"
+                          checked={customApiConfig.enabled}
+                          onChange={(e) => {
+                            const updated = { ...customApiConfig, enabled: e.target.checked };
+                            setCustomApiConfig(updated);
+                            saveCustomApiConfig(updated);
+                            setCustomApiTestStatus(null);
+                          }}
+                          style={{ width: '18px', height: '18px', accentColor: 'var(--accent-primary)' }}
+                        />
+                        <span style={{ fontSize: '13px', fontWeight: 600 }}>{t.customApiEnableHybrid}</span>
+                      </label>
+
+                      {customApiConfig.enabled && (
+                        <>
+                          <div style={{ marginBottom: '10px' }}>
+                            <label htmlFor="custom-api-url" className="input-label" style={{ fontSize: '11px' }}>
+                              {t.customApiUrlLabel} *
+                            </label>
+                            <input
+                              id="custom-api-url"
+                              type="url"
+                              className="input-field"
+                              style={{ minHeight: '38px', padding: '6px 10px', fontSize: '13px' }}
+                              value={customApiConfig.apiUrl}
+                              onChange={(e) => {
+                                const updated = { ...customApiConfig, apiUrl: e.target.value };
+                                setCustomApiConfig(updated);
+                                saveCustomApiConfig(updated);
+                                setCustomApiTestStatus(null);
+                              }}
+                              placeholder={t.customApiUrlPlaceholder}
+                            />
+                          </div>
+
+                          <div style={{ marginBottom: '12px' }}>
+                            <label htmlFor="custom-api-key" className="input-label" style={{ fontSize: '11px' }}>
+                              {t.customApiKeyLabel}
+                            </label>
+                            <input
+                              id="custom-api-key"
+                              type="password"
+                              className="input-field"
+                              style={{ minHeight: '38px', padding: '6px 10px', fontSize: '13px' }}
+                              value={customApiConfig.apiKey || ''}
+                              onChange={(e) => {
+                                const updated = { ...customApiConfig, apiKey: e.target.value };
+                                setCustomApiConfig(updated);
+                                saveCustomApiConfig(updated);
+                                setCustomApiTestStatus(null);
+                              }}
+                              placeholder={t.customApiKeyPlaceholder}
+                            />
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                            <button
+                              type="button"
+                              className="btn btn-secondary"
+                              disabled={customApiTesting || !customApiConfig.apiUrl.trim()}
+                              onClick={async () => {
+                                setCustomApiTesting(true);
+                                setCustomApiTestStatus(null);
+                                const res = await testCustomApi(customApiConfig);
+                                setCustomApiTesting(false);
+                                setCustomApiTestStatus({
+                                  ok: res.success,
+                                  msg: res.success ? t.customApiSuccess : `${t.customApiFailed} (${res.message})`,
+                                });
+                              }}
+                              style={{ minHeight: '36px', padding: '6px 12px', fontSize: '12px' }}
+                            >
+                              {customApiTesting ? t.customApiTesting : t.customApiTestBtn}
+                            </button>
+
+                            {customApiTestStatus && (
+                              <span
+                                style={{
+                                  fontSize: '12px',
+                                  fontWeight: 500,
+                                  color: customApiTestStatus.ok ? 'var(--accent-green, #10b981)' : 'var(--accent-red, #ef4444)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                }}
+                              >
+                                {customApiTestStatus.ok ? <Check size={14} /> : <AlertCircle size={14} />}
+                                {customApiTestStatus.msg}
+                              </span>
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Category 4: About */}
               <div className="settings-group">
                 <span className="settings-group-title">
                   <Info size={14} aria-hidden="true" />
