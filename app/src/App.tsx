@@ -40,7 +40,8 @@ import {
   RefreshCw,
   Zap,
   ChefHat,
-  Database
+  Database,
+  ShieldCheck
 } from 'lucide-react';
 import logoUrl from './assets/logo.jpg';
 import { scaleBle } from './services/bleService';
@@ -88,6 +89,7 @@ export const App: React.FC = () => {
 
   // Modals
   const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState<boolean>(false);
   const [showMealPicker, setShowMealPicker] = useState<boolean>(false);
   const [showManualAddModal, setShowManualAddModal] = useState<boolean>(false);
   const [showExportModal, setShowExportModal] = useState<boolean>(false);
@@ -332,10 +334,11 @@ export const App: React.FC = () => {
 
   // Close modals with Escape key
   useEffect(() => {
-    if (!showSettingsModal && !showMealPicker && !showManualAddModal && !showExportModal && !showCalendarModal) return;
+    if (!showSettingsModal && !showPrivacyModal && !showMealPicker && !showManualAddModal && !showExportModal && !showCalendarModal) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setShowSettingsModal(false);
+        setShowPrivacyModal(false);
         setShowMealPicker(false);
         setShowManualAddModal(false);
         setShowExportModal(false);
@@ -345,7 +348,7 @@ export const App: React.FC = () => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showSettingsModal, showMealPicker, showManualAddModal, showExportModal, showCalendarModal]);
+  }, [showSettingsModal, showPrivacyModal, showMealPicker, showManualAddModal, showExportModal, showCalendarModal]);
 
   const handleManualAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1526,6 +1529,34 @@ export const App: React.FC = () => {
             </div>
           </div>
 
+          {/* Privacy & KVKK Clarification Card */}
+          <div className="about-section">
+            <span className="settings-group-title">
+              <ShieldCheck size={14} aria-hidden="true" />
+              {t.privacyPolicyTitle}
+            </span>
+
+            <div className="about-card">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)' }}>
+                  {t.privacySectionData}
+                </span>
+                <span style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                  {t.privacyDataDesc}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                className="btn btn-secondary about-github-btn"
+                onClick={() => setShowPrivacyModal(true)}
+              >
+                <ShieldCheck size={15} />
+                <span>{t.privacyPolicyBtn}</span>
+              </button>
+            </div>
+          </div>
+
           {/* Open Food Facts API & Database Card */}
           <div className="about-section">
             <span className="settings-group-title">
@@ -2092,12 +2123,117 @@ export const App: React.FC = () => {
                   </div>
                   <ChevronRight size={18} style={{ color: 'var(--text-muted)' }} />
                 </div>
+
+                <div
+                  className="settings-card"
+                  onClick={() => setShowPrivacyModal(true)}
+                  style={{ cursor: 'pointer' }}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      setShowPrivacyModal(true);
+                    }
+                  }}
+                >
+                  <div className="settings-card-left">
+                    <div className="settings-card-icon">
+                      <ShieldCheck size={18} />
+                    </div>
+                    <div className="settings-card-info">
+                      <span className="settings-card-title">{t.privacyPolicyTitle}</span>
+                      <span className="settings-card-sub">{t.privacyPolicyBtn}</span>
+                    </div>
+                  </div>
+                  <ChevronRight size={18} style={{ color: 'var(--text-muted)' }} />
+                </div>
               </div>
             </div>
 
             <button
               className="btn btn-primary"
               onClick={() => setShowSettingsModal(false)}
+            >
+              {t.calDone}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Privacy Policy & KVKK Clarification Modal */}
+      {showPrivacyModal && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowPrivacyModal(false)}
+        >
+          <div
+            className="modal-content"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="privacy-modal-title"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '480px', maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}
+          >
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <ShieldCheck size={20} style={{ color: 'var(--accent-green, #10b981)' }} />
+                <h2 id="privacy-modal-title" className="modal-title" style={{ fontSize: '15px' }}>
+                  {t.privacyPolicyTitle}
+                </h2>
+              </div>
+              <button
+                type="button"
+                className="icon-btn"
+                onClick={() => setShowPrivacyModal(false)}
+                aria-label={t.calClose}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="settings-body" style={{ overflowY: 'auto', paddingRight: '4px', gap: '12px', fontSize: '12px', lineHeight: 1.5 }}>
+              <div style={{ padding: '10px 12px', background: 'var(--bg-hover)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                <strong style={{ display: 'block', color: 'var(--text-main)', marginBottom: '4px', fontSize: '12.5px' }}>
+                  {t.privacySectionData}
+                </strong>
+                <p style={{ margin: 0, color: 'var(--text-muted)' }}>
+                  {t.privacyDataDesc}
+                </p>
+              </div>
+
+              <div style={{ padding: '10px 12px', background: 'var(--bg-hover)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                <strong style={{ display: 'block', color: 'var(--text-main)', marginBottom: '4px', fontSize: '12.5px' }}>
+                  {t.privacySectionCameraBle}
+                </strong>
+                <p style={{ margin: 0, color: 'var(--text-muted)' }}>
+                  {t.privacyCameraBleDesc}
+                </p>
+              </div>
+
+              <div style={{ padding: '10px 12px', background: 'var(--bg-hover)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                <strong style={{ display: 'block', color: 'var(--text-main)', marginBottom: '4px', fontSize: '12.5px' }}>
+                  {t.privacySectionCrossBorder}
+                </strong>
+                <p style={{ margin: 0, color: 'var(--text-muted)' }}>
+                  {t.privacyCrossBorderDesc}
+                </p>
+              </div>
+
+              <div style={{ padding: '10px 12px', background: 'var(--bg-hover)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                <strong style={{ display: 'block', color: 'var(--text-main)', marginBottom: '4px', fontSize: '12.5px' }}>
+                  {t.privacySectionRights}
+                </strong>
+                <p style={{ margin: 0, color: 'var(--text-muted)' }}>
+                  {t.privacyRightsDesc}
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="btn btn-primary"
+              style={{ marginTop: '12px' }}
+              onClick={() => setShowPrivacyModal(false)}
             >
               {t.calDone}
             </button>
