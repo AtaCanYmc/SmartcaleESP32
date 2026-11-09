@@ -36,3 +36,6 @@ dist_firmware/
 web-flasher/firmware/*.bin
 *.apk
 *.zip
+
+# Local legal & compliance audit reports
+docs/hukuk-denetim-raporu.md
