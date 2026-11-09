@@ -24,6 +24,8 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Smartcale gıda barkodlarını taramak ve besin değerlerini otomatik sorgulamak için kamera izni gereklidir.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Smartcale akıllı mutfak tartısına bağlanmak ve canlı ağırlık ölçümü almak için Bluetooth izni gereklidir.</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
