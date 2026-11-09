@@ -1550,7 +1550,8 @@ export const App: React.FC = () => {
                   <strong style={{ color: 'var(--text-main)', display: 'block', marginBottom: '2px' }}>
                     {t.offCommunityContribution}
                   </strong>
-                  {t.offCommunityDesc}
+                  <p style={{ margin: '0 0 6px 0' }}>{t.offCommunityDesc}</p>
+                  <p style={{ margin: 0, fontStyle: 'italic', fontSize: '10.5px' }}>{t.offCopyrightNotice}</p>
                 </div>
               </div>
 
@@ -2322,6 +2323,11 @@ export const App: React.FC = () => {
                       <strong>Open Food Facts:</strong> {t.contributeToOffCheckbox}
                     </span>
                   </label>
+                  {contributeToOff && (
+                    <div style={{ marginTop: '6px', fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.35, paddingLeft: '23px', borderTop: '1px dashed var(--border-color)', paddingTop: '6px' }}>
+                      {t.offCopyrightNotice}
+                    </div>
+                  )}
                 </div>
               )}
 

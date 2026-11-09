@@ -138,6 +138,7 @@ export interface Translations {
   barcodeLabel: string;
   brandLabel: string;
   contributeToOffCheckbox: string;
+  offCopyrightNotice: string;
   contributeSuccessToast: string;
   uploadingToOff: string;
   openInOffWeb: string;
@@ -323,6 +324,7 @@ export const translations: Record<Language, Translations> = {
     barcodeLabel: 'Barkod (Opsiyonel)',
     brandLabel: 'Marka (Opsiyonel)',
     contributeToOffCheckbox: 'Open Food Facts veritabanına katkıda bulun (Tüm dünyada herkes için kalıcı olsun)',
+    offCopyrightNotice: 'Yalnızca ambalajdaki kamuya açık ürün ve besin bilgilerini giriniz. Veriler Open Food Facts açık veritabanına (ODbL) aktarılır. Marka veya telif hakkı uyar-kaldır bildirimleri için GitHub üzerinden iletişime geçebilirsiniz.',
     contributeSuccessToast: 'Open Food Facts veritabanına başarıyla eklendi!',
     uploadingToOff: 'Open Food Facts havuzuna yükleniyor...',
     openInOffWeb: 'Open Food Facts Web Sayfasında Fotoğraf Yükle',
@@ -506,6 +508,7 @@ export const translations: Record<Language, Translations> = {
     barcodeLabel: 'Barcode (Optional)',
     brandLabel: 'Brand (Optional)',
     contributeToOffCheckbox: 'Contribute to Open Food Facts database (Permanent worldwide for everyone)',
+    offCopyrightNotice: 'Only enter public product and nutrition information from packaging. Data is submitted to the Open Food Facts open database (ODbL). For trademark or copyright notice-and-takedown, please contact us via GitHub.',
     contributeSuccessToast: 'Successfully contributed to Open Food Facts!',
     uploadingToOff: 'Uploading to Open Food Facts...',
     openInOffWeb: 'Upload Packaging Photos on Open Food Facts',
@@ -689,6 +692,7 @@ export const translations: Record<Language, Translations> = {
     barcodeLabel: 'Barcode (Optional)',
     brandLabel: 'Marke (Optional)',
     contributeToOffCheckbox: 'Zur Open Food Facts-Datenbank beitragen (Weltweit dauerhaft für alle verfügbar)',
+    offCopyrightNotice: 'Geben Sie nur öffentlich zugängliche Produkt- und Nährwertdaten ein. Die Daten werden an Open Food Facts (ODbL) übermittelt. Für Urheberrechts- oder Markenhinweise kontaktieren Sie uns bitte über GitHub.',
     contributeSuccessToast: 'Erfolgreich zu Open Food Facts hinzugefügt!',
     uploadingToOff: 'Wird auf Open Food Facts hochgeladen...',
     openInOffWeb: 'Verpackungsfotos auf Open Food Facts hochladen',
@@ -872,6 +876,7 @@ export const translations: Record<Language, Translations> = {
     barcodeLabel: 'Code-barres (Optionnel)',
     brandLabel: 'Marque (Optionnel)',
     contributeToOffCheckbox: 'Contribuer à la base de données Open Food Facts (Permanent pour tous dans le monde)',
+    offCopyrightNotice: 'Saisissez uniquement les informations publiques de l\'emballage. Les données sont soumises à Open Food Facts (ODbL). Pour toute notification d\'atteinte aux droits d\'auteur, contactez-nous via GitHub.',
     contributeSuccessToast: 'Ajouté avec succès à Open Food Facts !',
     uploadingToOff: 'Envoi vers Open Food Facts...',
     openInOffWeb: 'Téléverser des photos d\'emballage sur Open Food Facts',
@@ -1055,6 +1060,7 @@ export const translations: Record<Language, Translations> = {
     barcodeLabel: 'Código de barras (Opcional)',
     brandLabel: 'Marca (Opcional)',
     contributeToOffCheckbox: 'Contribuir a la base de datos de Open Food Facts (Permanente para todos en el mundo)',
+    offCopyrightNotice: 'Ingrese únicamente información pública del envase. Los datos se envían a Open Food Facts (ODbL). Para avisos de derechos de autor o marcas comerciales, contáctenos mediante GitHub.',
     contributeSuccessToast: '¡Añadido con éxito a Open Food Facts!',
     uploadingToOff: 'Subiendo a Open Food Facts...',
     openInOffWeb: 'Subir fotos del empaque en Open Food Facts',
@@ -1238,6 +1244,7 @@ export const translations: Record<Language, Translations> = {
     barcodeLabel: '条形码（选填）',
     brandLabel: '品牌（选填）',
     contributeToOffCheckbox: '贡献到 Open Food Facts 数据库（全球永久共享）',
+    offCopyrightNotice: '请仅输入包装上的公开营养信息。数据将提交至 Open Food Facts 开放数据库（ODbL）。侵权或商标通知请通过 GitHub 联系我们。',
     contributeSuccessToast: '已成功贡献至 Open Food Facts！',
     uploadingToOff: '正在上传到 Open Food Facts...',
     openInOffWeb: '在 Open Food Facts 网页上传包装照片',
@@ -1421,6 +1428,7 @@ export const translations: Record<Language, Translations> = {
     barcodeLabel: 'バーコード（任意）',
     brandLabel: 'ブランド（任意）',
     contributeToOffCheckbox: 'Open Food Facts データベースに貢献（世界中で恒久共有）',
+    offCopyrightNotice: 'パッケージに記載された公開情報のみを入力してください。データは Open Food Facts オープンデータベース（ODbL）に提供されます。著作権・商標に関する通知は GitHub よりご連絡ください。',
     contributeSuccessToast: 'Open Food Facts に正常に追加されました！',
     uploadingToOff: 'Open Food Facts にアップロード中...',
     openInOffWeb: 'Open Food Facts でパッケージ写真を登録',
@@ -1604,6 +1612,7 @@ export const translations: Record<Language, Translations> = {
     barcodeLabel: 'Штрихкод (Необязательно)',
     brandLabel: 'Бренд (Необязательно)',
     contributeToOffCheckbox: 'Внести в базу данных Open Food Facts (Доступно всем в мире)',
+    offCopyrightNotice: 'Вносите только публичные данные с упаковки. Данные передаются в базу Open Food Facts (ODbL). По вопросам авторских прав и товарных знаков обращайтесь через GitHub.',
     contributeSuccessToast: 'Успешно добавлено в Open Food Facts!',
     uploadingToOff: 'Загрузка в Open Food Facts...',
     openInOffWeb: 'Загрузить фото упаковки на Open Food Facts',
