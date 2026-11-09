@@ -9,7 +9,7 @@
   <meta name="author" content="Ata Can" />
   <meta name="robots" content="index, follow" />
   <meta name="theme-color" content="#090d14" id="metaThemeColor" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://unpkg.com; font-src 'self';" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self';" />
 
   <script src="./i18n.js"></script>
   <script>
@@ -45,8 +45,8 @@
   <link rel="shortcut icon" href="./favicon.ico" />
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png" />
 
-  <!-- ESP Web Tools web component -->
-  <script type="module" crossorigin="anonymous" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+  <!-- ESP Web Tools web component (Self-hosted vendor) -->
+  <script type="module" src="./vendor/esp-web-tools/install-button.js"></script>
 
   <style>
     :root, [data-theme="dark"] {
@@ -1480,7 +1480,7 @@
 
   <!-- Interactive JavaScript logic -->
   <script type="module">
-    import { ESPLoader, Transport } from "https://unpkg.com/esptool-js@0.5.4/bundle.js";
+    import { ESPLoader, Transport } from "./vendor/esptool-bundle.js";
 
     // 1. Browser compatibility check
     const isSerialSupported = "serial" in navigator;
