@@ -9,6 +9,19 @@
     <meta name="author" content="Ata Can" />
     <meta name="robots" content="index, follow" />
     <meta name="theme-color" content="#0e213e" />
+    <meta name="color-scheme" content="light dark" />
+
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('smartcale-theme') || localStorage.getItem('smartscale-theme');
+          var meta = document.querySelector('meta[name="color-scheme"]');
+          var effective = saved === 'light' || saved === 'dark' ? saved : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+          document.documentElement.setAttribute('data-theme', effective);
+          if (meta) meta.setAttribute('content', (saved === 'light' || saved === 'dark') ? saved : 'light dark');
+        } catch (e) {}
+      })();
+    </script>
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />

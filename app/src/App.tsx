@@ -319,6 +319,10 @@ export const App: React.FC = () => {
         effective = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
       }
       document.documentElement.setAttribute('data-theme', effective);
+      const meta = document.querySelector('meta[name="color-scheme"]');
+      if (meta) {
+        meta.setAttribute('content', theme === 'system' ? 'light dark' : theme);
+      }
     };
 
     applyTheme();

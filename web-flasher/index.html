@@ -9,6 +9,7 @@
   <meta name="author" content="Ata Can" />
   <meta name="robots" content="index, follow" />
   <meta name="theme-color" content="#090d14" id="metaThemeColor" />
+  <meta name="color-scheme" content="light dark" id="metaColorScheme" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self';" />
 
   <script src="./i18n.js"></script>
@@ -18,6 +19,10 @@
       var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
       var theme = savedTheme || (prefersDark ? 'dark' : 'light');
       document.documentElement.setAttribute('data-theme', theme);
+      var metaScheme = document.querySelector('meta[name="color-scheme"]');
+      if (metaScheme) {
+        metaScheme.setAttribute('content', savedTheme ? theme : 'light dark');
+      }
 
       var lang = getInitialLanguage();
       document.documentElement.lang = lang;
@@ -49,7 +54,19 @@
   <script type="module" src="./vendor/esp-web-tools/install-button.js"></script>
 
   <style>
+    :root {
+      color-scheme: light dark;
+
+      &:has(> head > meta[name="color-scheme"][content="dark"]) {
+        color-scheme: dark;
+      }
+      &:has(> head > meta[name="color-scheme"][content="light"]) {
+        color-scheme: light;
+      }
+    }
+
     :root, [data-theme="dark"] {
+      color-scheme: dark;
       --bg: #090d14;
       --surface-1: #0f1522;
       --surface-2: #151d2f;
@@ -85,6 +102,7 @@
     }
 
     [data-theme="light"] {
+      color-scheme: light;
       --bg: #f8fafc;
       --surface-1: #ffffff;
       --surface-2: #f1f5f9;
@@ -1850,6 +1868,7 @@
     // ------------------------------------------------------------------------
     const THEME_STORAGE_KEY = 'smartcale-theme';
     const metaTheme = document.getElementById('metaThemeColor');
+    const metaColorScheme = document.querySelector('meta[name="color-scheme"]');
     const themeToggleBtn = document.getElementById('themeToggleBtn');
 
     function updateThemeUI(theme) {
@@ -1860,6 +1879,9 @@
       }
       if (metaTheme) {
         metaTheme.setAttribute('content', theme === 'light' ? '#f8fafc' : '#090d14');
+      }
+      if (metaColorScheme) {
+        metaColorScheme.setAttribute('content', theme);
       }
     }
 

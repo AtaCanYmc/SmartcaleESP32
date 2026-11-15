@@ -1,4 +1,13 @@
 :root {
+  color-scheme: light dark;
+
+  &:has(> head > meta[name="color-scheme"][content="dark"]) {
+    color-scheme: dark;
+  }
+  &:has(> head > meta[name="color-scheme"][content="light"]) {
+    color-scheme: light;
+  }
+
   --bg-primary: #0f172a;
   --bg-secondary: #1e293b;
   --bg-tertiary: #334155;
@@ -19,6 +28,7 @@
 }
 
 [data-theme="light"] {
+  color-scheme: light;
   --bg-primary: #f8fafc;
   --bg-secondary: #ffffff;
   --bg-tertiary: #f1f5f9;
@@ -34,6 +44,10 @@
   --card-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
   --modal-overlay: rgba(15, 23, 42, 0.45);
   --unit-active-bg: #ffffff;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
 }
 
 * {
