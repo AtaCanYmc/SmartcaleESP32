@@ -1,0 +1,51 @@
+name: Feature Request
+description: Propose a new feature, peripheral capability, or architectural enhancement
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please check existing issues and [ROADMAP.md](../../ROADMAP.md) to ensure this proposal is not already tracked.
+  - type: dropdown
+    id: component
+    attributes:
+      label: Target Subsystem
+      description: Select which component this proposal targets.
+      options:
+        - Firmware (ESP32-C3 / Sensors / Networking)
+        - Companion App (React / Capacitor / BLE)
+        - Web Flasher (Web Serial installer)
+        - Tooling & Automation
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: Describe the technical friction, hardware limitation, or use case this feature addresses.
+      placeholder: I encounter an issue when...
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed Solution
+      description: Detail the requested behavior, protocol changes, or architecture modifications.
+      placeholder: Add support for...
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Describe any alternative solutions or workarounds you considered.
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Contributor Checklist
+      options:
+        - label: I searched existing issues and PRs before submitting this request.
+          required: true
+        - label: This proposal adheres to anti-AI-slop and governance standards.
+          required: true

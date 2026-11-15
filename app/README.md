@@ -1,4 +1,6 @@
-# SmartScale Cross-Platform App (Capacitor 8)
+# Smartcale Cross-Platform App (Capacitor 8)
+
+[← Back to Root Repository](../README.md)
 
 Single-codebase Web, iOS, and Android companion application for **SmartcaleESP32**.
 
@@ -19,18 +21,24 @@ npm run dev
 ```
 Open in Google Chrome or Microsoft Edge, click **Bağlan (Connect)**, and select your `SmartKitchenScale` device.
 
-### 2. Build Web Bundle
+### 2. Run Tests & Linter
+```bash
+npm test       # runs scaleMath, calendar, i18n, bleService, and foodService test suites
+npm run lint   # executes oxlint
+```
+
+### 3. Build Web Bundle
 ```bash
 npm run build
 ```
 
-### 3. Sync to Mobile (Capacitor 8)
+### 4. Sync to Mobile (Capacitor 8)
 Sync compiled web assets to native iOS and Android projects:
 ```bash
 npx cap sync
 ```
 
-### 4. Run on Android
+### 5. Run on Android
 Open in Android Studio or run directly via CLI:
 ```bash
 npx cap open android
@@ -38,7 +46,7 @@ npx cap open android
 npx cap run android
 ```
 
-### 5. Run on iOS
+### 6. Run on iOS
 Open in Xcode (utilizes Swift Package Manager):
 ```bash
 npx cap open ios

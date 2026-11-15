@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security Vulnerabilities
+    url: https://github.com/AtaCanYmc/SmartcaleESP32/security/advisories/new
+    about: Please report security vulnerabilities privately according to our security policy.
+  - name: Community Discussions
+    url: https://github.com/AtaCanYmc/SmartcaleESP32/discussions
+    about: Ask questions and discuss architecture or feature proposals with the community.

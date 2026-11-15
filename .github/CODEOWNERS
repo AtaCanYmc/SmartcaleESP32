@@ -1,0 +1,21 @@
+# Global code ownership
+* @AtaCanYmc
+
+# GitHub Actions workflows and automation manifests
+/.github/ @AtaCanYmc
+
+# Core embedded firmware and pin configs
+/src/ @AtaCanYmc
+/include/ @AtaCanYmc
+/platformio.ini @AtaCanYmc
+
+# Cross-platform companion app
+/app/ @AtaCanYmc
+
+# Web flasher installer
+/web-flasher/ @AtaCanYmc
+
+# Security, licensing, and governance
+/LICENSE @AtaCanYmc
+/SECURITY.md @AtaCanYmc
+/CONTRIBUTING.md @AtaCanYmc

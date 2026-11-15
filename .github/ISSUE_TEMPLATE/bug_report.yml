@@ -1,0 +1,62 @@
+name: Bug Report
+description: Report a reproducible defect or bug in firmware, companion app, or web flasher
+title: "fix: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please verify the issue has not been reported before opening a new ticket.
+        For security vulnerability reports, refer to [SECURITY.md](../../SECURITY.md).
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected Subsystem
+      description: Select which component encountered the defect.
+      options:
+        - Firmware (ESP32-C3 / HX711 / OLED / SoftAP)
+        - Companion App (React / Capacitor / BLE)
+        - Web Flasher (Web Serial / Manifest)
+        - Documentation / Build Tooling
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: Bug Description
+      description: Provide a clear and concise description of the bug.
+      placeholder: Describe what happened.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Step-by-step instructions to reproduce the behavior.
+      placeholder: |
+        1. Power on device or run app...
+        2. Execute tare / connect BLE...
+        3. Observe incorrect behavior...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Serial Logs or Terminal Output
+      description: Paste relevant serial terminal output (115200 baud) or browser developer console traces.
+      render: shell
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Hardware board revision, OS, browser (for Web Serial/Bluetooth), app version.
+      placeholder: ESP32-C3 Super Mini, macOS 15.1, Chrome 130, App v1.3.0
+    validations:
+      required: true

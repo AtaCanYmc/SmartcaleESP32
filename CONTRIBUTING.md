@@ -25,17 +25,28 @@ Example: `feat(ble): add connection timeout handler`
    ```bash
    git checkout -b feat/your-feature-name
    ```
-3. Install PlatformIO Core if not present:
+3. Firmware Verification (ESP32-C3):
    ```bash
+   # Install PlatformIO Core if not present
    pip install platformio
-   ```
-4. Verify the build locally:
-   ```bash
-   pio run
-   ```
-5. Ensure static analysis passes:
-   ```bash
+
+   # Compile firmware
+   pio run # or: make build-firmware
+
+   # Run static analysis
    pio check
+   ```
+4. Companion App Verification (`app/`):
+   ```bash
+   cd app
+   npm ci
+   npm test       # executes test suite runner
+   npm run lint   # executes oxlint
+   npm run build  # executes tsc typecheck & vite production build
+   ```
+5. Unified Verification:
+   ```bash
+   make ci        # runs full verification across firmware and companion app
    ```
 
 ## Pull Request Checklist
@@ -44,4 +55,6 @@ Before submitting a pull request, verify:
 - The firmware compiles cleanly via `pio run` with zero compiler warnings.
 - New peripherals use non-blocking timers instead of blocking delays.
 - Hardware pin assignments are documented in `include/config.h`.
+- Frontend changes pass `npm test`, `npm run lint`, and `npm run build` in `app/`.
+- All internal markdown documentation links resolve cleanly.
 - The pull request description specifies testing hardware and validation results.

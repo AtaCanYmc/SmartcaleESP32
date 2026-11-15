@@ -13,7 +13,7 @@ When a Custom API is configured and enabled in Settings:
 2. **Prioritization**: Results from your Custom API are listed first.
 3. **Deduplication**: Results sharing the same barcode or product code are deduplicated, keeping your custom product definition.
 4. **Resilience & Fallback**:
-   - If the Custom API fails, times out (4-second abort controller), or returns no matches, Open Food Facts results are returned seamlessly.
+   - If the Custom API fails, times out (4-second abort controller), or returns no matches, Open Food Facts results are returned as fallback.
    - Barcode scans check your Custom API first; if unlisted, they fall back to Open Food Facts.
 
 ```mermaid

@@ -60,6 +60,7 @@ Detailed engineering guides and architectural specifications are organized in th
 | [Wi-Fi Provisioning & Portal](docs/provisioning.md) | Captive portal DNS hijacking, HTTP endpoints, and NVS storage layout |
 | [Calibration & Troubleshooting](docs/calibration.md) | Mathematical formulas, physical calibration procedure, and troubleshooting matrix |
 | [Mock / Simulation Mode](docs/mock_mode.md) | Hardware-free testing guide, synthetic weight injection, serial monitor control, and tare testing |
+| [Food Database & Custom API](docs/food_api.md) | Custom REST API schema, Open Food Facts hybrid search, and bearer token security |
 
 ---
 
@@ -261,42 +262,63 @@ For runtime web portal calibration, mathematical derivations, and a full trouble
 ```
 SmartcaleESP32/
 ├── .github/
+│   ├── ISSUE_TEMPLATE/
+│   │   ├── bug_report.yml          # Structured defect report template
+│   │   ├── config.yaml             # Issue routing and security links
+│   │   └── feature_request.yml     # Technical feature request form
+│   ├── PULL_REQUEST_TEMPLATE/
+│   │   └── pull_request_template.md # PR validation and Conventional Commits checklist
 │   ├── workflows/
-│   │   ├── ci.yml          # Automated PlatformIO & Capacitor build verification
-│   │   └── release.yml     # Release Please automated semantic releases & binary assets
-│   └── dependabot.yml      # Automated weekly dependency updates (npm & GitHub Actions)
-├── .release-please-config.json   # Release Please configuration
-├── .release-please-manifest.json # Release Please version tracking
-├── app/                    # Cross-platform companion app (Capacitor 8 + React)
-│   ├── android/            # Native Android wrapper project
-│   ├── ios/                # Native iOS wrapper project (Swift Package Manager)
-│   ├── src/                # Web UI, BLE GATT client, and calibration wizard
-│   └── package.json        # Frontend and Capacitor dependencies
+│   │   ├── ci.yml                  # Automated PlatformIO & Capacitor build verification
+│   │   ├── deploy-pages.yml        # GitHub Pages deployment for flasher & companion app
+│   │   ├── packages.yml            # Multi-package release bundling
+│   │   └── release.yml             # Release Please automated releases & binary assets
+│   ├── CODEOWNERS                  # Automated PR review routing
+│   └── dependabot.yml              # Automated weekly dependency updates
+├── .release-please-config.json       # Release Please configuration
+├── .release-please-manifest.json     # Release Please version tracking
+├── app/                              # Cross-platform companion app (Capacitor 8 + React)
+│   ├── android/                      # Native Android wrapper project
+│   ├── ios/                          # Native iOS wrapper project (Swift Package Manager)
+│   ├── src/                          # Web UI, BLE GATT client, and calibration wizard
+│   ├── package.json                  # Frontend and Capacitor dependencies
+│   └── README.md                     # Companion app documentation
 ├── assets/
-│   └── logo.jpg            # Repository brand emblem
-├── docs/                   # In-depth technical documentation suite
-│   ├── README.md           # Documentation index and subsystem map
-│   ├── architecture.md     # Software scheduling and signal processing filters
-│   ├── ble_protocol.md     # BLE GATT service and characteristic specification
-│   ├── calibration.md      # Load cell calibration protocol and diagnosis
-│   ├── hardware.md         # Electrical schematics, pin mapping, and peripherals
-│   └── provisioning.md     # SoftAP captive portal and NVS configuration
+│   └── logo.jpg                      # Repository brand emblem
+├── docs/                             # In-depth technical documentation suite
+│   ├── README.md                     # Documentation index and subsystem map
+│   ├── architecture.md               # Software scheduling and signal processing filters
+│   ├── ble_protocol.md               # BLE GATT service and characteristic specification
+│   ├── calibration.md                # Load cell calibration protocol and diagnosis
+│   ├── food_api.md                   # Food database schema and REST integration
+│   ├── hardware.md                   # Electrical schematics, pin mapping, and peripherals
+│   ├── mock_mode.md                  # Hardware-free simulation mode and synthetic weight injection
+│   └── provisioning.md               # SoftAP captive portal and NVS configuration
 ├── include/
-│   ├── ble_scale.h         # BLE GATT server, advertising, and characteristic callbacks
-│   ├── config.h            # Pin definitions, calibration factor, and timing constants
-│   ├── display.h           # SH1106 OLED rendering graphics
-│   ├── portal.h            # Captive portal DNS server and mobile web configurator
-│   └── storage.h           # NVS Preferences manager for persistent parameters
+│   ├── ble_scale.h                   # BLE GATT server, advertising, and characteristic callbacks
+│   ├── config.h                      # Pin definitions, calibration factor, and timing constants
+│   ├── display.h                     # SH1106 OLED rendering graphics
+│   ├── portal.h                      # Captive portal DNS server and mobile web configurator
+│   └── storage.h                     # NVS Preferences manager for persistent parameters
 ├── src/
-│   └── main.cpp            # Main entry point, interrupt handlers, and scheduling loop
-├── .gitignore              # Build artifact exclusions (.pio, .vscode)
-├── CONTRIBUTING.md         # Commit standards and pull request validation rules
-├── LICENSE                 # Apache 2.0 License terms
-├── Makefile                # Unified build automation for firmware and companion app
-├── platformio.ini          # Board definitions, build flags, and library dependencies
-├── README.md               # Primary technical documentation
-├── ROADMAP.md              # Milestone tracking and planned features
-└── SECURITY.md             # Vulnerability disclosure policy and response SLA
+│   └── main.cpp                      # Main entry point, interrupt handlers, and scheduling loop
+├── web-flasher/                      # In-browser Web Serial firmware flasher and telemetry console
+│   ├── firmware/                     # Compiled factory binaries for web flashing
+│   ├── i18n.js                       # Multi-language translation dictionaries
+│   ├── index.html                    # Single-page Web Serial interface and terminal
+│   └── README.md                     # Web flasher technical overview
+├── .editorconfig                     # Universal editor and IDE formatting rules
+├── .gitattributes                    # Cross-platform line ending normalization and binary rules
+├── .gitignore                        # Build artifact exclusions (.pio, node_modules)
+├── .markdownlint.json                # Markdown linting configuration
+├── CHANGELOG.md                      # Automated semantic changelog
+├── CONTRIBUTING.md                   # Commit standards and pull request validation rules
+├── LICENSE                           # Apache 2.0 License terms
+├── Makefile                          # Unified build automation for firmware and companion app
+├── platformio.ini                    # Board definitions, build flags, and library dependencies
+├── README.md                         # Primary technical documentation
+├── ROADMAP.md                        # Milestone tracking and planned features
+└── SECURITY.md                       # Vulnerability disclosure policy and response SLA
 ```
 
 ---

@@ -1,0 +1,18 @@
+{
+  "default": true,
+  "MD013": false,
+  "MD033": {
+    "allowed_elements": [
+      "img",
+      "details",
+      "summary",
+      "div",
+      "p",
+      "h1"
+    ]
+  },
+  "MD024": {
+    "siblings_only": true
+  },
+  "MD041": false
+}
