@@ -1,56 +1,56 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Smartcale ESP32 - Web Flasher & Serial Diagnostics</title>
+  <title>Smartcale ESP32 — Web Flasher &amp; Serial Diagnostics</title>
   <meta name="description" content="In-browser firmware installer and live serial diagnostic console for ESP32-C3 Smartcale kitchen scale. Flash binaries and test telemetry directly via Web Serial." />
   <meta name="keywords" content="ESP32, ESP32-C3, Smartcale, Kitchen Scale, Web Flasher, Web Serial, HX711, IoT, Firmware Flasher" />
   <meta name="author" content="Ata Can" />
   <meta name="robots" content="index, follow" />
-  <meta name="theme-color" content="#090d14" id="metaThemeColor" />
+  <meta name="theme-color" content="#08090c" id="metaThemeColor" />
   <meta name="color-scheme" content="light dark" id="metaColorScheme" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self';" />
 
-  <script src="./i18n.js"></script>
-  <script>
-    (function() {
-      var savedTheme = localStorage.getItem('smartcale-theme') || localStorage.getItem('smartscale-theme');
-      var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      var theme = savedTheme || (prefersDark ? 'dark' : 'light');
-      document.documentElement.setAttribute('data-theme', theme);
-      var metaScheme = document.querySelector('meta[name="color-scheme"]');
-      if (metaScheme) {
-        metaScheme.setAttribute('content', savedTheme ? theme : 'light dark');
-      }
-
-      var lang = getInitialLanguage();
-      document.documentElement.lang = lang;
-    })();
-  </script>
-
-  <!-- Open Graph / Facebook -->
+  <!-- Open Graph / Twitter -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://atacanymc.github.io/SmartcaleESP32/" />
-  <meta property="og:title" content="Smartcale ESP32 - Web Flasher & Serial Diagnostics" />
+  <meta property="og:title" content="Smartcale ESP32 — Precision Web Flasher &amp; Serial Diagnostics" />
   <meta property="og:description" content="Direct in-browser firmware installation, memory flashing, and live serial telemetry console for the Smartcale ESP32-C3 smart kitchen scale." />
   <meta property="og:image" content="./logo.jpg" />
   <meta property="og:site_name" content="Smartcale ESP32" />
-
-  <!-- Twitter -->
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="Smartcale ESP32 - Web Flasher & Serial Diagnostics" />
-  <meta name="twitter:description" content="Direct in-browser firmware installation, memory flashing, and live serial telemetry console for the Smartcale ESP32-C3 smart kitchen scale." />
+  <meta name="twitter:title" content="Smartcale ESP32 — Precision Web Flasher &amp; Serial Diagnostics" />
   <meta name="twitter:image" content="./logo.jpg" />
 
-  <!-- Humans & Icons -->
+  <!-- Icons & Manifest -->
   <link rel="author" href="./humans.txt" />
   <link rel="icon" type="image/png" href="./favicon-96x96.png" sizes="96x96" />
   <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
   <link rel="shortcut icon" href="./favicon.ico" />
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png" />
 
-  <!-- ESP Web Tools web component (Self-hosted vendor) -->
+  <!-- Typography: Space Grotesk, Inter, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- i18n Initialization -->
+  <script src="./i18n.js"></script>
+  <script>
+    (function () {
+      var savedTheme = localStorage.getItem('smartcale-theme') || localStorage.getItem('smartscale-theme');
+      var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var theme = savedTheme || (prefersDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+      var metaScheme = document.querySelector('meta[name="color-scheme"]');
+      if (metaScheme) metaScheme.setAttribute('content', savedTheme ? theme : 'light dark');
+      if (typeof getInitialLanguage === 'function') {
+        document.documentElement.lang = getInitialLanguage();
+      }
+    })();
+  </script>
+
+  <!-- Self-hosted ESP Web Tools -->
   <script type="module" src="./vendor/esp-web-tools/install-button.js"></script>
 
   <style>
@@ -67,67 +67,71 @@
 
     :root, [data-theme="dark"] {
       color-scheme: dark;
-      --bg: #090d14;
-      --surface-1: #0f1522;
-      --surface-2: #151d2f;
-      --surface-3: #1c263c;
-      --border-subtle: #1e283d;
-      --border-strong: #2c3a56;
+      --bg: #08090c;
+      --bg-elevated: #0e1117;
+      --surface-1: #12161f;
+      --surface-2: #181d29;
+      --surface-3: #202737;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.16);
 
-      --text-main: #f1f5f9;
-      --text-muted: #94a3b8;
-      --text-faint: #64748b;
+      --text-main: #f4f6fa;
+      --text-secondary: #a1aab8;
+      --text-muted: #6b7485;
 
-      --accent: #2563eb;
-      --accent-hover: #1d4ed8;
-      --accent-focus: rgba(37, 99, 235, 0.35);
+      /* Braun / Teenage Engineering Precision Accents */
+      --accent: #ff5500;
+      --accent-hover: #ff6a1f;
+      --accent-soft: rgba(255, 85, 0, 0.12);
+      --accent-border: rgba(255, 85, 0, 0.35);
 
-      --success: #10b981;
-      --success-subtle: rgba(16, 185, 129, 0.12);
+      --signal: #00d084;
+      --signal-soft: rgba(0, 208, 132, 0.12);
       --warning: #f59e0b;
-      --warning-subtle: rgba(245, 158, 11, 0.12);
+      --warning-soft: rgba(245, 158, 11, 0.12);
       --danger: #ef4444;
-      --danger-subtle: rgba(239, 68, 68, 0.12);
+      --danger-soft: rgba(239, 68, 68, 0.12);
 
-      --terminal-bg: #04070d;
-      --terminal-text: #e2e8f0;
-      --qr-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+      --terminal-bg: #050608;
+      --terminal-text: #dce3ee;
+      --grid-line: rgba(255, 255, 255, 0.025);
+      --shadow-card: 0 24px 60px -24px rgba(0, 0, 0, 0.75);
 
-      --radius-sm: 4px;
-      --radius-md: 6px;
-      --radius-lg: 8px;
-
-      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --font-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
     }
 
     [data-theme="light"] {
       color-scheme: light;
-      --bg: #f8fafc;
+      --bg: #f4f5f7;
+      --bg-elevated: #ffffff;
       --surface-1: #ffffff;
-      --surface-2: #f1f5f9;
-      --surface-3: #e2e8f0;
-      --border-subtle: #e2e8f0;
-      --border-strong: #cbd5e1;
+      --surface-2: #eceef2;
+      --surface-3: #e2e5eb;
+      --border: rgba(15, 23, 42, 0.09);
+      --border-strong: rgba(15, 23, 42, 0.18);
 
-      --text-main: #0f172a;
-      --text-muted: #475569;
-      --text-faint: #64748b;
+      --text-main: #0d1117;
+      --text-secondary: #475467;
+      --text-muted: #667085;
 
-      --accent: #2563eb;
-      --accent-hover: #1d4ed8;
-      --accent-focus: rgba(37, 99, 235, 0.25);
+      --accent: #ea4c00;
+      --accent-hover: #d44400;
+      --accent-soft: rgba(234, 76, 0, 0.09);
+      --accent-border: rgba(234, 76, 0, 0.32);
 
-      --success: #059669;
-      --success-subtle: rgba(5, 150, 105, 0.1);
+      --signal: #059669;
+      --signal-soft: rgba(5, 150, 105, 0.1);
       --warning: #d97706;
-      --warning-subtle: rgba(217, 119, 6, 0.1);
+      --warning-soft: rgba(217, 119, 6, 0.1);
       --danger: #dc2626;
-      --danger-subtle: rgba(220, 38, 38, 0.08);
+      --danger-soft: rgba(220, 38, 38, 0.09);
 
-      --terminal-bg: #090d16;
-      --terminal-text: #f8fafc;
-      --qr-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+      --terminal-bg: #0b0e14;
+      --terminal-text: #f1f5f9;
+      --grid-line: rgba(15, 23, 42, 0.035);
+      --shadow-card: 0 20px 50px -24px rgba(15, 23, 42, 0.12);
     }
 
     * {
@@ -136,49 +140,60 @@
       padding: 0;
     }
 
+    html {
+      scroll-behavior: smooth;
+    }
+
     body {
       background-color: var(--bg);
+      background-image:
+        linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+      background-size: 48px 48px;
       color: var(--text-main);
       font-family: var(--font-sans);
-      line-height: 1.5;
+      line-height: 1.55;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      overflow-x: hidden;
       -webkit-font-smoothing: antialiased;
     }
 
-    /* Skip link for keyboard accessibility */
+    /* Skip Link */
     .skip-link {
       position: absolute;
-      top: -40px;
+      top: -48px;
       left: 1rem;
       background: var(--accent);
       color: #fff;
       padding: 0.5rem 1rem;
-      border-radius: var(--radius-sm);
+      border-radius: 8px;
       z-index: 1000;
-      text-decoration: none;
-      font-size: 0.875rem;
       font-weight: 600;
+      font-size: 0.85rem;
+      text-decoration: none;
       transition: top 0.15s ease;
     }
     .skip-link:focus {
       top: 1rem;
     }
 
-    /* Top Navigation Bar */
+    /* Architectural Top Bar */
     header {
-      background-color: var(--surface-1);
-      border-bottom: 1px solid var(--border-subtle);
       position: sticky;
       top: 0;
       z-index: 50;
+      border-bottom: 1px solid var(--border);
+      background: color-mix(in srgb, var(--bg) 82%, transparent);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
     }
 
-    .header-content {
-      max-width: 1120px;
+    .header-inner {
+      max-width: 1240px;
       margin: 0 auto;
-      padding: 0.75rem 1.25rem;
+      padding: 0.85rem 1.5rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -193,405 +208,596 @@
       color: var(--text-main);
     }
 
-    .brand-logo {
-      width: 32px;
-      height: 32px;
-      border-radius: var(--radius-md);
-      object-fit: cover;
+    .brand-mark {
+      position: relative;
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      overflow: hidden;
       border: 1px solid var(--border-strong);
+      background: var(--surface-2);
+      flex-shrink: 0;
+    }
+
+    .brand-mark img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
       display: block;
     }
 
     .brand-title {
-      font-size: 1.05rem;
+      font-family: var(--font-display);
+      font-size: 1.1rem;
       font-weight: 700;
-      letter-spacing: -0.01em;
+      letter-spacing: -0.02em;
     }
 
-    .brand-version {
-      font-size: 0.75rem;
+    .brand-tag {
       font-family: var(--font-mono);
-      color: var(--text-muted);
-      background: var(--surface-2);
-      border: 1px solid var(--border-subtle);
-      padding: 0.1rem 0.45rem;
-      border-radius: var(--radius-sm);
-      font-weight: 500;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.15rem 0.5rem;
+      border-radius: 6px;
+      background: var(--accent-soft);
+      border: 1px solid var(--accent-border);
+      color: var(--accent);
     }
 
-    .header-nav {
+    .nav-cluster {
       display: flex;
       align-items: center;
-      gap: 1.25rem;
+      gap: 0.65rem;
+      flex-wrap: wrap;
     }
 
-    .header-nav a {
-      color: var(--text-muted);
+    .nav-link {
+      color: var(--text-secondary);
       text-decoration: none;
-      font-size: 0.875rem;
+      font-size: 0.825rem;
       font-weight: 500;
-      transition: color 0.15s;
+      padding: 0.4rem 0.65rem;
+      border-radius: 8px;
+      transition: color 0.15s, background-color 0.15s;
     }
-
-    .header-nav a:hover, .header-nav a:focus-visible {
+    .nav-link:hover {
       color: var(--text-main);
+      background: var(--surface-2);
     }
 
-    /* Main Container */
+    .nav-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      background: var(--accent);
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.48rem 0.95rem;
+      border-radius: 9px;
+      transition: background-color 0.15s, transform 0.15s;
+    }
+    .nav-cta:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+    }
+
+    .control-pill {
+      height: 34px;
+      background: var(--surface-1);
+      border: 1px solid var(--border-strong);
+      color: var(--text-main);
+      border-radius: 9px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0 0.6rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.15s, background-color 0.15s;
+    }
+    .control-pill:hover {
+      border-color: var(--accent);
+      background: var(--surface-2);
+    }
+
+    .theme-toggle-btn {
+      width: 34px;
+      padding: 0;
+    }
+    .theme-toggle-btn .icon-moon { display: none; }
+    .theme-toggle-btn .icon-sun { display: block; }
+    [data-theme="light"] .theme-toggle-btn .icon-sun { display: none; }
+    [data-theme="light"] .theme-toggle-btn .icon-moon { display: block; }
+
+    /* Container */
     main {
-      max-width: 1120px;
-      margin: 0 auto;
-      padding: 1.75rem 1.25rem 3.5rem;
+      max-width: 1240px;
       width: 100%;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 5rem;
       flex: 1;
     }
 
-    /* Hero / Status Bar */
-    .page-intro {
-      margin-bottom: 1.75rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      flex-wrap: wrap;
-      gap: 1rem;
-      border-bottom: 1px solid var(--border-subtle);
-      padding-bottom: 1.25rem;
-    }
-
-    .intro-title h1 {
-      font-size: 1.6rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      color: var(--text-main);
-      margin-bottom: 0.25rem;
-    }
-
-    .intro-title p {
-      font-size: 0.925rem;
-      color: var(--text-muted);
-      max-width: 680px;
-    }
-
-    .device-target-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.8rem;
-      font-family: var(--font-mono);
-      background: var(--surface-2);
-      border: 1px solid var(--border-strong);
-      padding: 0.35rem 0.65rem;
-      border-radius: var(--radius-sm);
-      color: var(--text-muted);
-    }
-
-    .status-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background-color: var(--text-faint);
-    }
-
-    .status-dot.active {
-      background-color: var(--success);
-    }
-
-    /* Browser compatibility alert */
+    /* Compatibility Alert */
     .alert-banner {
       display: none;
-      background: var(--warning-subtle);
-      border: 1px solid var(--warning);
-      border-radius: var(--radius-md);
-      padding: 0.875rem 1.25rem;
-      margin-bottom: 1.5rem;
-      color: var(--text-main);
-      font-size: 0.875rem;
       align-items: flex-start;
-      gap: 0.75rem;
+      gap: 0.85rem;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.75rem;
+      border-radius: 14px;
+      background: var(--warning-soft);
+      border: 1px solid var(--warning);
+      font-size: 0.875rem;
     }
-
     .alert-banner.show {
       display: flex;
     }
-
     .alert-banner svg {
-      flex-shrink: 0;
       color: var(--warning);
+      flex-shrink: 0;
       margin-top: 0.15rem;
     }
 
-    .alert-banner a {
-      color: var(--accent);
-      text-decoration: underline;
+    /* Hero Section: Asymmetric Hardware Showcase */
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 2rem;
+      align-items: center;
+      padding: 1.5rem 0 2.75rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 2.25rem;
     }
 
-    /* Tab Navigation */
-    .tab-bar {
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.3rem 0.75rem;
+      border-radius: 999px;
+      background: var(--surface-1);
+      border: 1px solid var(--border-strong);
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      color: var(--text-secondary);
+      margin-bottom: 1.15rem;
+    }
+
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--signal);
+      box-shadow: 0 0 0 4px var(--signal-soft);
+    }
+
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(2.15rem, 4.4vw, 3.6rem);
+      font-weight: 700;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.1rem;
+    }
+
+    .hero-desc {
+      font-size: 1.02rem;
+      color: var(--text-secondary);
+      max-width: 60ch;
+      margin-bottom: 1.65rem;
+    }
+
+    .hero-actions {
       display: flex;
-      gap: 0.25rem;
-      border-bottom: 1px solid var(--border-subtle);
+      align-items: center;
+      gap: 0.85rem;
+      flex-wrap: wrap;
+    }
+
+    /* ESP Web Install Button */
+    esp-web-install-button {
+      --esp-tools-button-color: var(--accent);
+      --esp-tools-button-text-color: #ffffff;
+      --esp-tools-button-border-radius: 12px;
+      display: inline-block;
+    }
+
+    .btn-flash-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: var(--accent);
+      color: #ffffff;
+      border: none;
+      border-radius: 12px;
+      padding: 0.88rem 1.65rem;
+      font-family: var(--font-display);
+      font-size: 0.98rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      cursor: pointer;
+      box-shadow: 0 12px 30px -10px rgba(255, 85, 0, 0.55);
+      transition: background-color 0.15s, transform 0.15s;
+    }
+    .btn-flash-primary:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+    }
+
+    .unsupported-notice {
+      display: inline-block;
+      padding: 0.65rem 1rem;
+      border-radius: 10px;
+      background: var(--warning-soft);
+      border: 1px solid var(--warning);
+      color: var(--warning);
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    /* Interactive Precision Scale Telemetry Card (Hero Right) */
+    .telemetry-deck {
+      background: var(--surface-1);
+      border: 1px solid var(--border-strong);
+      border-radius: 20px;
+      padding: 1.35rem;
+      box-shadow: var(--shadow-card);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .telemetry-deck::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top right, var(--accent-soft), transparent 60%);
+      pointer-events: none;
+    }
+
+    .deck-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      padding-bottom: 0.85rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .oled-screen {
+      margin: 1.1rem 0;
+      background: #05070a;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      padding: 1.25rem;
+      color: #f8fafc;
+      font-family: var(--font-mono);
+    }
+
+    .oled-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.68rem;
+      color: #64748b;
+      margin-bottom: 0.65rem;
+    }
+
+    .oled-reading {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .oled-grams {
+      font-size: 2.55rem;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      color: #ffffff;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .oled-unit {
+      font-size: 0.95rem;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .oled-bar {
+      margin-top: 0.9rem;
+      height: 4px;
+      background: #141a24;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .oled-bar-fill {
+      height: 100%;
+      width: 42%;
+      background: linear-gradient(90deg, var(--signal), var(--accent));
+      transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .deck-controls {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+    }
+
+    .deck-btn {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      border-radius: 9px;
+      padding: 0.5rem 0.6rem;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color 0.15s, background-color 0.15s;
+    }
+    .deck-btn:hover {
+      border-color: var(--accent);
+      background: var(--surface-3);
+    }
+
+    /* Workspace Tabs */
+    .workbench-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
       margin-bottom: 1.5rem;
+    }
+
+    .tab-pills {
+      display: inline-flex;
+      background: var(--surface-1);
+      border: 1px solid var(--border-strong);
+      border-radius: 12px;
+      padding: 0.25rem;
+      gap: 0.25rem;
       overflow-x: auto;
+      max-width: 100%;
     }
 
     .tab-button {
       background: transparent;
       border: none;
-      color: var(--text-muted);
-      font-family: inherit;
-      font-size: 0.9rem;
+      color: var(--text-secondary);
+      font-family: var(--font-display);
+      font-size: 0.875rem;
       font-weight: 600;
-      padding: 0.65rem 1rem;
+      padding: 0.6rem 1.05rem;
+      border-radius: 9px;
       cursor: pointer;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -1px;
-      transition: color 0.15s, border-color 0.15s;
       white-space: nowrap;
+      transition: background-color 0.15s, color 0.15s;
     }
-
     .tab-button:hover {
       color: var(--text-main);
     }
-
-    .tab-button:focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: -2px;
-    }
-
     .tab-button.active {
+      background: var(--surface-3);
       color: var(--text-main);
-      border-bottom-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--border-strong);
     }
 
     .tab-panel {
       display: none;
+      animation: fadeSlide 0.28s cubic-bezier(0.16, 1, 0.3, 1);
     }
-
     .tab-panel.active {
       display: block;
     }
 
-    /* Content Cards */
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Bento Cards */
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
     .card {
       background: var(--surface-1);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      border-radius: 18px;
       padding: 1.5rem;
-      margin-bottom: 1.5rem;
     }
 
-    .card-header {
-      margin-bottom: 1.25rem;
-    }
+    .col-12 { grid-column: span 12; }
+    .col-8 { grid-column: span 8; }
+    .col-7 { grid-column: span 7; }
+    .col-6 { grid-column: span 6; }
+    .col-5 { grid-column: span 5; }
+    .col-4 { grid-column: span 4; }
 
-    .card-header h2 {
-      font-size: 1.15rem;
-      font-weight: 700;
-      letter-spacing: -0.01em;
-      color: var(--text-main);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .card-header p {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      margin-top: 0.25rem;
-    }
-
-    /* Primary Action Installer Box */
-    .installer-hero {
-      background: var(--surface-2);
-      border: 1px solid var(--border-strong);
-      border-radius: var(--radius-lg);
-      padding: 2.25rem 1.5rem;
-      text-align: center;
-      margin-bottom: 1.5rem;
-    }
-
-    .installer-hero h3 {
-      font-size: 1.35rem;
-      font-weight: 700;
+    .section-kicker {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
       margin-bottom: 0.35rem;
     }
 
-    .installer-hero p {
-      font-size: 0.9rem;
-      color: var(--text-muted);
-      max-width: 580px;
-      margin: 0 auto 1.5rem;
+    .card-title {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.35rem;
     }
 
-    /* Styling esp-web-install-button cleanly */
-    esp-web-install-button {
-      --esp-tools-button-color: var(--accent);
-      --esp-tools-button-text-color: #ffffff;
-      --esp-tools-button-border-radius: 6px;
-      --esp-tools-button-padding: 0.75rem 1.75rem;
-      display: inline-block;
-    }
-
-    esp-web-install-button button {
-      font-family: inherit;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      transition: background-color 0.15s ease;
-      border: none;
-    }
-
-    esp-web-install-button button:hover {
-      background-color: var(--accent-hover);
-    }
-
-    esp-web-install-button button:focus-visible {
-      outline: 3px solid var(--accent-focus);
-    }
-
-    .unsupported-notice {
-      display: inline-block;
-      font-size: 0.85rem;
-      color: var(--warning);
-      background: var(--warning-subtle);
-      border: 1px solid var(--warning);
-      padding: 0.5rem 1rem;
-      border-radius: var(--radius-sm);
-    }
-
-    /* Hardware Specifications Table */
-    .specs-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 0.75rem;
+    .card-sub {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
       margin-bottom: 1.25rem;
     }
 
-    .spec-card {
-      background: var(--surface-2);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      padding: 0.85rem 1rem;
-    }
-
-    .spec-key {
-      font-size: 0.725rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-faint);
-      margin-bottom: 0.2rem;
-    }
-
-    .spec-val {
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--text-main);
-    }
-
-    .spec-desc {
-      font-size: 0.775rem;
-      color: var(--text-muted);
-      margin-top: 0.15rem;
-    }
-
-    /* Quick Connection Steps */
-    .step-list {
+    /* 4-Step Sequence */
+    .step-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.9rem;
       list-style: none;
     }
 
-    .step-card {
+    .step-item {
       background: var(--surface-2);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      padding: 1rem;
-      display: flex;
-      flex-direction: column;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.1rem;
     }
 
-    .step-badge {
-      width: 24px;
-      height: 24px;
-      border-radius: var(--radius-sm);
-      background: var(--surface-3);
-      border: 1px solid var(--border-strong);
-      font-size: 0.75rem;
+    .step-num {
       font-family: var(--font-mono);
+      font-size: 0.72rem;
       font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-main);
-      margin-bottom: 0.65rem;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+      display: block;
     }
 
     .step-title {
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: var(--text-main);
-      margin-bottom: 0.25rem;
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.3rem;
     }
 
     .step-desc {
       font-size: 0.8rem;
-      color: var(--text-muted);
+      color: var(--text-secondary);
       line-height: 1.45;
     }
 
-    /* Notice callout */
-    .note-box {
+    /* Hardware Pinout Matrix */
+    .pinout-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 0.85rem;
+    }
+
+    .pin-tile {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1rem;
+    }
+
+    .pin-label {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+    }
+
+    .pin-val {
+      font-family: var(--font-display);
+      font-size: 0.98rem;
+      font-weight: 700;
+    }
+
+    .pin-sub {
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      color: var(--text-secondary);
+      margin-top: 0.2rem;
+    }
+
+    .note-strip {
+      margin-top: 1.15rem;
+      padding: 0.85rem 1.1rem;
+      border-radius: 12px;
       background: var(--surface-2);
       border-left: 3px solid var(--accent);
-      padding: 0.75rem 1rem;
-      border-radius: 0 var(--radius-md) var(--radius-md) 0;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      margin-top: 1.25rem;
-      line-height: 1.45;
+      font-size: 0.84rem;
+      color: var(--text-secondary);
     }
-
-    .note-box strong {
-      color: var(--text-main);
-    }
-
-    .note-box code {
+    .note-strip code {
       font-family: var(--font-mono);
       background: var(--bg);
-      border: 1px solid var(--border-subtle);
-      padding: 0.1rem 0.35rem;
-      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-strong);
+      padding: 0.1rem 0.4rem;
+      border-radius: 6px;
       color: var(--text-main);
-      font-size: 0.8rem;
+      font-size: 0.78rem;
     }
 
-    /* Buttons */
+    /* Companion App Showcase */
+    .companion-layout {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 1.75rem;
+      align-items: center;
+    }
+
+    .feature-pills {
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.55rem;
+      margin: 1rem 0 1.35rem;
+    }
+
+    .feature-pills li {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.84rem;
+      color: var(--text-secondary);
+    }
+
+    .feature-pills svg {
+      color: var(--signal);
+      flex-shrink: 0;
+    }
+
+    .btn-row {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      flex-wrap: wrap;
+    }
+
     .btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 0.5rem;
-      font-family: inherit;
-      font-size: 0.875rem;
+      gap: 0.45rem;
+      font-family: var(--font-sans);
+      font-size: 0.85rem;
       font-weight: 600;
-      padding: 0.55rem 1rem;
-      border-radius: var(--radius-md);
+      padding: 0.62rem 1.1rem;
+      border-radius: 10px;
       border: 1px solid transparent;
       cursor: pointer;
       text-decoration: none;
-      transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+      transition: background-color 0.15s, border-color 0.15s, transform 0.15s;
     }
-
-    .btn:focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: 2px;
+    .btn:disabled {
+      opacity: 0.42;
+      cursor: not-allowed;
     }
 
     .btn-primary {
@@ -609,49 +815,148 @@
     }
     .btn-secondary:hover:not(:disabled) {
       background: var(--surface-3);
+      border-color: var(--accent);
     }
 
     .btn-danger {
-      background: var(--danger-subtle);
+      background: var(--danger-soft);
       border-color: var(--danger);
       color: var(--danger);
     }
-    .btn-danger:hover:not(:disabled) {
-      background: var(--surface-3);
+
+    .qr-card {
+      background: #ffffff;
+      border: 1px solid var(--border-strong);
+      border-radius: 16px;
+      padding: 0.95rem;
+      width: 176px;
+      text-align: center;
+      color: #0d1117;
+      flex-shrink: 0;
+    }
+    .qr-card img {
+      width: 136px;
+      height: 136px;
+      display: block;
+      margin: 0 auto;
+    }
+    .qr-caption {
+      font-family: var(--font-display);
+      font-size: 0.78rem;
+      font-weight: 700;
+      margin-top: 0.45rem;
+    }
+    .qr-subtext {
+      font-size: 0.68rem;
+      color: #475467;
+    }
+
+    /* Terminal Console & Custom Flasher */
+    .terminal-shell {
+      background: var(--terminal-bg);
+      border: 1px solid var(--border-strong);
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 430px;
+    }
+
+    .terminal-head {
+      background: var(--surface-2);
+      border-bottom: 1px solid var(--border);
+      padding: 0.55rem 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+    }
+
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-secondary);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-muted);
+    }
+    .status-dot.active {
+      background: var(--signal);
+      box-shadow: 0 0 0 3px var(--signal-soft);
+    }
+
+    .terminal-stream {
+      flex: 1;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      line-height: 1.6;
+      color: var(--terminal-text);
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .terminal-form {
+      display: flex;
+      border-top: 1px solid var(--border);
+      background: var(--surface-1);
+    }
+
+    .terminal-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      padding: 0.68rem 0.95rem;
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      outline: none;
+    }
+
+    .chip-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.45rem;
+      margin-top: 0.85rem;
+    }
+
+    .chip-label {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-right: 0.25rem;
     }
 
     .btn-chip {
       background: var(--surface-2);
-      border: 1px solid var(--border-subtle);
-      color: var(--text-muted);
-      padding: 0.25rem 0.65rem;
-      border-radius: var(--radius-sm);
-      font-size: 0.775rem;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      border-radius: 8px;
+      padding: 0.3rem 0.65rem;
       font-family: var(--font-mono);
+      font-size: 0.74rem;
       font-weight: 500;
       cursor: pointer;
-      transition: all 0.12s;
+      transition: border-color 0.15s, color 0.15s;
     }
     .btn-chip:hover {
-      background: var(--surface-3);
+      border-color: var(--accent);
       color: var(--text-main);
-      border-color: var(--border-strong);
     }
 
-    .btn:disabled, .btn-chip:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-
-    /* Form Fields */
-    .field-row {
+    /* Form Controls */
+    .field-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .field-group {
       margin-bottom: 1rem;
     }
 
@@ -659,23 +964,20 @@
       display: block;
       font-size: 0.8rem;
       font-weight: 600;
-      color: var(--text-main);
-      margin-bottom: 0.35rem;
+      margin-bottom: 0.4rem;
     }
 
     .input-control, .select-control {
       width: 100%;
       background: var(--bg);
       border: 1px solid var(--border-strong);
-      border-radius: var(--radius-md);
-      padding: 0.5rem 0.75rem;
+      border-radius: 10px;
+      padding: 0.55rem 0.8rem;
       color: var(--text-main);
-      font-family: inherit;
-      font-size: 0.875rem;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
       outline: none;
-      transition: border-color 0.15s;
     }
-
     .input-control:focus, .select-control:focus {
       border-color: var(--accent);
     }
@@ -688,173 +990,92 @@
     }
 
     .file-offset {
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      background: var(--surface-2);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-sm);
-      padding: 0.45rem 0.65rem;
-      width: 90px;
+      width: 96px;
       text-align: center;
-      color: var(--text-muted);
+      padding: 0.5rem;
+      border-radius: 9px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--accent);
       flex-shrink: 0;
     }
 
     .file-input {
       flex: 1;
-      font-size: 0.85rem;
       background: var(--bg);
       border: 1px solid var(--border-strong);
-      border-radius: var(--radius-md);
-      padding: 0.35rem 0.5rem;
-      color: var(--text-muted);
+      border-radius: 10px;
+      padding: 0.4rem 0.6rem;
+      font-size: 0.82rem;
+      color: var(--text-secondary);
     }
 
-    /* Progress Bar */
     .progress-box {
-      margin-top: 1rem;
       display: none;
+      margin-top: 1rem;
     }
-
     .progress-track {
-      background: var(--surface-3);
       height: 8px;
-      border-radius: var(--radius-sm);
+      background: var(--surface-3);
+      border-radius: 999px;
       overflow: hidden;
     }
-
     .progress-fill {
       height: 100%;
-      background: var(--accent);
       width: 0%;
+      background: var(--accent);
       transition: width 0.15s ease;
     }
-
     .progress-meta {
       display: flex;
       justify-content: space-between;
-      font-size: 0.775rem;
-      color: var(--text-muted);
-      margin-top: 0.35rem;
       font-family: var(--font-mono);
-    }
-
-    /* Terminal Console */
-    .terminal-wrapper {
-      background: var(--terminal-bg);
-      border: 1px solid var(--border-strong);
-      border-radius: var(--radius-md);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      height: 440px;
-    }
-
-    .terminal-bar {
-      background: var(--surface-2);
-      border-bottom: 1px solid var(--border-subtle);
-      padding: 0.5rem 0.75rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 0.75rem;
-      font-size: 0.8rem;
-    }
-
-    .terminal-state {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-family: var(--font-mono);
-      color: var(--text-muted);
-    }
-
-    .terminal-stream {
-      flex: 1;
-      padding: 0.85rem 1rem;
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      color: var(--terminal-text);
-      overflow-y: auto;
-      white-space: pre-wrap;
-      word-break: break-all;
-      line-height: 1.6;
-    }
-
-    .terminal-input-row {
-      display: flex;
-      border-top: 1px solid var(--border-subtle);
-      background: var(--surface-1);
-    }
-
-    .terminal-input {
-      flex: 1;
-      background: transparent;
-      border: none;
-      padding: 0.6rem 0.85rem;
-      color: var(--text-main);
-      font-family: var(--font-mono);
-      font-size: 0.85rem;
-      outline: none;
-    }
-
-    /* Terminal Quick Action Chips */
-    .chip-bar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
-      align-items: center;
-      margin-top: 0.75rem;
-    }
-
-    .chip-bar-label {
       font-size: 0.75rem;
-      color: var(--text-faint);
-      margin-right: 0.25rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      margin-top: 0.35rem;
     }
 
-    /* Accordion FAQs */
+    /* Diagnostics Accordion */
     details {
       background: var(--surface-2);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      padding: 0.75rem 1rem;
-      margin-bottom: 0.5rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.85rem 1.05rem;
+      margin-bottom: 0.6rem;
     }
-
     details summary {
       cursor: pointer;
+      font-family: var(--font-display);
       font-weight: 600;
-      font-size: 0.875rem;
-      color: var(--text-main);
-      user-select: none;
+      font-size: 0.92rem;
     }
-
-    details summary:focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: 2px;
-    }
-
     details p {
-      margin-top: 0.5rem;
-      font-size: 0.825rem;
-      color: var(--text-muted);
-      line-height: 1.5;
+      margin-top: 0.6rem;
+      font-size: 0.84rem;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+    details code {
+      font-family: var(--font-mono);
+      background: var(--bg);
+      padding: 0.1rem 0.35rem;
+      border-radius: 5px;
+      font-size: 0.78rem;
     }
 
     /* Footer */
     footer {
+      border-top: 1px solid var(--border);
       background: var(--surface-1);
-      border-top: 1px solid var(--border-subtle);
-      padding: 1.25rem;
+      padding: 1.35rem 1.5rem;
       font-size: 0.8rem;
-      color: var(--text-faint);
+      color: var(--text-muted);
     }
-
     .footer-inner {
-      max-width: 1120px;
+      max-width: 1240px;
       margin: 0 auto;
       display: flex;
       justify-content: space-between;
@@ -862,189 +1083,75 @@
       flex-wrap: wrap;
       gap: 0.75rem;
     }
-
     .footer-inner a {
-      color: var(--text-muted);
+      color: var(--text-secondary);
       text-decoration: none;
     }
-
     .footer-inner a:hover {
-      color: var(--text-main);
+      color: var(--accent);
     }
 
-    .btn-header-app {
-      background: var(--surface-2);
-      border: 1px solid var(--border-strong);
-      color: var(--text-main);
-      padding: 0.3rem 0.65rem;
-      border-radius: var(--radius-sm);
-      font-size: 0.8rem;
-      font-weight: 600;
-      text-decoration: none;
-      transition: background-color 0.15s, border-color 0.15s, color 0.15s;
-    }
-
-    .btn-header-app:hover {
-      background: var(--surface-3);
-      border-color: var(--accent);
-      color: var(--text-main);
-    }
-
-    /* Theme Toggle Button */
-    .theme-toggle-btn {
-      background: var(--surface-2);
-      border: 1px solid var(--border-strong);
-      color: var(--text-muted);
-      width: 30px;
-      height: 30px;
-      border-radius: var(--radius-sm);
-      display: inline-flex;
+    /* Custom Modal Dialog (replaces alert/confirm) */
+    .dialog-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(0, 0, 0, 0.68);
+      backdrop-filter: blur(6px);
+      display: none;
       align-items: center;
       justify-content: center;
-      cursor: pointer;
-      padding: 0;
-      transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+      padding: 1rem;
     }
-
-    .theme-toggle-btn:hover {
-      background: var(--surface-3);
-      border-color: var(--accent);
-      color: var(--text-main);
+    .dialog-backdrop.open {
+      display: flex;
     }
-
-    .theme-toggle-btn:focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: 2px;
-    }
-
-    .theme-toggle-btn .icon-moon {
-      display: none;
-    }
-    .theme-toggle-btn .icon-sun {
-      display: block;
-    }
-
-    [data-theme="light"] .theme-toggle-btn .icon-sun {
-      display: none;
-    }
-    [data-theme="light"] .theme-toggle-btn .icon-moon {
-      display: block;
-    }
-
-    /* Language Selector */
-    .lang-select {
-      background: var(--surface-2);
-      border: 1px solid var(--border-strong);
-      color: var(--text-main);
-      font-family: inherit;
-      font-size: 0.775rem;
-      font-weight: 600;
-      height: 30px;
-      padding: 0 0.45rem;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      outline: none;
-      transition: background-color 0.15s, border-color 0.15s;
-    }
-
-    .lang-select:hover {
-      background: var(--surface-3);
-      border-color: var(--accent);
-    }
-
-    .lang-select:focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: 2px;
-    }
-
-    /* Companion App Card */
-    .app-card {
+    .dialog-card {
       background: var(--surface-1);
       border: 1px solid var(--border-strong);
-      border-radius: var(--radius-lg);
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-      scroll-margin-top: 5rem;
+      border-radius: 16px;
+      max-width: 420px;
+      width: 100%;
+      padding: 1.35rem;
+      box-shadow: var(--shadow-card);
     }
-
-    .app-card-grid {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 1.5rem;
-      align-items: center;
-    }
-
-    .app-features {
-      list-style: none;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-      gap: 0.5rem;
-      margin: 1rem 0 1.25rem;
-    }
-
-    .app-feature-item {
-      display: flex;
-      align-items: center;
-      gap: 0.45rem;
-      font-size: 0.825rem;
-      color: var(--text-muted);
-    }
-
-    .app-feature-item svg {
-      color: var(--success);
-      flex-shrink: 0;
-    }
-
-    .qr-box {
-      background: #ffffff;
-      padding: 0.85rem;
-      border-radius: var(--radius-md);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      width: 175px;
-      border: 1px solid var(--border-strong);
-      box-shadow: var(--qr-shadow);
-      flex-shrink: 0;
-    }
-
-    .qr-box img {
-      width: 135px;
-      height: 135px;
-      display: block;
-    }
-
-    .qr-caption {
-      font-size: 0.75rem;
+    .dialog-title {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
       font-weight: 700;
-      color: #0f172a;
-      margin-top: 0.4rem;
-      line-height: 1.2;
+      margin-bottom: 0.45rem;
+    }
+    .dialog-body {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-bottom: 1.15rem;
+    }
+    .dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.55rem;
     }
 
-    .qr-subtext {
-      font-size: 0.65rem;
-      color: #64748b;
-      margin-top: 0.15rem;
+    @media (max-width: 920px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+      }
+      .col-8, .col-7, .col-6, .col-5, .col-4 {
+        grid-column: span 12;
+      }
     }
 
-    /* Responsive */
     @media (max-width: 680px) {
-      .app-card-grid {
+      .companion-layout {
         grid-template-columns: 1fr;
         justify-items: center;
         text-align: center;
       }
-      .app-features {
+      .feature-pills {
         text-align: left;
       }
-      .field-row {
+      .field-grid {
         grid-template-columns: 1fr;
-      }
-      .page-intro {
-        flex-direction: column;
-        align-items: flex-start;
       }
       .file-row {
         flex-direction: column;
@@ -1052,31 +1159,31 @@
       }
       .file-offset {
         width: 100%;
-        text-align: left;
       }
     }
   </style>
 </head>
 <body>
-
   <a href="#main-content" class="skip-link">Skip to main content</a>
 
-  <!-- Header -->
+  <!-- Architectural Header -->
   <header>
-    <div class="header-content">
+    <div class="header-inner">
       <a href="./" class="brand">
-        <img src="./logo.jpg" alt="Smartcale Logo" class="brand-logo" />
-        <span class="brand-title">Smartcale ESP32</span>
-        <span class="brand-version">v1.2.0</span>
+        <span class="brand-mark">
+          <img src="./logo.jpg" alt="Smartcale ESP32 Logo" />
+        </span>
+        <span class="brand-title" data-i18n="brandTitle">Smartcale ESP32</span>
+        <span class="brand-tag">v1.2.0</span>
       </a>
 
-      <nav class="header-nav" aria-label="Quick links">
-        <a href="./app/" class="btn-header-app" style="background: var(--accent); color: #ffffff; border-color: var(--accent);" data-i18n="navLaunchApp">Launch Web App</a>
-        <a href="#companion-app" class="btn-header-app" data-i18n="navGetApk">Get Android APK</a>
-        <a href="https://github.com/AtaCanYmc/SmartcaleESP32" target="_blank" rel="noopener noreferrer" data-i18n="navSource">Source Code</a>
-        <a href="./firmware/firmware.bin" download>firmware.bin</a>
+      <nav class="nav-cluster" aria-label="Quick links">
+        <a href="./app/" class="nav-cta" data-i18n="navLaunchApp">Launch Web App</a>
+        <a href="#companion-app" class="nav-link" data-i18n="navGetApk">Get Android APK</a>
+        <a href="https://github.com/AtaCanYmc/SmartcaleESP32" target="_blank" rel="noopener noreferrer" class="nav-link" data-i18n="navSource">Source Code</a>
+        <a href="./firmware/firmware.bin" download class="nav-link" style="font-family: var(--font-mono);">firmware.bin</a>
 
-        <select id="langSelect" class="lang-select" aria-label="Select language" title="Select language">
+        <select id="langSelect" class="control-pill" aria-label="Select language">
           <option value="tr">TR</option>
           <option value="en">EN</option>
           <option value="de">DE</option>
@@ -1087,40 +1194,19 @@
           <option value="ru">RU</option>
         </select>
 
-        <button id="themeToggleBtn" class="theme-toggle-btn" type="button" aria-label="Switch to light theme" title="Switch to light theme">
+        <button id="themeToggleBtn" class="control-pill theme-toggle-btn" type="button" aria-label="Switch theme">
           <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="5"></circle>
-            <line x1="12" y1="1" x2="12" y2="3"></line>
-            <line x1="12" y1="21" x2="12" y2="23"></line>
-            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-            <line x1="1" y1="12" x2="3" y2="12"></line>
-            <line x1="21" y1="12" x2="23" y2="12"></line>
-            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
           </svg>
           <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
           </svg>
         </button>
       </nav>
     </div>
   </header>
 
-  <!-- Main Content -->
   <main id="main-content">
-    
-    <div class="page-intro">
-      <div class="intro-title">
-        <h1 data-i18n="pageTitle">Microcontroller Web Flasher & Console</h1>
-        <p data-i18n="pageDesc">Direct in-browser firmware installation, memory flashing, and serial telemetry console for the Smartcale ESP32-C3 kitchen scale.</p>
-      </div>
-      <div class="device-target-tag">
-        <span class="status-dot active"></span>
-        <span data-i18n="deviceTarget">Target: ESP32-C3 RISC-V @ 160MHz</span>
-      </div>
-    </div>
-
     <!-- Web Serial Browser Support Alert -->
     <div id="compatBanner" class="alert-banner" role="alert">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1132,199 +1218,223 @@
       </div>
     </div>
 
-    <!-- Navigation Tabs -->
-    <div class="tab-bar" role="tablist" aria-label="Flasher tools">
-      <button class="tab-button active" role="tab" aria-selected="true" data-tab="panel-install" id="tab-install">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
-        </svg>
-        <span data-i18n="tabInstall">One-Click Flash</span>
-      </button>
+    <!-- Hero Section -->
+    <section class="hero-grid">
+      <div>
+        <div class="eyebrow">
+          <span class="pulse-dot"></span>
+          <span data-i18n="deviceTarget">Target: ESP32-C3 RISC-V @ 160MHz</span>
+        </div>
 
-      <button class="tab-button" role="tab" aria-selected="false" data-tab="panel-console" id="tab-console">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/>
-        </svg>
-        <span data-i18n="tabConsole">Serial Monitor & Diagnostics</span>
-      </button>
+        <h1 class="hero-title" data-i18n="pageTitle">Microcontroller Web Flasher &amp; Console</h1>
+        <p class="hero-desc" data-i18n="pageDesc">
+          Direct in-browser firmware installation, memory flashing, and serial telemetry console for the Smartcale ESP32-C3 kitchen scale.
+        </p>
 
-      <button class="tab-button" role="tab" aria-selected="false" data-tab="panel-custom" id="tab-custom">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
-        </svg>
-        <span data-i18n="tabCustom">Custom Binary (.bin)</span>
-      </button>
+        <div class="hero-actions">
+          <esp-web-install-button manifest="./manifest.json">
+            <button slot="activate" class="btn-flash-primary">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              <span data-i18n="btnInstall">Connect &amp; Install Firmware</span>
+            </button>
+            <span slot="unsupported" class="unsupported-notice" data-i18n="unsupportedNotice">Web Serial API is not supported in this browser.</span>
+          </esp-web-install-button>
+
+          <a href="./app/" class="btn btn-secondary" style="padding: 0.85rem 1.25rem; border-radius: 12px;">
+            <span data-i18n="btnLaunchWeb">Launch Web App</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Interactive OLED & HX711 Telemetry Preview -->
+      <div class="telemetry-deck" aria-label="Interactive OLED telemetry preview">
+        <div class="deck-header">
+          <span>SH1106 128×64 • BLE 10Hz</span>
+          <span style="color: var(--signal);">HX711 24-BIT</span>
+        </div>
+
+        <div class="oled-screen">
+          <div class="oled-meta">
+            <span id="oledModeLabel">MODE: PRECISION_G</span>
+            <span>GPIO 0/1</span>
+          </div>
+          <div class="oled-reading">
+            <span class="oled-grams" id="oledGramsValue">148.5</span>
+            <span class="oled-unit">GRAMS</span>
+          </div>
+          <div class="oled-bar">
+            <div class="oled-bar-fill" id="oledBarFill"></div>
+          </div>
+        </div>
+
+        <div class="deck-controls">
+          <button type="button" class="deck-btn" data-sim-weight="0.0">TARE (0.0g)</button>
+          <button type="button" class="deck-btn" data-sim-weight="148.5">ESPRESSO 148.5g</button>
+          <button type="button" class="deck-btn" data-sim-weight="320.0">POUR-OVER 320g</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Workbench Tab Switcher -->
+    <div class="workbench-nav">
+      <div class="tab-pills" role="tablist" aria-label="Flasher tools">
+        <button class="tab-button active" role="tab" aria-selected="true" data-tab="panel-install" id="tab-install">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+          </svg>
+          <span data-i18n="tabInstall">One-Click Flash</span>
+        </button>
+
+        <button class="tab-button" role="tab" aria-selected="false" data-tab="panel-console" id="tab-console">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/>
+          </svg>
+          <span data-i18n="tabConsole">Serial Monitor &amp; Diagnostics</span>
+        </button>
+
+        <button class="tab-button" role="tab" aria-selected="false" data-tab="panel-custom" id="tab-custom">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+          </svg>
+          <span data-i18n="tabCustom">Custom Binary (.bin)</span>
+        </button>
+      </div>
     </div>
 
     <!-- TAB 1: ONE-CLICK INSTALLATION -->
     <section id="panel-install" class="tab-panel active" role="tabpanel" aria-labelledby="tab-install">
-      
-      <div class="installer-hero">
-        <h3 data-i18n="heroTitle">Install Production Firmware</h3>
-        <p data-i18n="heroDesc">Precompiled production binary bundle for ESP32-C3 Super Mini and DevKit boards. Includes Bootloader (0x0), Partitions (0x8000), and Application (0x10000).</p>
+      <div class="bento-grid">
+        <!-- Sequence Card -->
+        <div class="card col-12">
+          <div class="section-kicker">01 / Web Serial Provisioning</div>
+          <h2 class="card-title" data-i18n="stepsHeader">Connection &amp; Flashing Sequence</h2>
+          <p class="card-sub" data-i18n="stepsDesc">Follow these 4 physical steps to complete device installation without terminal tools.</p>
 
-        <!-- ESP Web Tools install button -->
-        <esp-web-install-button manifest="./manifest.json">
-          <button slot="activate" class="btn btn-primary" style="padding: 0.75rem 2rem; font-size: 1rem;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-            <span data-i18n="btnInstall">Connect & Install Firmware</span>
-          </button>
-          <span slot="unsupported" class="unsupported-notice" data-i18n="unsupportedNotice">Web Serial API is not supported in this browser.</span>
-        </esp-web-install-button>
-      </div>
-
-      <!-- Quick Steps -->
-      <div class="card">
-        <div class="card-header">
-          <h2 data-i18n="stepsHeader">Connection & Flashing Sequence</h2>
-          <p data-i18n="stepsDesc">Follow these 4 physical steps to complete device installation without terminal tools.</p>
+          <ol class="step-grid">
+            <li class="step-item">
+              <span class="step-num">STEP 01</span>
+              <div class="step-title" data-i18n="step1Title">Connect USB Data Cable</div>
+              <div class="step-desc" data-i18n="step1Desc">Plug the ESP32-C3 into your computer with a certified USB data cable (avoid power-only charge leads).</div>
+            </li>
+            <li class="step-item">
+              <span class="step-num">STEP 02</span>
+              <div class="step-title" data-i18n="step2Title">Bootloader Mode</div>
+              <div class="step-desc" data-i18n="step2Desc">If connection times out, hold BOOT (IO9), press and release RST, then release BOOT and retry.</div>
+            </li>
+            <li class="step-item">
+              <span class="step-num">STEP 03</span>
+              <div class="step-title" data-i18n="step3Title">Select Port</div>
+              <div class="step-desc" data-i18n="step3Desc">Click "Connect &amp; Install Firmware". In the browser modal, pick the serial port (e.g. USB JTAG/serial debug unit).</div>
+            </li>
+            <li class="step-item">
+              <span class="step-num">STEP 04</span>
+              <div class="step-title" data-i18n="step4Title">Clean Flash</div>
+              <div class="step-desc" data-i18n="step4Desc">Select "Erase device" for clean initialization. The flashing process will complete in approximately 30 seconds.</div>
+            </li>
+          </ol>
         </div>
 
-        <ol class="step-list">
-          <li class="step-card">
-            <span class="step-badge">1</span>
-            <div class="step-title" data-i18n="step1Title">Connect USB Data Cable</div>
-            <div class="step-desc" data-i18n="step1Desc">Plug the ESP32-C3 into your computer with a certified USB data cable (avoid power-only charge leads).</div>
-          </li>
-          <li class="step-card">
-            <span class="step-badge">2</span>
-            <div class="step-title" data-i18n="step2Title">Bootloader Mode</div>
-            <div class="step-desc" data-i18n="step2Desc">If connection times out, hold BOOT (IO9), press and release RST, then release BOOT and retry.</div>
-          </li>
-          <li class="step-card">
-            <span class="step-badge">3</span>
-            <div class="step-title" data-i18n="step3Title">Select Port</div>
-            <div class="step-desc" data-i18n="step3Desc">Click "Connect & Install Firmware". In the browser modal, pick the serial port (e.g. USB JTAG/serial debug unit).</div>
-          </li>
-          <li class="step-card">
-            <span class="step-badge">4</span>
-            <div class="step-title" data-i18n="step4Title">Clean Flash</div>
-            <div class="step-desc" data-i18n="step4Desc">Select "Erase device" for clean initialization. The flashing process will complete in approximately 30 seconds.</div>
-          </li>
-        </ol>
-      </div>
+        <!-- Companion App Card -->
+        <div class="card col-12" id="companion-app" style="scroll-margin-top: 5rem;">
+          <div class="companion-layout">
+            <div>
+              <div class="section-kicker">02 / Web Bluetooth &amp; Mobile Ecosystem</div>
+              <h2 class="card-title" data-i18n="companionTitle">Next Step: Smartcale Companion App (Web &amp; Mobile)</h2>
+              <p class="card-sub" data-i18n="companionDesc">Connect your browser or phone to the scale over Bluetooth Low Energy (BLE) to view live weight, trigger remote Tare, track calories &amp; macros, or test Mock Scale Mode.</p>
 
-      <!-- Next Step: Companion App -->
-      <div class="app-card" id="companion-app">
-        <div class="app-card-grid">
-          <div>
-            <div class="card-header" style="margin-bottom: 0.5rem;">
-              <h2>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: var(--accent);">
-                  <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>
-                </svg>
-                <span data-i18n="companionTitle">Next Step: Smartcale Companion App (Web & Mobile)</span>
-              </h2>
-              <p data-i18n="companionDesc">Connect your browser or phone to the scale over Bluetooth Low Energy (BLE) to view live weight, trigger remote Tare, track calories & macros, or test Mock Scale Mode.</p>
+              <ul class="feature-pills">
+                <li>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span data-i18n="featTelemetry">Real-Time 10Hz BLE Telemetry</span>
+                </li>
+                <li>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span data-i18n="featTare">Remote Tare &amp; Calibration</span>
+                </li>
+                <li>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span data-i18n="featBarcode">Barcode Food &amp; Nutrition Scanner</span>
+                </li>
+                <li>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span data-i18n="featRecipe">Interactive Recipe Mode with Auto-Tare</span>
+                </li>
+              </ul>
+
+              <div class="btn-row">
+                <a href="./app/" class="btn btn-primary">
+                  <span data-i18n="btnLaunchWeb">Launch Web App</span>
+                </a>
+                <a href="https://github.com/AtaCanYmc/SmartcaleESP32/releases/latest/download/smartcale-companion-android.apk" class="btn btn-secondary" download>
+                  <span data-i18n="btnDownloadApk">Download Android APK</span>
+                </a>
+                <a href="https://github.com/AtaCanYmc/SmartcaleESP32/releases/latest" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" data-i18n="btnAllReleases">
+                  All Releases &amp; Assets
+                </a>
+              </div>
+
+              <div style="margin-top: 0.85rem; font-size: 0.78rem; color: var(--text-muted);" data-i18n-html="platformsNote">
+                Platforms: <strong>Web (Chrome, Edge &amp; Brave with Web Bluetooth)</strong> &bull; <strong>Android 8+ (APK)</strong> &bull; <strong>iOS (Xcode / Capacitor in <code>app/ios</code>)</strong>
+              </div>
             </div>
 
-            <ul class="app-features">
-              <li class="app-feature-item">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                <span data-i18n="featTelemetry">Real-Time 10Hz BLE Telemetry</span>
-              </li>
-              <li class="app-feature-item">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                <span data-i18n="featTare">Remote Tare & Calibration</span>
-              </li>
-              <li class="app-feature-item">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                <span data-i18n="featBarcode">Barcode Food & Nutrition Scanner</span>
-              </li>
-              <li class="app-feature-item">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                <span data-i18n="featRecipe">Interactive Recipe Mode with Auto-Tare</span>
-              </li>
-            </ul>
-
-            <div style="display: flex; gap: 0.65rem; align-items: center; flex-wrap: wrap;">
-              <a href="./app/" class="btn btn-primary" style="background: var(--accent); color: #ffffff;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-                </svg>
-                <span data-i18n="btnLaunchWeb">Launch Web App (Zero Install)</span>
-              </a>
-
-              <a href="https://github.com/AtaCanYmc/SmartcaleESP32/releases/latest/download/smartcale-companion-android.apk" class="btn btn-secondary" download>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-                </svg>
-                <span data-i18n="btnDownloadApk">Download Android APK (.apk)</span>
-              </a>
-
-              <a href="https://github.com/AtaCanYmc/SmartcaleESP32/releases/latest" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" data-i18n="btnAllReleases">
-                All Releases & Assets
-              </a>
+            <div class="qr-card">
+              <img src="./qr-apk.svg" alt="Scan to download Android APK" />
+              <div class="qr-caption" data-i18n="qrCaption">Scan with Phone</div>
+              <div class="qr-subtext" data-i18n="qrSubtext">Direct Android APK download</div>
             </div>
+          </div>
+        </div>
 
-            <div style="margin-top: 0.75rem; font-size: 0.775rem; color: var(--text-faint);" data-i18n-html="platformsNote">
-              Platforms: <strong>Web (Chrome, Edge & Brave with Web Bluetooth)</strong> &bull; <strong>Android 8+ (APK)</strong> &bull; <strong>iOS (Xcode / Capacitor in <code>app/ios</code>)</strong>
+        <!-- Hardware Pinout Card -->
+        <div class="card col-12">
+          <div class="section-kicker">03 / Hardware Architecture</div>
+          <h2 class="card-title" data-i18n="specsTitle">Default Hardware Pinout Configuration</h2>
+          <p class="card-sub" data-i18n="specsDesc">Pin assignments embedded into this compiled firmware build.</p>
+
+          <div class="pinout-grid">
+            <div class="pin-tile">
+              <div class="pin-label" data-i18n="specMcu">Microcontroller</div>
+              <div class="pin-val">ESP32-C3 Super Mini / DevKit</div>
+              <div class="pin-sub" data-i18n="specMcuDesc">Single-core 32-bit RISC-V @ 160MHz</div>
+            </div>
+            <div class="pin-tile">
+              <div class="pin-label" data-i18n="specAdc">Weight Sensor (ADC)</div>
+              <div class="pin-val">HX711 24-bit ADC</div>
+              <div class="pin-sub" data-i18n-html="specAdcDesc">DT: GPIO 0 &bull; SCK: GPIO 1</div>
+            </div>
+            <div class="pin-tile">
+              <div class="pin-label" data-i18n="specDisplay">Display &amp; Tare Input</div>
+              <div class="pin-val">SH1106 OLED &amp; Tactile</div>
+              <div class="pin-sub" data-i18n-html="specDisplayDesc">SDA: 8 &bull; SCL: 9 &bull; Tare: GPIO 2</div>
+            </div>
+            <div class="pin-tile">
+              <div class="pin-label" data-i18n="specPartition">Partition Scheme</div>
+              <div class="pin-val">huge_app.csv (3.14MB)</div>
+              <div class="pin-sub" data-i18n="specPartitionDesc">Flash mode: DIO @ 40MHz</div>
             </div>
           </div>
 
-          <!-- QR Code Box for Instant Mobile Download -->
-          <div class="qr-box">
-            <img src="./qr-apk.svg" alt="Scan to download Android APK" />
-            <div class="qr-caption" data-i18n="qrCaption">Scan with Phone</div>
-            <div class="qr-subtext" data-i18n="qrSubtext">Direct Android APK download</div>
+          <div class="note-strip" data-i18n-html="wifiNote">
+            <strong>Wi-Fi Setup Note:</strong> On first boot without Wi-Fi configured, the scale launches a SoftAP hotspot named <code>Smartcale-Setup</code>. Connect via browser at <code>http://192.168.4.1</code> to configure Wi-Fi and load cell calibration factors.
           </div>
         </div>
       </div>
-
-      <!-- Hardware Specs -->
-      <div class="card">
-        <div class="card-header">
-          <h2 data-i18n="specsTitle">Default Hardware Pinout Configuration</h2>
-          <p data-i18n="specsDesc">Pin assignments embedded into this compiled firmware build.</p>
-        </div>
-
-        <div class="specs-grid">
-          <div class="spec-card">
-            <div class="spec-key" data-i18n="specMcu">Microcontroller</div>
-            <div class="spec-val">ESP32-C3 Super Mini / DevKit</div>
-            <div class="spec-desc" data-i18n="specMcuDesc">Single-core 32-bit RISC-V @ 160MHz</div>
-          </div>
-          <div class="spec-card">
-            <div class="spec-key" data-i18n="specAdc">Weight Sensor (ADC)</div>
-            <div class="spec-val">HX711 24-bit ADC</div>
-            <div class="spec-desc" data-i18n-html="specAdcDesc">DT: GPIO 0 &bull; SCK: GPIO 1</div>
-          </div>
-          <div class="spec-card">
-            <div class="spec-key" data-i18n="specDisplay">Display & Tare Input</div>
-            <div class="spec-val">SH1106 OLED (I2C) & Button</div>
-            <div class="spec-desc" data-i18n-html="specDisplayDesc">SDA: 8 &bull; SCL: 9 &bull; Tare: GPIO 2</div>
-          </div>
-          <div class="spec-card">
-            <div class="spec-key" data-i18n="specPartition">Partition Scheme</div>
-            <div class="spec-val">huge_app.csv (3.14MB App)</div>
-            <div class="spec-desc" data-i18n="specPartitionDesc">Flash mode: DIO @ 40MHz</div>
-          </div>
-        </div>
-
-        <div class="note-box" data-i18n-html="wifiNote">
-          <strong>Wi-Fi Setup Note:</strong> On first boot without Wi-Fi configured, the scale launches a SoftAP hotspot named <code>Smartcale-Setup</code>. Connect via phone or browser at <code>http://192.168.4.1</code> to configure Wi-Fi and load cell calibration factors. If Mock Mode is enabled, BLE weighing starts immediately.
-        </div>
-      </div>
-
     </section>
 
     <!-- TAB 2: SERIAL MONITOR & DIAGNOSTICS -->
     <section id="panel-console" class="tab-panel" role="tabpanel" aria-labelledby="tab-console">
       <div class="card">
-        <div class="card-header">
-          <h2 data-i18n="consoleTitle">Live Serial Diagnostic Console</h2>
-          <p data-i18n="consoleDesc">Monitor raw HX711 sensor counts, BLE connection events, and inject test commands.</p>
-        </div>
+        <div class="section-kicker">Web Serial Telemetry</div>
+        <h2 class="card-title" data-i18n="consoleTitle">Live Serial Diagnostic Console</h2>
+        <p class="card-sub" data-i18n="consoleDesc">Monitor raw HX711 sensor counts, BLE connection events, and inject test commands.</p>
 
-        <!-- Terminal Controls -->
-        <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.85rem; flex-wrap: wrap;">
-          <button id="btnConsoleToggle" class="btn btn-primary" data-i18n="btnConnectSerial">
-            Connect Serial Port
-          </button>
+        <div class="btn-row" style="margin-bottom: 1rem;">
+          <button id="btnConsoleToggle" class="btn btn-primary" data-i18n="btnConnectSerial">Connect Serial Port</button>
 
-          <select id="consoleBaud" class="select-control" style="width: auto; padding: 0.45rem 0.65rem;" aria-label="Serial Baud Rate">
+          <select id="consoleBaud" class="select-control" style="width: auto;" aria-label="Serial Baud Rate">
             <option value="115200" selected>115200 baud (Default)</option>
             <option value="9600">9600 baud</option>
             <option value="57600">57600 baud</option>
@@ -1332,49 +1442,40 @@
             <option value="921600">921600 baud</option>
           </select>
 
-          <button id="btnConsoleReset" class="btn btn-secondary" disabled title="Toggle RTS/DTR lines to hard reset the ESP32">
-            Reset Chip (RTS/DTR)
-          </button>
-
-          <button id="btnConsoleClear" class="btn btn-secondary" data-i18n="clearTerminal">
-            Clear
-          </button>
-
-          <button id="btnConsoleCopy" class="btn btn-secondary">
-            Copy
-          </button>
+          <button id="btnConsoleReset" class="btn btn-secondary" disabled title="Toggle RTS/DTR lines to hard reset the ESP32">Reset Chip (RTS/DTR)</button>
+          <button id="btnConsoleClear" class="btn btn-secondary" data-i18n="clearTerminal">Clear</button>
+          <button id="btnConsoleCopy" class="btn btn-secondary">Copy</button>
         </div>
 
-        <!-- Terminal Window -->
-        <div class="terminal-wrapper">
-          <div class="terminal-bar">
-            <div class="terminal-state">
+        <div class="terminal-shell">
+          <div class="terminal-head">
+            <div class="status-indicator">
               <span id="consoleStatusDot" class="status-dot"></span>
               <span id="consoleStatusText">Disconnected</span>
             </div>
-            <label style="color: var(--text-muted); display: flex; align-items: center; gap: 0.35rem; cursor: pointer; font-size: 0.775rem;">
-              <input type="checkbox" id="chkAutoscroll" checked /> <span data-i18n="autoScroll">Autoscroll</span>
+            <label style="display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer; color: var(--text-secondary);">
+              <input type="checkbox" id="chkAutoscroll" checked />
+              <span data-i18n="autoScroll">Autoscroll</span>
             </label>
           </div>
 
           <div id="consoleBody" class="terminal-stream" role="log" aria-live="polite">[Console Ready] Connect USB cable and click 'Connect Serial Port' to view live telemetry.</div>
 
-          <form id="consoleInputForm" class="terminal-input-row">
+          <form id="consoleInputForm" class="terminal-form">
             <input type="text" id="consoleInput" class="terminal-input" data-i18n-placeholder="inputPlaceholder" placeholder="Type command (e.g. '150', '-1', 'i2000') and press Enter..." disabled />
-            <button type="submit" class="btn btn-primary" style="border-radius: 0; padding: 0.5rem 1rem;" disabled id="btnConsoleSend" data-i18n="btnSend">Send</button>
+            <button type="submit" class="btn btn-primary" style="border-radius: 0;" disabled id="btnConsoleSend" data-i18n="btnSend">Send</button>
           </form>
         </div>
 
-        <!-- Quick Command Chips for Mock Mode Testing -->
         <div class="chip-bar" aria-label="Mock Mode quick command shortcuts">
-          <span class="chip-bar-label" data-i18n="mockChipsTitle">Mock Mode Shortcuts:</span>
-          <button class="btn-chip" data-cmd="0" title="Set simulated weight to 0.0g">0g</button>
-          <button class="btn-chip" data-cmd="45.5" title="Set simulated weight to 45.5g">45.5g</button>
-          <button class="btn-chip" data-cmd="150" title="Set simulated weight to 150g">150g</button>
-          <button class="btn-chip" data-cmd="250" title="Set simulated weight to 250g">250g</button>
-          <button class="btn-chip" data-cmd="-1" title="Resume automatic simulated weight cycle">Resume Auto (-1)</button>
-          <button class="btn-chip" data-cmd="i2000" title="Set step interval to 2000ms">2s Speed (i2000)</button>
-          <button class="btn-chip" data-cmd="i4000" title="Set step interval to 4000ms">4s Speed (i4000)</button>
+          <span class="chip-label" data-i18n="mockChipsTitle">Mock Scale Quick Injection Chips:</span>
+          <button type="button" class="btn-chip" data-cmd="0">0g</button>
+          <button type="button" class="btn-chip" data-cmd="45.5">45.5g</button>
+          <button type="button" class="btn-chip" data-cmd="150">150g</button>
+          <button type="button" class="btn-chip" data-cmd="250">250g</button>
+          <button type="button" class="btn-chip" data-cmd="-1">Resume Auto (-1)</button>
+          <button type="button" class="btn-chip" data-cmd="i2000">2s Speed (i2000)</button>
+          <button type="button" class="btn-chip" data-cmd="i4000">4s Speed (i4000)</button>
         </div>
       </div>
     </section>
@@ -1382,13 +1483,12 @@
     <!-- TAB 3: CUSTOM FIRMWARE (.BIN) -->
     <section id="panel-custom" class="tab-panel" role="tabpanel" aria-labelledby="tab-custom">
       <div class="card">
-        <div class="card-header">
-          <h2 data-i18n="customTitle">Custom Binary Programmer (esptool-js)</h2>
-          <p data-i18n="customDesc">Flash custom compiled binaries from PlatformIO or ESP-IDF directly to specified hardware offsets.</p>
-        </div>
+        <div class="section-kicker">esptool-js Programmer</div>
+        <h2 class="card-title" data-i18n="customTitle">Custom Binary Programmer (esptool-js)</h2>
+        <p class="card-sub" data-i18n="customDesc">Flash custom compiled binaries from PlatformIO or ESP-IDF directly to specified hardware offsets.</p>
 
-        <div class="field-row">
-          <div class="field-group">
+        <div class="field-grid">
+          <div>
             <label class="field-label" for="customBaud" data-i18n="labelProgBaud">Programming Baud Rate</label>
             <select id="customBaud" class="select-control">
               <option value="921600" selected>921600 (High Speed)</option>
@@ -1396,41 +1496,35 @@
               <option value="115200">115200 (Safe / Compatibility)</option>
             </select>
           </div>
-          <div class="field-group">
+          <div>
             <label class="field-label" data-i18n="labelTargetArch">Target Architecture</label>
             <input type="text" class="input-control" value="ESP32-C3 (Auto-detects ROM)" disabled />
           </div>
         </div>
 
-        <div class="field-group">
-          <label class="field-label" data-i18n="labelPartitionsOffsets">Binary Partitions & Memory Offsets</label>
+        <div style="margin-bottom: 1rem;">
+          <label class="field-label" data-i18n="labelPartitionsOffsets">Binary Partitions &amp; Memory Offsets</label>
 
-          <!-- Bootloader -->
           <div class="file-row">
             <span class="file-offset">0x0000</span>
             <input type="file" id="fileBootloader" class="file-input" accept=".bin" aria-label="Bootloader bin at offset 0x0000" />
           </div>
-
-          <!-- Partitions -->
           <div class="file-row">
             <span class="file-offset">0x8000</span>
             <input type="file" id="filePartitions" class="file-input" accept=".bin" aria-label="Partitions bin at offset 0x8000" />
           </div>
-
-          <!-- App -->
           <div class="file-row">
             <span class="file-offset">0x10000</span>
             <input type="file" id="fileApp" class="file-input" accept=".bin" aria-label="Firmware application bin at offset 0x10000" />
           </div>
         </div>
 
-        <div style="display: flex; gap: 0.65rem; flex-wrap: wrap; margin-top: 1rem;">
+        <div class="btn-row">
           <button id="btnCustomConnect" class="btn btn-primary" data-i18n="btnConnectPort">Connect Port</button>
           <button id="btnCustomProgram" class="btn btn-secondary" disabled data-i18n="btnProgramCustom">Program Custom Partitions</button>
           <button id="btnCustomErase" class="btn btn-danger" disabled data-i18n="btnEraseFlash">Erase Entire Flash</button>
         </div>
 
-        <!-- Custom Flash Progress -->
         <div id="customProgressWrapper" class="progress-box">
           <div class="progress-track">
             <div id="customProgressBar" class="progress-fill"></div>
@@ -1441,54 +1535,41 @@
           </div>
         </div>
 
-        <!-- Custom Flasher Log -->
         <div style="margin-top: 1.25rem;">
-          <div class="terminal-wrapper" style="height: 200px;">
-            <div class="terminal-bar">
-              <span style="font-family: var(--font-mono); font-size: 0.775rem; color: var(--text-muted);" data-i18n="esptoolOutputTitle">esptool-js Engine Output</span>
-              <button id="btnClearCustomLog" class="btn-chip" data-i18n="clearTerminal">Clear</button>
+          <div class="terminal-shell" style="height: 210px;">
+            <div class="terminal-head">
+              <span style="color: var(--text-secondary);" data-i18n="esptoolOutputTitle">esptool-js Engine Output</span>
+              <button type="button" id="btnClearCustomLog" class="btn-chip" data-i18n="clearTerminal">Clear</button>
             </div>
-            <div id="customLogBody" class="terminal-stream" style="font-size: 0.775rem;">Ready. Select binary files and connect port to begin.</div>
+            <div id="customLogBody" class="terminal-stream" style="font-size: 0.78rem;">Ready. Select binary files and connect port to begin.</div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Diagnostics & Hardware Checklist -->
+    <!-- Diagnostics & Troubleshooting -->
     <section class="card">
-      <div class="card-header">
-        <h2 data-i18n="diagTitle">Diagnostics & Hardware Troubleshooting</h2>
-        <p data-i18n="diagDesc">Common issues encountered during USB flashing and serial verification.</p>
-      </div>
+      <div class="section-kicker">Field Reference</div>
+      <h2 class="card-title" data-i18n="diagTitle">Diagnostics &amp; Hardware Troubleshooting</h2>
+      <p class="card-sub" data-i18n="diagDesc">Common issues encountered during USB flashing and serial verification.</p>
 
       <details>
         <summary data-i18n="trouble1Title">No serial port appears in the browser popup</summary>
-        <p data-i18n-html="trouble1Desc">1. <strong>Data Cable Check:</strong> Many USB cables packaged with power banks only deliver 5V power without D+/D- data pins. Ensure your cable supports data transfer.<br/>
-        2. <strong>USB Drivers:</strong> ESP32-C3 Super Mini boards feature native USB CDC and work without external drivers on macOS and Windows 11. Legacy DevKits with CP2102 or CH340 bridge chips require their respective USB UART VCP drivers.<br/>
-        3. <strong>Linux Permissions:</strong> Grant non-root user access to serial nodes via <code>sudo usermod -a -G dialout $USER</code> and log back in.</p>
+        <p data-i18n-html="trouble1Desc">1. <strong>Data Cable Check:</strong> Many USB cables packaged with power banks only deliver 5V power without D+/D- data pins. Ensure your cable supports data transfer.<br/>2. <strong>USB Drivers:</strong> ESP32-C3 Super Mini boards feature native USB CDC and work without external drivers on macOS and Windows 11. Legacy DevKits with CP2102 or CH340 bridge chips require their respective USB UART VCP drivers.<br/>3. <strong>Linux Permissions:</strong> Grant non-root user access to serial nodes via <code>sudo usermod -a -G dialout $USER</code> and log back in.</p>
       </details>
 
       <details>
         <summary data-i18n="trouble2Title">Error: "Failed to connect to ESP32" or "Timed out waiting for packet header"</summary>
-        <p data-i18n-html="trouble2Desc">The chip did not enter ROM Bootloader mode automatically. Perform manual bootloader strapping:<br/>
-        1. Hold the <strong>BOOT (IO9)</strong> button on the ESP32 board.<br/>
-        2. Briefly press and release the <strong>RST (Reset)</strong> button once.<br/>
-        3. Release the <strong>BOOT</strong> button.<br/>
-        4. Click "Connect & Install Firmware" again.</p>
+        <p data-i18n-html="trouble2Desc">The chip did not enter ROM Bootloader mode automatically. Perform manual bootloader strapping:<br/>1. Hold the <strong>BOOT (IO9)</strong> button on the ESP32 board.<br/>2. Briefly press and release the <strong>RST (Reset)</strong> button once.<br/>3. Release the <strong>BOOT</strong> button.<br/>4. Click "Connect &amp; Install Firmware" again.</p>
       </details>
 
       <details>
         <summary data-i18n="trouble3Title">Firmware flashes successfully but weight output reads 0 or does not change</summary>
-        <p data-i18n-html="trouble3Desc">Verify load cell and display pinout connections:<br/>
-        &bull; HX711 Data (DT) &rarr; GPIO 0, Clock (SCK) &rarr; GPIO 1.<br/>
-        &bull; OLED Display: SDA &rarr; GPIO 8, SCL &rarr; GPIO 9.<br/>
-        &bull; If testing prior to wiring modules, verify that <code>ENABLE_MOCK_SCALE true</code> is set in <code>include/config.h</code> to simulate weight telemetry.</p>
+        <p data-i18n-html="trouble3Desc">Verify load cell and display pinout connections:<br/>&bull; HX711 Data (DT) &rarr; GPIO 0, Clock (SCK) &rarr; GPIO 1.<br/>&bull; OLED Display: SDA &rarr; GPIO 8, SCL &rarr; GPIO 9.<br/>&bull; If testing prior to wiring modules, verify that <code>ENABLE_MOCK_SCALE true</code> is set in <code>include/config.h</code> to simulate weight telemetry.</p>
       </details>
     </section>
-
   </main>
 
-  <!-- Footer -->
   <footer>
     <div class="footer-inner">
       <div data-i18n-html="footerText">Smartcale ESP32 Firmware Flasher &bull; Apache-2.0 License</div>
@@ -1496,37 +1577,107 @@
     </div>
   </footer>
 
-  <!-- Interactive JavaScript logic -->
+  <!-- Custom Non-Blocking Dialog Modal (replaces alert / confirm) -->
+  <div id="customDialog" class="dialog-backdrop" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
+    <div class="dialog-card">
+      <div id="dialogTitle" class="dialog-title">Notice</div>
+      <div id="dialogBody" class="dialog-body"></div>
+      <div class="dialog-actions">
+        <button type="button" id="dialogCancelBtn" class="btn btn-secondary" style="display: none;">Cancel</button>
+        <button type="button" id="dialogOkBtn" class="btn btn-primary">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Logic -->
   <script type="module">
     import { ESPLoader, Transport } from "./vendor/esptool-bundle.js";
 
-    // 1. Browser compatibility check
-    const isSerialSupported = "serial" in navigator;
-    if (!isSerialSupported) {
-      document.getElementById("compatBanner").classList.add("show");
+    // Custom non-blocking modal helper
+    function showMessage(title, message) {
+      return new Promise((resolve) => {
+        const backdrop = document.getElementById("customDialog");
+        const titleEl = document.getElementById("dialogTitle");
+        const bodyEl = document.getElementById("dialogBody");
+        const cancelBtn = document.getElementById("dialogCancelBtn");
+        const okBtn = document.getElementById("dialogOkBtn");
+
+        titleEl.textContent = title;
+        bodyEl.textContent = message;
+        cancelBtn.style.display = "none";
+        backdrop.classList.add("open");
+
+        const cleanup = () => {
+          backdrop.classList.remove("open");
+          okBtn.removeEventListener("click", onOk);
+          resolve(true);
+        };
+        const onOk = () => cleanup();
+        okBtn.addEventListener("click", onOk);
+      });
     }
 
-    // 2. Tab Navigation with Accessible Attributes
+    function showConfirm(title, message) {
+      return new Promise((resolve) => {
+        const backdrop = document.getElementById("customDialog");
+        const titleEl = document.getElementById("dialogTitle");
+        const bodyEl = document.getElementById("dialogBody");
+        const cancelBtn = document.getElementById("dialogCancelBtn");
+        const okBtn = document.getElementById("dialogOkBtn");
+
+        titleEl.textContent = title;
+        bodyEl.textContent = message;
+        cancelBtn.style.display = "inline-flex";
+        backdrop.classList.add("open");
+
+        const cleanup = (result) => {
+          backdrop.classList.remove("open");
+          okBtn.removeEventListener("click", onOk);
+          cancelBtn.removeEventListener("click", onCancel);
+          resolve(result);
+        };
+        const onOk = () => cleanup(true);
+        const onCancel = () => cleanup(false);
+        okBtn.addEventListener("click", onOk);
+        cancelBtn.addEventListener("click", onCancel);
+      });
+    }
+
+    // Hero Interactive OLED Preview
+    const gramsEl = document.getElementById("oledGramsValue");
+    const barEl = document.getElementById("oledBarFill");
+    document.querySelectorAll("[data-sim-weight]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const val = parseFloat(btn.getAttribute("data-sim-weight") || "0");
+        if (gramsEl) gramsEl.textContent = val.toFixed(1);
+        if (barEl) barEl.style.width = `${Math.min(100, Math.round((val / 500) * 100))}%`;
+      });
+    });
+
+    // 1. Web Serial Browser Support Check
+    if (!("serial" in navigator)) {
+      document.getElementById("compatBanner")?.classList.add("show");
+    }
+
+    // 2. Accessible Tab Navigation
     const tabButtons = document.querySelectorAll(".tab-button");
     const tabPanels = document.querySelectorAll(".tab-panel");
-
-    tabButtons.forEach(btn => {
+    tabButtons.forEach((btn) => {
       btn.addEventListener("click", () => {
-        tabButtons.forEach(b => {
+        tabButtons.forEach((b) => {
           b.classList.remove("active");
           b.setAttribute("aria-selected", "false");
         });
-        tabPanels.forEach(p => p.classList.remove("active"));
+        tabPanels.forEach((p) => p.classList.remove("active"));
 
         btn.classList.add("active");
         btn.setAttribute("aria-selected", "true");
-        const targetId = btn.getAttribute("data-tab");
-        const targetPanel = document.getElementById(targetId);
+        const targetPanel = document.getElementById(btn.getAttribute("data-tab"));
         if (targetPanel) targetPanel.classList.add("active");
       });
     });
 
-    // 3. Serial Monitor State & Logic
+    // 3. Live Serial Monitor
     let consolePort = null;
     let consoleReader = null;
     let consoleWriter = null;
@@ -1556,22 +1707,29 @@
       consoleBody.textContent = "";
     });
 
-    btnConsoleCopy.addEventListener("click", async () => {
+    btnConsoleCopy.addEventListener("click", () => {
+      const textarea = document.createElement("textarea");
+      textarea.value = consoleBody.textContent || "";
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
       try {
-        await navigator.clipboard.writeText(consoleBody.textContent);
-        const originalText = btnConsoleCopy.textContent;
+        document.execCommand("copy");
+        const orig = btnConsoleCopy.textContent;
         btnConsoleCopy.textContent = "Copied!";
-        setTimeout(() => btnConsoleCopy.textContent = originalText, 1800);
+        setTimeout(() => (btnConsoleCopy.textContent = orig), 1600);
       } catch (err) {
-        alert("Clipboard copy failed: " + err);
+        showMessage("Clipboard Error", String(err));
       }
+      document.body.removeChild(textarea);
     });
 
     btnConsoleToggle.addEventListener("click", async () => {
       if (!isConsoleConnected) {
         try {
           if (!("serial" in navigator)) {
-            alert("Web Serial API is not supported in this browser. Please use Google Chrome or Edge.");
+            await showMessage("Web Serial Unavailable", "Please use Google Chrome, Edge, Brave, or Opera on desktop.");
             return;
           }
 
@@ -1589,7 +1747,6 @@
           btnConsoleSend.disabled = false;
           appendConsole(`\n[System] Connected to serial port at ${baud} baud.\n`);
 
-          // Read stream loop
           const decoder = new TextDecoderStream();
           consolePort.readable.pipeTo(decoder.writable).catch(() => {});
           consoleReader = decoder.readable.getReader();
@@ -1611,16 +1768,13 @@
               }
             }
           })();
-
         } catch (err) {
-          console.error("Serial port open error:", err);
           appendConsole(`\n[System Error] Could not open port: ${err.message || err}\n`);
           isConsoleConnected = false;
           consoleStatusDot.classList.remove("active");
           consoleStatusText.textContent = "Disconnected";
         }
       } else {
-        // Disconnect logic
         try {
           isConsoleConnected = false;
           if (consoleReader) {
@@ -1636,7 +1790,7 @@
             consolePort = null;
           }
         } catch (err) {
-          console.warn("Disconnect cleanup error:", err);
+          console.warn(err);
         }
 
         consoleStatusDot.classList.remove("active");
@@ -1650,12 +1804,10 @@
       }
     });
 
-    // Console Send Command
     consoleInputForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const text = consoleInput.value.trim();
       if (!text || !consoleWriter) return;
-
       try {
         await consoleWriter.write(text + "\r\n");
         appendConsole(`> ${text}\n`);
@@ -1665,13 +1817,12 @@
       }
     });
 
-    // Quick Command Chip Shortcuts
-    document.querySelectorAll(".btn-chip[data-cmd]").forEach(chip => {
+    document.querySelectorAll(".btn-chip[data-cmd]").forEach((chip) => {
       chip.addEventListener("click", async () => {
         const cmd = chip.getAttribute("data-cmd");
         if (!cmd) return;
         if (!consoleWriter || !isConsoleConnected) {
-          alert("Please connect the serial port first!");
+          await showMessage("Serial Port Not Connected", "Connect the serial port first before sending test commands.");
           return;
         }
         try {
@@ -1683,13 +1834,12 @@
       });
     });
 
-    // Reset ESP via DTR/RTS signals
     btnConsoleReset.addEventListener("click", async () => {
       if (!consolePort) return;
       try {
         appendConsole("\n[System] Asserting reset line (DTR/RTS toggle)...\n");
         await consolePort.setSignals({ dataTerminalReady: false, requestToSend: true });
-        await new Promise(r => setTimeout(r, 150));
+        await new Promise((r) => setTimeout(r, 150));
         await consolePort.setSignals({ dataTerminalReady: false, requestToSend: false });
         appendConsole("[System] Reset pulse sent.\n");
       } catch (err) {
@@ -1729,7 +1879,7 @@
 
     btnCustomConnect.addEventListener("click", async () => {
       if (!("serial" in navigator)) {
-        alert("Web Serial is not supported in this browser.");
+        await showMessage("Web Serial Unavailable", "Web Serial is not supported in this browser.");
         return;
       }
 
@@ -1779,10 +1929,10 @@
       }
     });
 
-    // Erase chip
     btnCustomErase.addEventListener("click", async () => {
       if (!customEspLoader) return;
-      if (!confirm("Are you sure you want to completely erase the flash memory of this ESP32?")) return;
+      const confirmed = await showConfirm("Erase Entire Flash?", "Are you sure you want to completely erase the flash memory of this ESP32?");
+      if (!confirmed) return;
 
       try {
         btnCustomErase.disabled = true;
@@ -1798,7 +1948,6 @@
       }
     });
 
-    // Program flash
     btnCustomProgram.addEventListener("click", async () => {
       if (!customEspLoader) return;
 
@@ -1807,20 +1956,18 @@
       const fileApp = document.getElementById("fileApp").files[0];
 
       if (!fileBoot && !filePart && !fileApp) {
-        alert("Please select at least one .bin file to program!");
+        await showMessage("No Binary Selected", "Please select at least one .bin file to program.");
         return;
       }
 
       const fileArray = [];
-
-      async function readFileAsBinary(file, offset) {
-        return new Promise((resolve, reject) => {
+      const readFileAsBinary = (file, offset) =>
+        new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = (e) => resolve({ data: e.target.result, address: offset });
           reader.onerror = reject;
           reader.readAsBinaryString(file);
         });
-      }
 
       try {
         if (fileBoot) fileArray.push(await readFileAsBinary(fileBoot, 0x0000));
@@ -1837,7 +1984,7 @@
         customLog(`[System] Starting flash of ${fileArray.length} partition(s)...`);
 
         await customEspLoader.writeFlash({
-          fileArray: fileArray,
+          fileArray,
           flashSize: "keep",
           flashMode: "dio",
           flashFreq: "40m",
@@ -1863,72 +2010,51 @@
       }
     });
 
-    // ------------------------------------------------------------------------
-    // Theme Switcher (Dark / Light)
-    // ------------------------------------------------------------------------
-    const THEME_STORAGE_KEY = 'smartcale-theme';
-    const metaTheme = document.getElementById('metaThemeColor');
+    // 5. Theme Switcher (Dark / Light)
+    const THEME_STORAGE_KEY = "smartcale-theme";
+    const metaTheme = document.getElementById("metaThemeColor");
     const metaColorScheme = document.querySelector('meta[name="color-scheme"]');
-    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const themeToggleBtn = document.getElementById("themeToggleBtn");
 
     function updateThemeUI(theme) {
-      const next = theme === 'dark' ? 'light' : 'dark';
+      const next = theme === "dark" ? "light" : "dark";
       if (themeToggleBtn) {
-        themeToggleBtn.setAttribute('aria-label', `Switch to ${next} theme`);
-        themeToggleBtn.setAttribute('title', `Switch to ${next} theme`);
+        themeToggleBtn.setAttribute("aria-label", `Switch to ${next} theme`);
+        themeToggleBtn.setAttribute("title", `Switch to ${next} theme`);
       }
-      if (metaTheme) {
-        metaTheme.setAttribute('content', theme === 'light' ? '#f8fafc' : '#090d14');
-      }
-      if (metaColorScheme) {
-        metaColorScheme.setAttribute('content', theme);
-      }
+      if (metaTheme) metaTheme.setAttribute("content", theme === "light" ? "#f4f5f7" : "#08090c");
+      if (metaColorScheme) metaColorScheme.setAttribute("content", theme);
     }
 
     function setTheme(theme, save = true) {
-      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.setAttribute("data-theme", theme);
       updateThemeUI(theme);
       if (save) {
         try {
           localStorage.setItem(THEME_STORAGE_KEY, theme);
-        } catch (e) {
-          // ignore localStorage security errors
-        }
+        } catch (_) {}
       }
     }
 
-    // Initial button state sync
-    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
-    updateThemeUI(currentTheme);
+    updateThemeUI(document.documentElement.getAttribute("data-theme") || "dark");
 
-    if (themeToggleBtn) {
-      themeToggleBtn.addEventListener('click', () => {
-        const active = document.documentElement.getAttribute('data-theme') || 'dark';
-        setTheme(active === 'dark' ? 'light' : 'dark', true);
-      });
-    }
+    themeToggleBtn?.addEventListener("click", () => {
+      const active = document.documentElement.getAttribute("data-theme") || "dark";
+      setTheme(active === "dark" ? "light" : "dark", true);
+    });
 
-    if (window.matchMedia) {
-      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-        const saved = localStorage.getItem(THEME_STORAGE_KEY) || localStorage.getItem('smartscale-theme');
-        if (!saved) {
-          setTheme(e.matches ? 'dark' : 'light', false);
-        }
-      });
-    }
+    // 6. Language Sync with external ./i18n.js
+    if (typeof getInitialLanguage === "function" && typeof applyFlasherLanguage === "function") {
+      const initialLang = getInitialLanguage();
+      applyFlasherLanguage(initialLang);
 
-    // ------------------------------------------------------------------------
-    // Language Switcher (i18n)
-    // ------------------------------------------------------------------------
-    const initialLang = getInitialLanguage();
-    applyFlasherLanguage(initialLang);
-
-    const langSelect = document.getElementById('langSelect');
-    if (langSelect) {
-      langSelect.value = initialLang;
-      langSelect.addEventListener('change', (e) => {
-        applyFlasherLanguage(e.target.value);
-      });
+      const langSelect = document.getElementById("langSelect");
+      if (langSelect) {
+        langSelect.value = initialLang;
+        langSelect.addEventListener("change", (e) => {
+          applyFlasherLanguage(e.target.value);
+        });
+      }
     }
   </script>
 </body>
